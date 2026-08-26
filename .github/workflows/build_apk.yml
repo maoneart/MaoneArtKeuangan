@@ -52,22 +52,20 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.0.6
-          name: 'MaoneArt Keuangan v1.0.6 (Release)'
+          tag_name: v1.0.7
+          name: 'MaoneArt Keuangan v1.0.7 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.6)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.7)
             
-            - **Perbaikan Total Tombol Modal & Navbar Sistem (100% Bebas Tertutup Navbar)**:
-              * Seluruh input modal bottom sheet (`QuickAddModal`, `AddDebtModal`, `PayDebtModal`, `AddSavingModal`, `DepositSavingModal`, `AddCategoryModal`) kini menggunakan `useSafeArea: true` dan container `SafeArea` dengan margin keyboard dinamis. Tombol aksi bawah (Simpan Transaksi, Simpan Impian, dll) selalu tampil utuh dan aman di atas bilah 3-tombol sistem HP.
-            - **Kotak Input Nominal Mewah & Simetris (*Symmetrical FinTech Rp Input*)**:
-              * Teks `Rp` selalu otomatis muncul secara permanen dengan tata letak simetris dan rapi.
-              * Real-Time Thousand Separator otomatis memformat angka ribuan bertitik (`1.000.000`).
-            - **Integrasi Cepat App Features & All Categories**:
-              * Mengklik kotak kategori di *APP FEATURES* (Beranda) atau *Kelola Kategori* akan langsung membuka modal transaksi dengan kategori tersebut terpilih secara otomatis.
-            - **Redesain & Perapian Grafik Batang (*FL BarChart*)**:
-              * Judul dan legenda `🟢 Pemasukan` & `🔴 Pengeluaran` dipisahkan secara rapi sehingga tidak bertumpuk.
-              * Lebar label sumbu Y (*reservedSize: 64*) diperluas sehingga teks `Rp 1,25 jt` dan `Rp 500 rb` muat 1 baris tanpa terpotong.
-              * Batang grafik lebih proporsional dengan gridlines horizontal putus-putus.
+            - **Integrasi Penuh Saldo Awal Tabungan & Pemotongan Saldo Kas Real-Time**:
+              * Pembuatan target tabungan dengan Saldo Awal kini memvalidasi ketersediaan saldo kas utama. Jika saldo kas kosong atau kurang dari saldo awal, sistem menolak dan menampilkan peringatan saldo tidak cukup.
+              * Setiap pembuatan target dengan saldo awal otomatis dicatat sebagai Pengeluaran (*Investasi & Tabungan*) yang memotong Saldo Kas riil di SQLite.
+              * Begitu juga setoran tabungan harian memotong Saldo Kas utama.
+            - **Floating Action Button (FAB) Konsisten di Layar Hutang & Tabungan**:
+              * Layar Hutang & Piutang dilengkapi tombol melayang `+ Catat Hutang / Piutang`.
+              * Layar Tabungan Impian dilengkapi tombol melayang `+ Buat Target Impian`.
+              * Konsisten dan seragam dengan tombol `+ Catat Transaksi` di Layar Transaksi.
+            - **100% Bebas Tertutup Navbar Sistem**: Seluruh tombol aksi modal dan list view aman dari bilah 3-tombol sistem HP.
             - **100% Offline SQLite Storage**: Data tersimpan lokal di HP tanpa server.
           files: build/app/outputs/flutter-apk/app-release.apk
         env:

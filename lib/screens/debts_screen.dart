@@ -151,13 +151,16 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
           'Debt & Credit Manager',
           style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textDark),
         ),
-        actions: [
-          IconButton(
-            onPressed: () => AddDebtModal.show(context, type: _selectedType),
-            icon: const Icon(Icons.add_circle_rounded, color: AppTheme.bluePrimary, size: 26),
-            tooltip: 'Tambah Catatan',
-          ),
-        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => AddDebtModal.show(context, type: _selectedType),
+        backgroundColor: _selectedType == 'hutang' ? AppTheme.redMain : AppTheme.greenMain,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add_rounded, size: 20),
+        label: Text(
+          'Catat ${_selectedType == 'hutang' ? 'Hutang' : 'Piutang'}',
+          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(

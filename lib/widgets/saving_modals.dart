@@ -39,7 +39,7 @@ class _AddSavingModalState extends ConsumerState<AddSavingModal> {
     super.dispose();
   }
 
-  void _submit() async {
+  void _submit(double currentBalance) async {
     final name = _nameController.text.trim();
     final target = CurrencyFormatter.parseRupiah(_targetController.text);
     final initialDeposit = CurrencyFormatter.parseRupiah(_initialDepositController.text);
@@ -49,6 +49,33 @@ class _AddSavingModalState extends ConsumerState<AddSavingModal> {
         const SnackBar(content: Text('Masukkan nama impian dan target nominal yang valid')),
       );
       return;
+    }
+
+    // Validasi Saldo Kas jika ada saldo awal
+    if (initialDeposit > 0) {
+      if (currentBalance < initialDeposit) {
+        showDialog(
+          context: context,
+          builder: (c) => AlertDialog(
+            backgroundColor: AppTheme.cardBg,
+            title: Row(
+              children: const [
+                Icon(Icons.warning_amber_rounded, color: AppTheme.redMain),
+                SizedBox(width: 8),
+                Text('Saldo Kas Kurang'),
+              ],
+            ),
+            content: Text(
+              'Saldo kas Anda saat ini (${CurrencyFormatter.formatRupiah(currentBalance)}) tidak mencukupi untuk setoran awal tabungan sebesar ${CurrencyFormatter.formatRupiah(initialDeposit)}.\n\nSilakan kurangi saldo awal atau catat pemasukan terlebih dahulu.',
+              style: const TextStyle(fontSize: 13),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(c), child: const Text('Tutup')),
+            ],
+          ),
+        );
+        return;
+      }
     }
 
     final saving = SavingModel(
@@ -64,8 +91,12 @@ class _AddSavingModalState extends ConsumerState<AddSavingModal> {
     if (mounted) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Target tabungan baru berhasil dibuat!'),
+        SnackBar(
+          content: Text(
+            initialDeposit > 0
+                ? 'Target tabungan dibuat & Saldo Kas terpotong ${CurrencyFormatter.formatRupiah(initialDeposit)}!'
+                : 'Target tabungan baru berhasil dibuat!',
+          ),
           backgroundColor: AppTheme.bluePrimary,
         ),
       );
@@ -74,6 +105,9 @@ class _AddSavingModalState extends ConsumerState<AddSavingModal> {
 
   @override
   Widget build(BuildContext context) {
+    final summaryAsync = ref.watch(financialSummaryProvider);
+    final currentBalance = summaryAsync.valueOrNull?.netBalance ?? 0.0;
+
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final bottomSafe = MediaQuery.of(context).padding.bottom;
 
@@ -110,7 +144,49 @@ class _AddSavingModalState extends ConsumerState<AddSavingModal> {
                   'BUAT TARGET TABUNGAN IMPIAN',
                   style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
+
+                // Cash Balance Indicator Box
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: currentBalance > 0 ? AppTheme.borderLight : AppTheme.redMain,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        currentBalance > 0 ? Icons.account_balance_wallet_rounded : Icons.error_outline_rounded,
+                        color: currentBalance > 0 ? AppTheme.greenMain : AppTheme.redMain,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Saldo Kas Anda: ${CurrencyFormatter.formatRupiah(currentBalance)}',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: currentBalance > 0 ? AppTheme.textDark : AppTheme.redMain,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                            Text(
+                              'Pengisian Saldo Awal akan otomatis memotong Saldo Kas Anda',
+                              style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
 
                 // Nama Tabungan
                 Text('NAMA TARGET IMPIAN', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold)),
@@ -274,7 +350,7 @@ class _AddSavingModalState extends ConsumerState<AddSavingModal> {
                 const SizedBox(height: 20),
 
                 ElevatedButton(
-                  onPressed: _submit,
+                  onPressed: () => _submit(currentBalance),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.bluePrimary,
                     foregroundColor: Colors.white,
@@ -324,7 +400,7 @@ class _DepositSavingModalState extends ConsumerState<DepositSavingModal> {
     super.dispose();
   }
 
-  void _submit() async {
+  void _submit(double currentBalance) async {
     final amount = CurrencyFormatter.parseRupiah(_amountController.text);
     if (amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -333,30 +409,27 @@ class _DepositSavingModalState extends ConsumerState<DepositSavingModal> {
       return;
     }
 
-    final summary = await ref.read(financialSummaryProvider.future);
-    if (summary.netBalance < amount) {
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (c) => AlertDialog(
-            backgroundColor: AppTheme.cardBg,
-            title: Row(
-              children: const [
-                Icon(Icons.warning_amber_rounded, color: AppTheme.redMain),
-                SizedBox(width: 8),
-                Text('Saldo Kas Kurang'),
-              ],
-            ),
-            content: Text(
-              'Saldo kas Anda (${CurrencyFormatter.formatRupiah(summary.netBalance)}) tidak mencukupi untuk setor tabungan ${CurrencyFormatter.formatRupiah(amount)}.',
-              style: const TextStyle(fontSize: 13),
-            ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(c), child: const Text('Tutup')),
+    if (currentBalance < amount) {
+      showDialog(
+        context: context,
+        builder: (c) => AlertDialog(
+          backgroundColor: AppTheme.cardBg,
+          title: Row(
+            children: const [
+              Icon(Icons.warning_amber_rounded, color: AppTheme.redMain),
+              SizedBox(width: 8),
+              Text('Saldo Kas Kurang'),
             ],
           ),
-        );
-      }
+          content: Text(
+            'Saldo kas Anda saat ini (${CurrencyFormatter.formatRupiah(currentBalance)}) tidak mencukupi untuk setor tabungan ${CurrencyFormatter.formatRupiah(amount)}.\n\nSilakan catat pemasukan terlebih dahulu.',
+            style: const TextStyle(fontSize: 13),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(c), child: const Text('Tutup')),
+          ],
+        ),
+      );
       return;
     }
 
@@ -372,7 +445,7 @@ class _DepositSavingModalState extends ConsumerState<DepositSavingModal> {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Setoran tabungan ${CurrencyFormatter.formatRupiah(amount)} berhasil!'),
+          content: Text('Setoran tabungan ${CurrencyFormatter.formatRupiah(amount)} berhasil (Saldo Kas berkurang)!'),
           backgroundColor: AppTheme.bluePrimary,
         ),
       );
@@ -381,6 +454,9 @@ class _DepositSavingModalState extends ConsumerState<DepositSavingModal> {
 
   @override
   Widget build(BuildContext context) {
+    final summaryAsync = ref.watch(financialSummaryProvider);
+    final currentBalance = summaryAsync.valueOrNull?.netBalance ?? 0.0;
+
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final bottomSafe = MediaQuery.of(context).padding.bottom;
 
@@ -415,6 +491,48 @@ class _DepositSavingModalState extends ConsumerState<DepositSavingModal> {
                 Text(
                   '${widget.saving.savingName} • Target: ${widget.saving.formattedTarget}',
                   style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 13),
+                ),
+                const SizedBox(height: 12),
+
+                // Cash Balance Indicator Box
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: currentBalance > 0 ? AppTheme.borderLight : AppTheme.redMain,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        currentBalance > 0 ? Icons.account_balance_wallet_rounded : Icons.error_outline_rounded,
+                        color: currentBalance > 0 ? AppTheme.greenMain : AppTheme.redMain,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Saldo Kas Anda: ${CurrencyFormatter.formatRupiah(currentBalance)}',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: currentBalance > 0 ? AppTheme.textDark : AppTheme.redMain,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                            Text(
+                              'Setoran akan otomatis memotong Saldo Kas Anda',
+                              style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
 
@@ -475,7 +593,7 @@ class _DepositSavingModalState extends ConsumerState<DepositSavingModal> {
                 const SizedBox(height: 20),
 
                 ElevatedButton(
-                  onPressed: _submit,
+                  onPressed: () => _submit(currentBalance),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.bluePrimary,
                     foregroundColor: Colors.white,

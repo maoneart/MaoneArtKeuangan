@@ -395,7 +395,29 @@ class DatabaseHelper {
 
   Future<int> insertSaving(SavingModel saving) async {
     final db = await database;
-    return await db.insert('tabungan', saving.toMap());
+    int newId = 0;
+    await db.transaction((txn) async {
+      newId = await txn.insert('tabungan', saving.toMap());
+      if (saving.collectedAmount > 0) {
+        // 1. Simpan riwayat setoran awal
+        await txn.insert('setoran_tabungan', {
+          'id_tabungan': newId,
+          'tanggal_setor': DateTime.now().toIso8601String().substring(0, 10),
+          'jumlah_setor': saving.collectedAmount,
+          'keterangan': 'Setoran Awal saat Pembuatan Target Tabungan',
+        });
+
+        // 2. Otomatis Rekam ke Tabel Transaksi (Setor Awal memotong Saldo Kas)
+        await txn.insert('transaksi', {
+          'tanggal': DateTime.now().toIso8601String().substring(0, 10),
+          'tipe': 'pengeluaran',
+          'id_kategori': 3, // Investasi & Tabungan
+          'jumlah': saving.collectedAmount,
+          'keterangan': 'Setoran Awal Tabungan: ${saving.name}',
+        });
+      }
+    });
+    return newId;
   }
 
   Future<void> addSavingDeposit(int savingId, double amount, DateTime depositDate, {String? note}) async {

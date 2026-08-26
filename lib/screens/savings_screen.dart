@@ -27,7 +27,7 @@ class SavingsScreen extends ConsumerWidget {
         backgroundColor: AppTheme.bluePrimary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded, size: 20),
-        label: Text('Buat Target', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13)),
+        label: Text('Buat Target Impian', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13)),
       ),
       body: SafeArea(
         child: savingsAsync.when(
