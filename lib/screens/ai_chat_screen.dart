@@ -445,118 +445,122 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
             ),
 
             // Detected Transactions Action Card
-            if (!isUser && msg.detectedTransactions.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              GlassCard(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.bolt_rounded, color: Color(0xFFD97706), size: 16),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${msg.detectedTransactions.length} TRANSAKSI TERDETEKSI',
-                          style: GoogleFonts.plusJakartaSans(
-                            color: const Color(0xFFD97706),
-                            fontWeight: FontWeight.w800,
-                            fontSize: 11,
-                            letterSpacing: 0.5,
+            if (!isUser && msg.detectedTransactions.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: GlassCard(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.bolt_rounded, color: Color(0xFFD97706), size: 16),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${msg.detectedTransactions.length} TRANSAKSI TERDETEKSI',
+                            style: GoogleFonts.plusJakartaSans(
+                              color: const Color(0xFFD97706),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 11,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      for (final tx in msg.detectedTransactions)
+                        _buildDetectedTransactionItem(tx),
+                      const SizedBox(height: 6),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: msg.detectedTransactions.every((t) => t.isSaved)
+                              ? null
+                              : () => _saveTransactions(msg.detectedTransactions, categories),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.greenMain,
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: const Color(0xFFE2E8F0),
+                            disabledForegroundColor: AppTheme.textMuted,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            elevation: 0,
+                          ),
+                          icon: Icon(
+                            msg.detectedTransactions.every((t) => t.isSaved)
+                                ? Icons.check_circle_rounded
+                                : Icons.save_rounded,
+                            size: 16,
+                          ),
+                          label: Text(
+                            msg.detectedTransactions.every((t) => t.isSaved)
+                                ? 'Semua Transaksi Telah Disimpan ✅'
+                                : 'Simpan ke Catatan Keuangan',
+                            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12),
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    ...msg.detectedTransactions.map((tx) {
-                      final isIncome = tx.type == 'pemasukan';
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 6),
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppTheme.borderLight),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: isIncome ? AppTheme.greenSoft : AppTheme.redSoft,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                isIncome ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
-                                color: isIncome ? AppTheme.greenMain : AppTheme.redMain,
-                                size: 14,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    tx.note,
-                                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.textDark),
-                                  ),
-                                  Text(
-                                    tx.categoryName,
-                                    style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10.5),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Text(
-                              '${isIncome ? '+' : '-'}${CurrencyFormatter.formatRupiah(tx.amount)}',
-                              style: GoogleFonts.plusJakartaSans(
-                                color: isIncome ? AppTheme.greenMain : AppTheme.redMain,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 12.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                    const SizedBox(height: 6),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: msg.detectedTransactions.every((t) => t.isSaved)
-                            ? null
-                            : () => _saveTransactions(msg.detectedTransactions, categories),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.greenMain,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: const Color(0xFFE2E8F0),
-                          disabledForegroundColor: AppTheme.textMuted,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          elevation: 0,
-                        ),
-                        icon: Icon(
-                          msg.detectedTransactions.every((t) => t.isSaved)
-                              ? Icons.check_circle_rounded
-                              : Icons.save_rounded,
-                          size: 16,
-                        ),
-                        label: Text(
-                          msg.detectedTransactions.every((t) => t.isSaved)
-                              ? 'Semua Transaksi Telah Disimpan ✅'
-                              : 'Simpan ke Catatan Keuangan',
-                          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12),
-                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ],
           ],
         ),
-      );
-    }
+      ),
+    );
+  }
+
+  Widget _buildDetectedTransactionItem(ParsedTransaction tx) {
+    final isIncome = tx.type == 'pemasukan';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppTheme.borderLight),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isIncome ? AppTheme.greenSoft : AppTheme.redSoft,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isIncome ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
+              color: isIncome ? AppTheme.greenMain : AppTheme.redMain,
+              size: 14,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tx.note,
+                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.textDark),
+                ),
+                Text(
+                  tx.categoryName,
+                  style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10.5),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '${isIncome ? '+' : '-'}${CurrencyFormatter.formatRupiah(tx.amount)}',
+            style: GoogleFonts.plusJakartaSans(
+              color: isIncome ? AppTheme.greenMain : AppTheme.redMain,
+              fontWeight: FontWeight.w800,
+              fontSize: 12.5,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
