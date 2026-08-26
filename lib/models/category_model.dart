@@ -27,8 +27,8 @@ class CategoryModel {
     }
   }
 
-  IconData get iconData {
-    switch (iconName.toLowerCase()) {
+  static IconData mapBootstrapIcon(String name) {
+    switch (name.toLowerCase()) {
       case 'bi-wallet2':
         return Icons.account_balance_wallet_rounded;
       case 'bi-briefcase':
@@ -52,14 +52,18 @@ class CategoryModel {
         return Icons.medical_services_rounded;
       case 'bi-journal-bookmark':
         return Icons.school_rounded;
+      case 'bi-bookmark':
+        return Icons.bookmark_rounded;
       case 'bi-house':
         return Icons.home_rounded;
       case 'bi-car':
         return Icons.directions_car_rounded;
       default:
-        return isIncome ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded;
+        return Icons.category_rounded;
     }
   }
+
+  IconData get iconData => mapBootstrapIcon(iconName);
 
   Map<String, dynamic> toMap() {
     return {

@@ -64,10 +64,12 @@ class SavingModel {
   double get remainingTarget => (targetAmount - collectedAmount).clamp(0.0, double.infinity);
   double get progressPercentage => targetAmount > 0 ? (collectedAmount / targetAmount).clamp(0.0, 1.0) : 0.0;
 
+  String get savingName => name;
   String get formattedTarget => CurrencyFormatter.formatRupiah(targetAmount);
   String get formattedCollected => CurrencyFormatter.formatRupiah(collectedAmount);
   String get formattedRemaining => CurrencyFormatter.formatRupiah(remainingTarget);
   String get formattedDueDate => dueDate != null ? AppDateFormatter.formatFull(dueDate!) : 'Tanpa batas waktu';
+  String get formattedTargetDate => formattedDueDate;
 
   Map<String, dynamic> toMap() {
     return {

@@ -25,6 +25,7 @@ class TransactionModel {
 
   String get formattedAmount => CurrencyFormatter.formatRupiah(amount);
   String get formattedDate => AppDateFormatter.formatFull(date);
+  String get formattedFullDate => AppDateFormatter.formatFull(date);
   String get formattedShortDate => AppDateFormatter.formatShort(date);
 
   Map<String, dynamic> toMap() {

@@ -187,7 +187,7 @@ class CategoryManagementScreen extends ConsumerWidget {
                       final cat = CategoryModel(
                         name: name,
                         type: selectedType,
-                        icon: selectedIcon,
+                        iconName: selectedIcon,
                         colorHex: selectedColor,
                       );
                       await ref.read(financialControllerProvider.notifier).addCategory(cat);
