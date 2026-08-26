@@ -5,6 +5,7 @@ import '../models/debt_model.dart';
 import '../models/saving_model.dart';
 import '../models/financial_summary.dart';
 import '../services/database_helper.dart';
+import '../services/gemini_service.dart';
 
 // Database Instance Provider
 final databaseProvider = Provider<DatabaseHelper>((ref) => DatabaseHelper.instance);
@@ -168,4 +169,30 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
 
 final financialControllerProvider = StateNotifierProvider<FinancialController, AsyncValue<void>>((ref) {
   return FinancialController(ref);
+});
+
+// Gemini API Key State Management (Real-Time Synchronized Across All Screens)
+class GeminiApiKeyNotifier extends StateNotifier<String> {
+  GeminiApiKeyNotifier() : super('') {
+    loadKey();
+  }
+
+  Future<void> loadKey() async {
+    final key = await GeminiService.getApiKey();
+    state = key ?? '';
+  }
+
+  Future<void> setKey(String key) async {
+    await GeminiService.saveApiKey(key);
+    state = key.trim();
+  }
+
+  Future<void> removeKey() async {
+    await GeminiService.removeApiKey();
+    state = '';
+  }
+}
+
+final geminiApiKeyProvider = StateNotifierProvider<GeminiApiKeyNotifier, String>((ref) {
+  return GeminiApiKeyNotifier();
 });

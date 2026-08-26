@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/gemini_service.dart';
+import '../providers/financial_provider.dart';
 import '../utils/app_theme.dart';
 import '../widgets/glass_card.dart';
+import 'api_key_tutorial_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -15,29 +16,23 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final TextEditingController _apiKeyController = TextEditingController();
   bool _obscureKey = true;
-  bool _hasSavedKey = false;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _loadApiKey();
   }
 
-  void _loadApiKey() async {
-    final key = await GeminiService.getApiKey();
-    if (key != null && key.isNotEmpty && mounted) {
-      setState(() {
-        _apiKeyController.text = key;
-        _hasSavedKey = true;
-      });
-    }
+  @override
+  void dispose() {
+    _apiKeyController.dispose();
+    super.dispose();
   }
 
   void _saveApiKey() async {
     final key = _apiKeyController.text.trim();
     if (key.isEmpty) {
-      await GeminiService.removeApiKey();
-      setState(() => _hasSavedKey = false);
+      await ref.read(geminiApiKeyProvider.notifier).removeKey();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Gemini API Key telah dihapus.')),
@@ -46,8 +41,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       return;
     }
 
-    await GeminiService.saveApiKey(key);
-    setState(() => _hasSavedKey = true);
+    await ref.read(geminiApiKeyProvider.notifier).setKey(key);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -59,14 +53,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   @override
-  void dispose() {
-    _apiKeyController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final savedKey = ref.watch(geminiApiKeyProvider);
+    final hasSavedKey = savedKey.trim().isNotEmpty;
     final bottomPadding = MediaQuery.of(context).padding.bottom + 40;
+
+    // Sinkronisasi otomatis teks controller jika belum diedit
+    if (!_isInitialized && savedKey.isNotEmpty) {
+      _apiKeyController.text = savedKey;
+      _isInitialized = true;
+    } else if (savedKey.isNotEmpty && _apiKeyController.text.isEmpty) {
+      _apiKeyController.text = savedKey;
+    }
 
     return Scaffold(
       backgroundColor: AppTheme.bgApp,
@@ -129,7 +127,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        'Versi 1.0.1 (Official Release)',
+                        'Versi 1.0.2 (Official Release)',
                         style: GoogleFonts.plusJakartaSans(
                           color: AppTheme.bluePrimary,
                           fontWeight: FontWeight.bold,
@@ -168,13 +166,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: _hasSavedKey ? AppTheme.greenSoft : const Color(0xFFFEF3C7),
+                      color: hasSavedKey ? AppTheme.greenSoft : const Color(0xFFFEF3C7),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      _hasSavedKey ? 'Aktif ✅' : 'Belum Diatur ⚠️',
+                      hasSavedKey ? 'Aktif ✅' : 'Belum Diatur ⚠️',
                       style: GoogleFonts.plusJakartaSans(
-                        color: _hasSavedKey ? const Color(0xFF047857) : const Color(0xFFD97706),
+                        color: hasSavedKey ? const Color(0xFF047857) : const Color(0xFFD97706),
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
@@ -218,7 +216,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       obscureText: _obscureKey,
                       style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 13),
                       decoration: InputDecoration(
-                        hintText: 'Tempel API Key (AIzaSy...)',
+                        hintText: 'Tempel API Key (AIzaSy... / AQ...)',
                         hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
                         filled: true,
                         fillColor: const Color(0xFFF8FAFC),
@@ -249,7 +247,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             label: Text('Simpan API Key', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12)),
                           ),
                         ),
-                        if (_hasSavedKey) ...[
+                        if (hasSavedKey) ...[
                           const SizedBox(width: 8),
                           OutlinedButton(
                             onPressed: () {
@@ -266,6 +264,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ),
                         ],
                       ],
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Tombol Tutorial Cara Buat API Key
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const ApiKeyTutorialScreen()),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF6366F1),
+                          side: const BorderSide(color: Color(0xFFC7D2FE)),
+                          backgroundColor: const Color(0xFFEEF2FF),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        icon: const Icon(Icons.menu_book_rounded, size: 16, color: Color(0xFF4F46E5)),
+                        label: Text(
+                          '📖 Panduan Cara Membuat API Key (100% Gratis)',
+                          style: GoogleFonts.plusJakartaSans(
+                            color: const Color(0xFF4F46E5),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11.5,
+                          ),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 8),
 
@@ -375,7 +400,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const Divider(color: AppTheme.borderLight, height: 16),
                     _buildInfoRow('Platform', 'Android (Flutter + SQLite)'),
                     const Divider(color: AppTheme.borderLight, height: 16),
-                    _buildInfoRow('Status Rilis', 'v1.0.1 (Official Release)'),
+                    _buildInfoRow('Status Rilis', 'v1.0.2 (Official Release)'),
                   ],
                 ),
               ),

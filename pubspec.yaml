@@ -1,7 +1,7 @@
 name: maoneart_keuangan
 description: "MaoneArt Keuangan - Aplikasi Pencatatan Keuangan, Arus Kas, Hutang Piutang & Tabungan Impian Cerdas berbasis Flutter & SQLite Offline"
 publish_to: 'none'
-version: 1.0.1+2
+version: 1.0.2+3
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -12,6 +12,7 @@ dependencies:
 
   # Networking & HTTP for Gemini AI
   http: ^1.2.2
+  url_launcher: ^6.3.0
 
   # State Management
   flutter_riverpod: ^2.5.1

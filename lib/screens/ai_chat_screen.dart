@@ -9,6 +9,7 @@ import '../utils/app_theme.dart';
 import '../utils/currency_formatter.dart';
 import '../widgets/glass_card.dart';
 import 'settings_screen.dart';
+import 'api_key_tutorial_screen.dart';
 
 class ChatBubbleMessage {
   final String sender; // 'user' atau 'ai'
@@ -38,12 +39,10 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final List<ChatBubbleMessage> _messages = [];
   bool _isLoading = false;
-  bool _hasApiKey = false;
 
   @override
   void initState() {
     super.initState();
-    _checkApiKey();
     _messages.add(
       ChatBubbleMessage(
         sender: 'ai',
@@ -51,13 +50,6 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         timestamp: DateTime.now(),
       ),
     );
-  }
-
-  void _checkApiKey() async {
-    final key = await GeminiService.getApiKey();
-    if (mounted) {
-      setState(() => _hasApiKey = key != null && key.trim().isNotEmpty);
-    }
   }
 
   @override
@@ -178,6 +170,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   @override
   Widget build(BuildContext context) {
     final categories = ref.watch(categoriesProvider).valueOrNull ?? [];
+    final savedApiKey = ref.watch(geminiApiKeyProvider);
+    final hasApiKey = savedApiKey.trim().isNotEmpty;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final bottomSafe = MediaQuery.of(context).padding.bottom;
 
@@ -215,8 +209,15 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         actions: [
           IconButton(
             onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ApiKeyTutorialScreen()),
+            ),
+            icon: const Icon(Icons.menu_book_rounded, color: Color(0xFF6366F1)),
+            tooltip: 'Panduan API Key',
+          ),
+          IconButton(
+            onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const SettingsScreen()),
-            ).then((_) => _checkApiKey()),
+            ),
             icon: const Icon(Icons.key_rounded, color: AppTheme.bluePrimary),
             tooltip: 'Atur API Key',
           ),
@@ -242,7 +243,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         child: Column(
           children: [
             // Warning Banner if API Key is not configured
-            if (!_hasApiKey)
+            if (!hasApiKey)
               Container(
                 margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                 padding: const EdgeInsets.all(12),
@@ -257,15 +258,29 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Gemini API Key belum dimasukkan. Masukkan API Key gratis Anda di menu Pengaturan.',
+                        'Gemini API Key belum dimasukkan. Dapatkan kunci gratis dan masukkan di Pengaturan.',
                         style: GoogleFonts.plusJakartaSans(color: const Color(0xFF92400E), fontSize: 11.5),
                       ),
                     ),
                     const SizedBox(width: 6),
+                    OutlinedButton(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const ApiKeyTutorialScreen()),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF92400E),
+                        side: const BorderSide(color: Color(0xFFD97706)),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        minimumSize: Size.zero,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('Tutorial', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(width: 4),
                     ElevatedButton(
                       onPressed: () => Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                      ).then((_) => _checkApiKey()),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFD97706),
                         foregroundColor: Colors.white,
@@ -541,7 +556,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
             ],
           ],
         ),
-      ),
-    );
+      );
+    }
   }
 }
