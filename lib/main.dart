@@ -23,7 +23,7 @@ void main() async {
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
       systemNavigationBarColor: AppTheme.cardBg,
-      systemNavigationBarBrightness: Brightness.dark,
+      systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
 
