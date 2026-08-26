@@ -15,6 +15,7 @@ class AddDebtModal extends ConsumerStatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => AddDebtModal(initialType: type),
     );
@@ -28,10 +29,18 @@ class _AddDebtModalState extends ConsumerState<AddDebtModal> {
   late String _type;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
-  final TextEditingController _categoryController = TextEditingController(text: 'Perorangan / Teman');
+  String _selectedCategory = 'Perorangan / Teman';
   final TextEditingController _noteController = TextEditingController();
   DateTime _borrowDate = DateTime.now();
   DateTime? _dueDate;
+
+  final categoriesHutang = [
+    'Kartu Kredit',
+    'Pinjaman Bank',
+    'Leasing / Kendaraan',
+    'Pinjaman Online',
+    'Perorangan / Teman',
+  ];
 
   @override
   void initState() {
@@ -43,7 +52,6 @@ class _AddDebtModalState extends ConsumerState<AddDebtModal> {
   void dispose() {
     _nameController.dispose();
     _amountController.dispose();
-    _categoryController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -62,7 +70,7 @@ class _AddDebtModalState extends ConsumerState<AddDebtModal> {
     final debt = DebtModel(
       debtorName: name,
       type: _type,
-      categoryDebt: _categoryController.text.trim(),
+      categoryDebt: _selectedCategory,
       totalAmount: amount,
       remainingAmount: amount,
       borrowDate: _borrowDate,
@@ -84,217 +92,294 @@ class _AddDebtModalState extends ConsumerState<AddDebtModal> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final bottomSafe = MediaQuery.of(context).padding.bottom;
+
     return Container(
       decoration: const BoxDecoration(
         color: AppTheme.cardBg,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(color: AppTheme.borderLight, borderRadius: BorderRadius.circular(10)),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Tab Pilihan: Hutang Saya vs Piutang Orang
-            Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              padding: const EdgeInsets.all(4),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _type = 'hutang'),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: _type == 'hutang' ? AppTheme.redMain : Colors.transparent,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          'Hutang Saya (Wajib Bayar)',
-                          style: GoogleFonts.plusJakartaSans(
-                            color: _type == 'hutang' ? Colors.white : AppTheme.textMuted,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _type = 'piutang'),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: _type == 'piutang' ? AppTheme.bluePrimary : Colors.transparent,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          'Piutang (Harus Ditagih)',
-                          style: GoogleFonts.plusJakartaSans(
-                            color: _type == 'piutang' ? Colors.white : AppTheme.textMuted,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 18),
-
-            // Nama Orang / Pihak
-            Text(
-              _type == 'hutang' ? 'PEMBERI PINJAMAN / NAMA TEMAN' : 'NAMA PEMINJAM / PENGHUTANG',
-              style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 6),
-            TextField(
-              controller: _nameController,
-              autofocus: true,
-              style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 15),
-              decoration: InputDecoration(
-                hintText: 'Contoh: Budi, Bank BCA, ShopeePayLater...',
-                hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 13),
-                filled: true,
-                fillColor: const Color(0xFFF8FAFC),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // Nominal Hutang/Piutang
-            Text('TOTAL NOMINAL (RP)', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
-            TextField(
-              controller: _amountController,
-              keyboardType: TextInputType.number,
-              inputFormatters: [ThousandsSeparatorInputFormatter()],
-              style: GoogleFonts.plusJakartaSans(color: _type == 'hutang' ? AppTheme.redMain : AppTheme.bluePrimary, fontSize: 24, fontWeight: FontWeight.w900),
-              decoration: InputDecoration(
-                prefixText: 'Rp ',
-                prefixStyle: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 22, fontWeight: FontWeight.bold),
-                hintText: '0',
-                hintStyle: const TextStyle(color: AppTheme.textLight),
-                filled: true,
-                fillColor: const Color(0xFFF8FAFC),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // Tanggal Pinjam & Jatuh Tempo
-            Row(
+      child: SafeArea(
+        top: false,
+        bottom: true,
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: bottomInset + bottomSafe + 24,
+          ),
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () async {
-                      final picked = await showDatePicker(context: context, initialDate: _borrowDate, firstDate: DateTime(2020), lastDate: DateTime(2035));
-                      if (picked != null) setState(() => _borrowDate = picked);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppTheme.borderLight),
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(color: AppTheme.borderLight, borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'TAMBAH CATATAN ${_type.toUpperCase()}',
+                  style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                const SizedBox(height: 16),
+
+                // Tab Pilihan: Hutang Saya vs Piutang Orang
+                Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  padding: const EdgeInsets.all(4),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _type = 'hutang'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: _type == 'hutang' ? AppTheme.redMain : Colors.transparent,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              'Hutang Saya (Wajib Bayar)',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: _type == 'hutang' ? Colors.white : AppTheme.textMuted,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Tgl Pinjam', style: TextStyle(color: AppTheme.textMuted, fontSize: 10)),
-                          const SizedBox(height: 2),
-                          Text(AppDateFormatter.formatShort(_borrowDate), style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 12)),
-                        ],
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _type = 'piutang'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: _type == 'piutang' ? AppTheme.greenMain : Colors.transparent,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              'Piutang (Harus Ditagih)',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: _type == 'piutang' ? Colors.white : AppTheme.textMuted,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Nama Orang / Pihak
+                Text(
+                  _type == 'hutang' ? 'PEMBERI PINJAMAN / NAMA PIHAK' : 'NAMA PEMINJAM / PENGHUTANG',
+                  style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: _nameController,
+                  autofocus: true,
+                  style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 15),
+                  decoration: InputDecoration(
+                    hintText: 'Contoh: Budi, Bank BCA, ShopeePayLater...',
+                    hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 13),
+                    filled: true,
+                    fillColor: const Color(0xFFF8FAFC),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                // Kategori Hutang / Pinjaman
+                Text(
+                  'KATEGORI PINJAMAN',
+                  style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppTheme.borderLight),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedCategory,
+                      isExpanded: true,
+                      style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 13, fontWeight: FontWeight.bold),
+                      items: categoriesHutang.map((cat) {
+                        return DropdownMenuItem<String>(
+                          value: cat,
+                          child: Text(cat),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => _selectedCategory = val);
+                      },
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: InkWell(
-                    onTap: () async {
-                      final picked = await showDatePicker(context: context, initialDate: _dueDate ?? DateTime.now().add(const Duration(days: 30)), firstDate: DateTime.now(), lastDate: DateTime(2035));
-                      if (picked != null) setState(() => _dueDate = picked);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppTheme.borderLight),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Jatuh Tempo', style: TextStyle(color: AppTheme.textMuted, fontSize: 10)),
-                          const SizedBox(height: 2),
-                          Text(
-                            _dueDate != null ? AppDateFormatter.formatShort(_dueDate!) : 'Pilih Tenggat',
-                            style: GoogleFonts.plusJakartaSans(color: _dueDate != null ? AppTheme.bluePrimary : AppTheme.textMuted, fontWeight: FontWeight.bold, fontSize: 12),
-                          ),
-                        ],
-                      ),
+                const SizedBox(height: 14),
+
+                // Symmetrical Luxury Nominal Box with "Rp"
+                Text(
+                  'TOTAL NOMINAL',
+                  style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: _type == 'hutang' ? AppTheme.redMain.withValues(alpha: 0.5) : AppTheme.greenMain.withValues(alpha: 0.5),
+                      width: 1.5,
                     ),
                   ),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Rp',
+                        style: GoogleFonts.plusJakartaSans(
+                          color: AppTheme.textDark,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _amountController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [ThousandsSeparatorInputFormatter()],
+                          style: GoogleFonts.plusJakartaSans(
+                            color: _type == 'hutang' ? AppTheme.redMain : AppTheme.greenMain,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                          ),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            hintText: '0',
+                            hintStyle: TextStyle(color: AppTheme.textLight),
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                // Tanggal Pinjam & Jatuh Tempo
+                Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(context: context, initialDate: _borrowDate, firstDate: DateTime(2020), lastDate: DateTime(2035));
+                          if (picked != null) setState(() => _borrowDate = picked);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: AppTheme.borderLight),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Tgl Pinjam', style: TextStyle(color: AppTheme.textMuted, fontSize: 10)),
+                              const SizedBox(height: 2),
+                              Text(AppDateFormatter.formatShort(_borrowDate), style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(context: context, initialDate: _dueDate ?? DateTime.now().add(const Duration(days: 30)), firstDate: DateTime.now(), lastDate: DateTime(2035));
+                          if (picked != null) setState(() => _dueDate = picked);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: AppTheme.borderLight),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Jatuh Tempo', style: TextStyle(color: AppTheme.textMuted, fontSize: 10)),
+                              const SizedBox(height: 2),
+                              Text(
+                                _dueDate != null ? AppDateFormatter.formatShort(_dueDate!) : 'Pilih Tenggat',
+                                style: GoogleFonts.plusJakartaSans(color: _dueDate != null ? AppTheme.bluePrimary : AppTheme.textMuted, fontWeight: FontWeight.bold, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+
+                // Catatan
+                TextField(
+                  controller: _noteController,
+                  style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'Keterangan tambahan...',
+                    hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                    filled: true,
+                    fillColor: const Color(0xFFF8FAFC),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                ElevatedButton(
+                  onPressed: _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _type == 'hutang' ? AppTheme.redMain : AppTheme.bluePrimary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    elevation: 0,
+                  ),
+                  child: Text('Simpan Data ${_type == 'hutang' ? 'Hutang' : 'Piutang'}', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 14)),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
-
-            // Catatan
-            TextField(
-              controller: _noteController,
-              style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 13),
-              decoration: InputDecoration(
-                hintText: 'Keterangan tambahan...',
-                hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
-                filled: true,
-                fillColor: const Color(0xFFF8FAFC),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            ElevatedButton(
-              onPressed: _submit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _type == 'hutang' ? AppTheme.redMain : AppTheme.bluePrimary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-              child: Text('Simpan Data ${_type == 'hutang' ? 'Hutang' : 'Piutang'}', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 14)),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -310,6 +395,7 @@ class PayDebtModal extends ConsumerStatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => PayDebtModal(debt: debt),
     );
@@ -399,125 +485,171 @@ class _PayDebtModalState extends ConsumerState<PayDebtModal> {
     final summaryAsync = ref.watch(financialSummaryProvider);
     final currentBalance = summaryAsync.valueOrNull?.netBalance ?? 0.0;
     final isDebt = widget.debt.isDebt;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final bottomSafe = MediaQuery.of(context).padding.bottom;
 
     return Container(
       decoration: const BoxDecoration(
         color: AppTheme.cardBg,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      padding: EdgeInsets.only(left: 20, right: 20, top: 20, bottom: MediaQuery.of(context).viewInsets.bottom + 20),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppTheme.borderLight, borderRadius: BorderRadius.circular(10)))),
-            const SizedBox(height: 16),
-            
-            Text(
-              isDebt ? 'BAYAR / CICIL HUTANG SAYA' : 'TERIMA PEMBAYARAN PIUTANG',
-              style: GoogleFonts.plusJakartaSans(color: isDebt ? AppTheme.redMain : AppTheme.bluePrimary, fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            Text(
-              '${widget.debt.debtorName} • Sisa: ${widget.debt.formattedRemaining}',
-              style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 13),
-            ),
-            const SizedBox(height: 12),
-
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: isDebt
-                      ? (currentBalance > 0 ? AppTheme.borderLight : AppTheme.redMain)
-                      : AppTheme.borderLight,
+      child: SafeArea(
+        top: false,
+        bottom: true,
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: bottomInset + bottomSafe + 24,
+          ),
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppTheme.borderLight, borderRadius: BorderRadius.circular(10)))),
+                const SizedBox(height: 16),
+                
+                Text(
+                  isDebt ? 'BAYAR / CICIL HUTANG SAYA' : 'TERIMA PEMBAYARAN PIUTANG',
+                  style: GoogleFonts.plusJakartaSans(color: isDebt ? AppTheme.redMain : AppTheme.bluePrimary, fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    isDebt
-                        ? (currentBalance > 0 ? Icons.account_balance_wallet_rounded : Icons.error_outline_rounded)
-                        : Icons.savings_rounded,
-                    color: isDebt ? (currentBalance > 0 ? AppTheme.greenMain : AppTheme.redMain) : AppTheme.bluePrimary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Saldo Kas Anda: ${CurrencyFormatter.formatRupiah(currentBalance)}',
-                          style: GoogleFonts.plusJakartaSans(
-                            color: isDebt ? (currentBalance > 0 ? AppTheme.textDark : AppTheme.redMain) : AppTheme.textDark,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                        Text(
-                          isDebt
-                              ? 'Pembayaran akan otomatis memotong Saldo Kas Anda'
-                              : 'Uang yang diterima akan otomatis menambah Saldo Kas Anda',
-                          style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10),
-                        ),
-                      ],
+                Text(
+                  '${widget.debt.debtorName} • Sisa: ${widget.debt.formattedRemaining}',
+                  style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 13),
+                ),
+                const SizedBox(height: 12),
+
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isDebt
+                          ? (currentBalance > 0 ? AppTheme.borderLight : AppTheme.redMain)
+                          : AppTheme.borderLight,
                     ),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isDebt
+                            ? (currentBalance > 0 ? Icons.account_balance_wallet_rounded : Icons.error_outline_rounded)
+                            : Icons.savings_rounded,
+                        color: isDebt ? (currentBalance > 0 ? AppTheme.greenMain : AppTheme.redMain) : AppTheme.bluePrimary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Saldo Kas Anda: ${CurrencyFormatter.formatRupiah(currentBalance)}',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: isDebt ? (currentBalance > 0 ? AppTheme.textDark : AppTheme.redMain) : AppTheme.textDark,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                            Text(
+                              isDebt
+                                  ? 'Pembayaran akan otomatis memotong Saldo Kas Anda'
+                                  : 'Uang yang diterima akan otomatis menambah Saldo Kas Anda',
+                              style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
 
-            Text('NOMINAL PEMBAYARAN (RP)', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
-            TextField(
-              controller: _amountController,
-              keyboardType: TextInputType.number,
-              inputFormatters: [ThousandsSeparatorInputFormatter()],
-              autofocus: true,
-              style: GoogleFonts.plusJakartaSans(color: isDebt ? AppTheme.redMain : AppTheme.bluePrimary, fontSize: 24, fontWeight: FontWeight.bold),
-              decoration: InputDecoration(
-                prefixText: 'Rp ',
-                prefixStyle: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 22, fontWeight: FontWeight.bold),
-                filled: true,
-                fillColor: const Color(0xFFF8FAFC),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
-              ),
-            ),
-            const SizedBox(height: 14),
+                // Symmetrical Luxury Nominal Box with "Rp"
+                Text('NOMINAL PEMBAYARAN', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDebt ? AppTheme.redMain.withValues(alpha: 0.5) : AppTheme.bluePrimary.withValues(alpha: 0.5),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Rp',
+                        style: GoogleFonts.plusJakartaSans(
+                          color: AppTheme.textDark,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _amountController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [ThousandsSeparatorInputFormatter()],
+                          autofocus: true,
+                          style: GoogleFonts.plusJakartaSans(
+                            color: isDebt ? AppTheme.redMain : AppTheme.bluePrimary,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                          ),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            hintText: '0',
+                            hintStyle: TextStyle(color: AppTheme.textLight),
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
 
-            TextField(
-              controller: _noteController,
-              style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 13),
-              decoration: InputDecoration(
-                hintText: isDebt ? 'Keterangan (misal: Cicilan ke-1)...' : 'Keterangan (misal: Transfer BCA)...',
-                hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
-                filled: true,
-                fillColor: const Color(0xFFF8FAFC),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
-              ),
-            ),
-            const SizedBox(height: 20),
+                TextField(
+                  controller: _noteController,
+                  style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: isDebt ? 'Keterangan (misal: Cicilan ke-1)...' : 'Keterangan (misal: Transfer BCA)...',
+                    hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                    filled: true,
+                    fillColor: const Color(0xFFF8FAFC),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                  ),
+                ),
+                const SizedBox(height: 20),
 
-            ElevatedButton(
-              onPressed: () => _submit(currentBalance),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isDebt ? AppTheme.redMain : AppTheme.bluePrimary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-              child: Text(
-                isDebt ? 'Konfirmasi Bayar Hutang' : 'Konfirmasi Terima Piutang',
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
+                ElevatedButton(
+                  onPressed: () => _submit(currentBalance),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isDebt ? AppTheme.redMain : AppTheme.bluePrimary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    isDebt ? 'Konfirmasi Bayar Hutang' : 'Konfirmasi Terima Piutang',
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

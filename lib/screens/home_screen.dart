@@ -27,7 +27,7 @@ class HomeScreen extends ConsumerWidget {
     final monthDate = DateTime(int.parse(parts[0]), int.parse(parts[1]));
     final periodLabel = AppDateFormatter.formatMonthYear(monthDate);
 
-    final bottomPadding = MediaQuery.of(context).padding.bottom + 80;
+    final bottomPadding = MediaQuery.of(context).padding.bottom + 160;
 
     return Scaffold(
       backgroundColor: AppTheme.bgApp,
@@ -316,7 +316,7 @@ class HomeScreen extends ConsumerWidget {
                         final pastel = pastelColors[i % pastelColors.length];
 
                         return InkWell(
-                          onTap: () => onNavigateTab(1), // Navigasi ke transaksi
+                          onTap: () => QuickAddModal.show(context, preSelectedCategory: cat, type: cat.type),
                           borderRadius: BorderRadius.circular(16),
                           child: Container(
                             decoration: BoxDecoration(

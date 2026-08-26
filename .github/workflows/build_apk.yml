@@ -52,21 +52,23 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.0.5
-          name: 'MaoneArt Keuangan v1.0.5 (Release)'
+          tag_name: v1.0.6
+          name: 'MaoneArt Keuangan v1.0.6 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.5)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.6)
             
-            - **Format Nominal Otomatis (*Real-Time Thousand Separator*)**:
-              * Saat mengetik angka nominal di seluruh form transaksi, hutang, dan tabungan, angka otomatis diberi tanda pemisah titik (.) ribuan secara langsung (misal: ketik `1000000` langsung menjadi `1.000.000`).
-            - **Tampilan Hutang & Piutang 100% Identik dengan www/Keuangan/hutang.php**:
-              * Header Navigasi *Debt & Credit Manager* dengan Segmented Toggle `Hutang Saya` & `Piutang (Di Orang)`.
-              * Kartu Ringkasan Berdampingan `TOTAL HUTANG SAYA` (Merah) vs `TOTAL PIUTANG SAYA` (Hijau).
-              * Filter Status Pills: `Belum Lunas`, `Lunas`, `Semua Data`.
-              * Kartu item dengan tag kategori pill (`💳 Kartu Kredit`, `🏦 Pinjaman Bank`, `👤 Perorangan`, dll), badge `LUNAS` / `Belum Lunas`, Progress Bar cicilan, dan tombol aksi `Bayar Cicilan`, `Log Cicilan`, dan Hapus.
-            - **Bebas Total Bug Navbar Overlap**:
-              * Bottom safe-padding ditingkatkan hingga **+160px** di seluruh layar (Transaksi, Kategori, Tabungan, Hutang, Laporan), memastikan tidak ada satupun item atau tombol yang tertutup bilah navigasi ponsel atau floating action button.
-            - **100% Offline SQLite Storage**: Data tersimpan aman di internal HP tanpa server atau internet.
+            - **Perbaikan Total Tombol Modal & Navbar Sistem (100% Bebas Tertutup Navbar)**:
+              * Seluruh input modal bottom sheet (`QuickAddModal`, `AddDebtModal`, `PayDebtModal`, `AddSavingModal`, `DepositSavingModal`, `AddCategoryModal`) kini menggunakan `useSafeArea: true` dan container `SafeArea` dengan margin keyboard dinamis. Tombol aksi bawah (Simpan Transaksi, Simpan Impian, dll) selalu tampil utuh dan aman di atas bilah 3-tombol sistem HP.
+            - **Kotak Input Nominal Mewah & Simetris (*Symmetrical FinTech Rp Input*)**:
+              * Teks `Rp` selalu otomatis muncul secara permanen dengan tata letak simetris dan rapi.
+              * Real-Time Thousand Separator otomatis memformat angka ribuan bertitik (`1.000.000`).
+            - **Integrasi Cepat App Features & All Categories**:
+              * Mengklik kotak kategori di *APP FEATURES* (Beranda) atau *Kelola Kategori* akan langsung membuka modal transaksi dengan kategori tersebut terpilih secara otomatis.
+            - **Redesain & Perapian Grafik Batang (*FL BarChart*)**:
+              * Judul dan legenda `🟢 Pemasukan` & `🔴 Pengeluaran` dipisahkan secara rapi sehingga tidak bertumpuk.
+              * Lebar label sumbu Y (*reservedSize: 64*) diperluas sehingga teks `Rp 1,25 jt` dan `Rp 500 rb` muat 1 baris tanpa terpotong.
+              * Batang grafik lebih proporsional dengan gridlines horizontal putus-putus.
+            - **100% Offline SQLite Storage**: Data tersimpan lokal di HP tanpa server.
           files: build/app/outputs/flutter-apk/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

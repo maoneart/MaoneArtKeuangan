@@ -31,7 +31,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     final monthDate = DateTime(int.parse(parts[0]), int.parse(parts[1]));
     final periodLabel = AppDateFormatter.formatMonthYear(monthDate);
 
-    final bottomPadding = MediaQuery.of(context).padding.bottom + 80;
+    final bottomPadding = MediaQuery.of(context).padding.bottom + 160;
 
     return Scaffold(
       backgroundColor: AppTheme.bgApp,
@@ -257,33 +257,30 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            'Grafik Batang: Arus Kas Mingguan',
+            style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 15),
+          ),
+          const SizedBox(height: 6),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Grafik Batang: Arus Kas Mingguan',
-                style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 15),
-              ),
-              Row(
-                children: [
-                  Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppTheme.greenMain, shape: BoxShape.circle)),
-                  const SizedBox(width: 4),
-                  Text('Masuk', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10)),
-                  const SizedBox(width: 10),
-                  Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppTheme.redMain, shape: BoxShape.circle)),
-                  const SizedBox(width: 4),
-                  Text('Keluar', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10)),
-                ],
-              ),
+              Container(width: 10, height: 10, decoration: BoxDecoration(color: AppTheme.greenMain, borderRadius: BorderRadius.circular(3))),
+              const SizedBox(width: 6),
+              Text('Pemasukan (+)', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.w600)),
+              const SizedBox(width: 16),
+              Container(width: 10, height: 10, decoration: BoxDecoration(color: AppTheme.redMain, borderRadius: BorderRadius.circular(3))),
+              const SizedBox(width: 6),
+              Text('Pengeluaran (-)', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.w600)),
             ],
           ),
           const SizedBox(height: 18),
 
           SizedBox(
-            height: 200,
+            height: 220,
             child: BarChart(
               BarChartData(
                 maxY: maxY,
+                groupsSpace: 20,
                 barTouchData: BarTouchData(
                   touchTooltipData: BarTouchTooltipData(
                     getTooltipColor: (_) => const Color(0xFF0F172A),
@@ -308,12 +305,16 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 42,
+                      reservedSize: 64,
                       getTitlesWidget: (val, meta) {
                         if (val == 0) return const SizedBox.shrink();
-                        return Text(
-                          CurrencyFormatter.formatCompact(val),
-                          style: const TextStyle(color: AppTheme.textMuted, fontSize: 9),
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: Text(
+                            CurrencyFormatter.formatCompact(val),
+                            textAlign: TextAlign.right,
+                            style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10, fontWeight: FontWeight.w600),
+                          ),
                         );
                       },
                     ),
@@ -321,6 +322,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
+                      reservedSize: 36,
                       getTitlesWidget: (val, meta) {
                         final idx = val.toInt();
                         if (idx >= 0 && idx < weekLabels.length) {
@@ -329,7 +331,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                             child: Text(
                               weekLabels[idx],
                               textAlign: TextAlign.center,
-                              style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 9, fontWeight: FontWeight.bold),
+                              style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 10, fontWeight: FontWeight.bold),
                             ),
                           );
                         }
@@ -341,7 +343,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  getDrawingHorizontalLine: (_) => const FlLine(color: AppTheme.borderLight, strokeWidth: 0.8),
+                  getDrawingHorizontalLine: (_) => const FlLine(color: AppTheme.borderLight, strokeWidth: 0.8, dashArray: [4, 4]),
                 ),
                 borderData: FlBorderData(show: false),
                 barGroups: barGroups,
