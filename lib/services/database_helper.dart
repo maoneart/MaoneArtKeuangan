@@ -330,6 +330,8 @@ class DatabaseHelper {
       // 2. Ambil data hutang
       final debtMap = await txn.query('hutang', where: 'id = ?', whereArgs: [debtId]);
       if (debtMap.isNotEmpty) {
+        final debtorName = debtMap.first['nama_penghutang']?.toString() ?? 'Pihak Terkait';
+        final type = debtMap.first['tipe']?.toString() ?? 'hutang';
         final currentRemaining = double.tryParse(debtMap.first['sisa_hutang']?.toString() ?? '0') ?? 0.0;
         final newRemaining = (currentRemaining - amount).clamp(0.0, double.infinity);
         final newStatus = newRemaining <= 0 ? 'lunas' : 'belum_lunas';
@@ -338,6 +340,27 @@ class DatabaseHelper {
           'sisa_hutang': newRemaining,
           'status': newStatus,
         }, where: 'id = ?', whereArgs: [debtId]);
+
+        // 3. Otomatis Rekam ke Tabel Transaksi agar Saldo Kas Riil Terupdate
+        if (type == 'hutang') {
+          // Bayar Hutang -> Mengurangi Saldo Kas (Pengeluaran)
+          await txn.insert('transaksi', {
+            'tanggal': paymentDate.toIso8601String().substring(0, 10),
+            'tipe': 'pengeluaran',
+            'id_kategori': 8, // Tagihan & Pembayaran Hutang
+            'jumlah': amount,
+            'keterangan': 'Pelunasan/Cicilan Hutang ke $debtorName${note != null && note.isNotEmpty ? " ($note)" : ""}',
+          });
+        } else {
+          // Terima Piutang -> Menambah Saldo Kas (Pemasukan)
+          await txn.insert('transaksi', {
+            'tanggal': paymentDate.toIso8601String().substring(0, 10),
+            'tipe': 'pemasukan',
+            'id_kategori': 4, // Penerimaan Piutang / Bonus
+            'jumlah': amount,
+            'keterangan': 'Penerimaan Piutang dari $debtorName${note != null && note.isNotEmpty ? " ($note)" : ""}',
+          });
+        }
       }
     });
   }
@@ -389,6 +412,7 @@ class DatabaseHelper {
       // 2. Update saldo tabungan
       final saveMap = await txn.query('tabungan', where: 'id = ?', whereArgs: [savingId]);
       if (saveMap.isNotEmpty) {
+        final savingName = saveMap.first['nama_tabungan']?.toString() ?? 'Tabungan Impian';
         final currentCollected = double.tryParse(saveMap.first['saldo_terkumpul']?.toString() ?? '0') ?? 0.0;
         final targetAmount = double.tryParse(saveMap.first['target_jumlah']?.toString() ?? '0') ?? 0.0;
         final newCollected = currentCollected + amount;
@@ -398,6 +422,15 @@ class DatabaseHelper {
           'saldo_terkumpul': newCollected,
           'status': newStatus,
         }, where: 'id = ?', whereArgs: [savingId]);
+
+        // 3. Otomatis Rekam ke Tabel Transaksi (Setor Tabungan mengurangi kas utama)
+        await txn.insert('transaksi', {
+          'tanggal': depositDate.toIso8601String().substring(0, 10),
+          'tipe': 'pengeluaran',
+          'id_kategori': 3, // Investasi & Tabungan
+          'jumlah': amount,
+          'keterangan': 'Setor Tabungan Impian: $savingName${note != null && note.isNotEmpty ? " ($note)" : ""}',
+        });
       }
     });
   }

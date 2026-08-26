@@ -66,74 +66,75 @@ class _TransactionScreenState extends ConsumerState<TransactionScreen> {
         icon: const Icon(Icons.add_rounded, size: 20),
         label: Text('Catat Transaksi', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13)),
       ),
-      body: Column(
-        children: [
-          // Search Box & Filter Chips
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              children: [
-                TextField(
-                  controller: _searchController,
-                  onChanged: (val) => ref.read(transactionSearchQueryProvider.notifier).state = val,
-                  style: GoogleFonts.outfit(color: Colors.white, fontSize: 14),
-                  decoration: InputDecoration(
-                    hintText: 'Cari transaksi atau kategori...',
-                    hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
-                    prefixIcon: const Icon(Icons.search_rounded, color: Colors.white60, size: 20),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear_rounded, size: 18),
-                            onPressed: () {
-                              _searchController.clear();
-                              ref.read(transactionSearchQueryProvider.notifier).state = '';
-                            },
-                          )
-                        : null,
-                    filled: true,
-                    fillColor: AppTheme.bgCard,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: AppTheme.borderGlass)),
-                  ),
-                ),
-                const SizedBox(height: 10),
-
-                // Filter Tipe Chips: Semua, Pemasukan, Pengeluaran
-                Row(
-                  children: [
-                    _buildFilterChip('Semua', 'semua', currentFilter),
-                    const SizedBox(width: 8),
-                    _buildFilterChip('Pemasukan (+)', 'pemasukan', currentFilter, activeColor: AppTheme.accentEmerald),
-                    const SizedBox(width: 8),
-                    _buildFilterChip('Pengeluaran (-)', 'pengeluaran', currentFilter, activeColor: AppTheme.accentRose),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 4),
-
-          // Transaksi List
-          Expanded(
-            child: transactionsAsync.when(
-              data: (txs) {
-                if (txs.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.receipt_long_outlined, color: Colors.white24, size: 56),
-                        const SizedBox(height: 12),
-                        Text('Tidak ada transaksi ditemukan', style: GoogleFonts.outfit(color: AppTheme.textMuted, fontSize: 14)),
-                      ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Search Box & Filter Chips
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _searchController,
+                    onChanged: (val) => ref.read(transactionSearchQueryProvider.notifier).state = val,
+                    style: GoogleFonts.outfit(color: Colors.white, fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'Cari transaksi atau kategori...',
+                      hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
+                      prefixIcon: const Icon(Icons.search_rounded, color: Colors.white60, size: 20),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear_rounded, size: 18),
+                              onPressed: () {
+                                _searchController.clear();
+                                ref.read(transactionSearchQueryProvider.notifier).state = '';
+                              },
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: AppTheme.bgCard,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: AppTheme.borderGlass)),
                     ),
-                  );
-                }
+                  ),
+                  const SizedBox(height: 10),
 
-                final bottomPadding = MediaQuery.of(context).padding.bottom + 90;
-                return ListView.separated(
-                  padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPadding),
-                  itemCount: txs.length,
+                  // Filter Tipe Chips: Semua, Pemasukan, Pengeluaran
+                  Row(
+                    children: [
+                      _buildFilterChip('Semua', 'semua', currentFilter),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Pemasukan (+)', 'pemasukan', currentFilter, activeColor: AppTheme.accentEmerald),
+                      const SizedBox(width: 8),
+                      _buildFilterChip('Pengeluaran (-)', 'pengeluaran', currentFilter, activeColor: AppTheme.accentRose),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 4),
+
+            // Transaksi List
+            Expanded(
+              child: transactionsAsync.when(
+                data: (txs) {
+                  if (txs.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.receipt_long_outlined, color: Colors.white24, size: 56),
+                          const SizedBox(height: 12),
+                          Text('Tidak ada transaksi ditemukan', style: GoogleFonts.outfit(color: AppTheme.textMuted, fontSize: 14)),
+                        ],
+                      ),
+                    );
+                  }
+
+                  final bottomPadding = MediaQuery.of(context).padding.bottom + 120;
+                  return ListView.separated(
+                    padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPadding),
+                    itemCount: txs.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 8),
                   itemBuilder: (ctx, i) {
                     final tx = txs[i];
@@ -214,11 +215,10 @@ class _TransactionScreenState extends ConsumerState<TransactionScreen> {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, __) => const Center(child: Text('Gagal memuat daftar transaksi')),
             ),
           ),
         ],
-      ),
+      )),
     );
   }
 

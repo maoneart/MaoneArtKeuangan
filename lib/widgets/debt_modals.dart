@@ -76,7 +76,7 @@ class _AddDebtModalState extends ConsumerState<AddDebtModal> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('${_type == 'hutang' ? 'Hutang' : 'Piutang'} berhasil dicatat!'),
-          backgroundColor: _type == 'hutang' ? AppTheme.accentRose : AppTheme.accentAmber,
+          backgroundColor: _type == 'hutang' ? AppTheme.accentRose : AppTheme.accentCyan,
         ),
       );
     }
@@ -131,8 +131,8 @@ class _AddDebtModalState extends ConsumerState<AddDebtModal> {
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          'Hutang Saya',
-                          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                          'Hutang Saya (Wajib Bayar)',
+                          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                         ),
                       ),
                     ),
@@ -143,13 +143,13 @@ class _AddDebtModalState extends ConsumerState<AddDebtModal> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
-                          color: _type == 'piutang' ? AppTheme.accentAmber : Colors.transparent,
+                          color: _type == 'piutang' ? AppTheme.accentCyan : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          'Piutang (Orang Lain)',
-                          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                          'Piutang (Harus Ditagih)',
+                          style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                         ),
                       ),
                     ),
@@ -170,7 +170,7 @@ class _AddDebtModalState extends ConsumerState<AddDebtModal> {
               autofocus: true,
               style: GoogleFonts.outfit(color: Colors.white, fontSize: 15),
               decoration: InputDecoration(
-                hintText: 'Contoh: Ahmad, Bank, ShopeePayLater...',
+                hintText: 'Contoh: Budi, Bank BCA, ShopeePayLater...',
                 hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
                 filled: true,
                 fillColor: const Color(0xFF1E293B),
@@ -186,7 +186,7 @@ class _AddDebtModalState extends ConsumerState<AddDebtModal> {
             TextField(
               controller: _amountController,
               keyboardType: TextInputType.number,
-              style: GoogleFonts.outfit(color: _type == 'hutang' ? AppTheme.accentRose : AppTheme.accentAmber, fontSize: 24, fontWeight: FontWeight.w900),
+              style: GoogleFonts.outfit(color: _type == 'hutang' ? AppTheme.accentRose : AppTheme.accentCyan, fontSize: 24, fontWeight: FontWeight.w900),
               decoration: InputDecoration(
                 prefixText: 'Rp ',
                 prefixStyle: GoogleFonts.outfit(color: Colors.white70, fontSize: 22, fontWeight: FontWeight.bold),
@@ -266,7 +266,7 @@ class _AddDebtModalState extends ConsumerState<AddDebtModal> {
             ElevatedButton(
               onPressed: _submit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _type == 'hutang' ? AppTheme.accentRose : AppTheme.accentAmber,
+                backgroundColor: _type == 'hutang' ? AppTheme.accentRose : AppTheme.accentCyan,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -306,7 +306,6 @@ class _PayDebtModalState extends ConsumerState<PayDebtModal> {
   @override
   void initState() {
     super.initState();
-    // Default isi sisa hutang
     _amountController.text = widget.debt.remainingAmount.toStringAsFixed(0);
   }
 
@@ -317,13 +316,40 @@ class _PayDebtModalState extends ConsumerState<PayDebtModal> {
     super.dispose();
   }
 
-  void _submit() async {
+  void _submit(double currentBalance) async {
     final amount = CurrencyFormatter.parseRupiah(_amountController.text);
     if (amount <= 0 || amount > widget.debt.remainingAmount) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Nominal bayar harus antara Rp 1 s/d ${widget.debt.formattedRemaining}')),
       );
       return;
+    }
+
+    // Validasi Saldo Kas jika ini adalah Bayar Hutang (Pengeluaran)
+    if (widget.debt.isDebt) {
+      if (currentBalance < amount) {
+        showDialog(
+          context: context,
+          builder: (c) => AlertDialog(
+            backgroundColor: AppTheme.bgCard,
+            title: Row(
+              children: const [
+                Icon(Icons.warning_amber_rounded, color: AppTheme.accentRose),
+                SizedBox(width: 8),
+                Text('Saldo Tidak Cukup'),
+              ],
+            ),
+            content: Text(
+              'Saldo kas Anda saat ini (${CurrencyFormatter.formatRupiah(currentBalance)}) tidak mencukupi untuk melunasi/mencicil hutang sebesar ${CurrencyFormatter.formatRupiah(amount)}.\n\nSilakan catat pemasukan terlebih dahulu.',
+              style: const TextStyle(fontSize: 13),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(c), child: const Text('Tutup', style: TextStyle(color: Colors.white))),
+            ],
+          ),
+        );
+        return;
+      }
     }
 
     await ref.read(financialControllerProvider.notifier).payDebt(
@@ -336,13 +362,24 @@ class _PayDebtModalState extends ConsumerState<PayDebtModal> {
     if (mounted) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pembayaran hutang berhasil dicatat!'), backgroundColor: AppTheme.accentEmerald),
+        SnackBar(
+          content: Text(
+            widget.debt.isDebt
+                ? 'Hutang berhasil dibayar ${CurrencyFormatter.formatRupiah(amount)} (Saldo Kas berkurang)'
+                : 'Piutang berhasil diterima ${CurrencyFormatter.formatRupiah(amount)} (Saldo Kas bertambah)',
+          ),
+          backgroundColor: widget.debt.isDebt ? AppTheme.accentEmerald : AppTheme.accentCyan,
+        ),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final summaryAsync = ref.watch(financialSummaryProvider);
+    final currentBalance = summaryAsync.valueOrNull?.netBalance ?? 0.0;
+    final isDebt = widget.debt.isDebt;
+
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF0F172A),
@@ -357,17 +394,74 @@ class _PayDebtModalState extends ConsumerState<PayDebtModal> {
           children: [
             Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white30, borderRadius: BorderRadius.circular(10)))),
             const SizedBox(height: 16),
+            
+            // Header Modal
             Text(
-              'BAYAR / CICIL ${widget.debt.isDebt ? 'HUTANG' : 'PIUTANG'}',
-              style: GoogleFonts.outfit(color: AppTheme.accentEmerald, fontWeight: FontWeight.bold, fontSize: 16),
+              isDebt ? 'BAYAR / CICIL HUTANG SAYA' : 'TERIMA PEMBAYARAN PIUTANG',
+              style: GoogleFonts.outfit(color: isDebt ? AppTheme.accentEmerald : AppTheme.accentCyan, fontWeight: FontWeight.bold, fontSize: 16),
             ),
-            Text('${widget.debt.debtorName} • Sisa: ${widget.debt.formattedRemaining}', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13)),
+            Text(
+              '${widget.debt.debtorName} • Sisa: ${widget.debt.formattedRemaining}',
+              style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+
+            // Banner Saldo Kas & Dampak Finansial
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isDebt
+                      ? (currentBalance > 0 ? AppTheme.accentEmerald.withValues(alpha: 0.3) : AppTheme.accentRose)
+                      : AppTheme.accentCyan.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    isDebt
+                        ? (currentBalance > 0 ? Icons.account_balance_wallet_rounded : Icons.error_outline_rounded)
+                        : Icons.savings_rounded,
+                    color: isDebt ? (currentBalance > 0 ? AppTheme.accentEmerald : AppTheme.accentRose) : AppTheme.accentCyan,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Saldo Kas Anda: ${CurrencyFormatter.formatRupiah(currentBalance)}',
+                          style: GoogleFonts.outfit(
+                            color: isDebt ? (currentBalance > 0 ? Colors.white : AppTheme.accentRose) : Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                        Text(
+                          isDebt
+                              ? 'Pembayaran akan otomatis memotong Saldo Kas Anda'
+                              : 'Uang yang diterima akan otomatis menambah Saldo Kas Anda',
+                          style: GoogleFonts.inter(color: AppTheme.textMuted, fontSize: 10),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 16),
+
+            // Input Nominal Bayar
+            Text('NOMINAL PEMBAYARAN (RP)', style: GoogleFonts.outfit(color: AppTheme.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
             TextField(
               controller: _amountController,
               keyboardType: TextInputType.number,
               autofocus: true,
-              style: GoogleFonts.outfit(color: AppTheme.accentEmerald, fontSize: 24, fontWeight: FontWeight.bold),
+              style: GoogleFonts.outfit(color: isDebt ? AppTheme.accentEmerald : AppTheme.accentCyan, fontSize: 24, fontWeight: FontWeight.bold),
               decoration: InputDecoration(
                 prefixText: 'Rp ',
                 prefixStyle: const TextStyle(color: Colors.white70, fontSize: 22, fontWeight: FontWeight.bold),
@@ -377,11 +471,13 @@ class _PayDebtModalState extends ConsumerState<PayDebtModal> {
               ),
             ),
             const SizedBox(height: 14),
+
+            // Keterangan / Catatan
             TextField(
               controller: _noteController,
               style: const TextStyle(color: Colors.white, fontSize: 13),
               decoration: InputDecoration(
-                hintText: 'Keterangan pembayaran (misal: Cicilan ke-1)...',
+                hintText: isDebt ? 'Keterangan (misal: Cicilan ke-1)...' : 'Keterangan (misal: Transfer BCA)...',
                 hintStyle: const TextStyle(color: Colors.white38, fontSize: 12),
                 filled: true,
                 fillColor: const Color(0xFF1E293B),
@@ -389,15 +485,19 @@ class _PayDebtModalState extends ConsumerState<PayDebtModal> {
               ),
             ),
             const SizedBox(height: 20),
+
             ElevatedButton(
-              onPressed: _submit,
+              onPressed: () => _submit(currentBalance),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentEmerald,
+                backgroundColor: isDebt ? AppTheme.accentEmerald : AppTheme.accentCyan,
                 foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
-              child: Text('Konfirmasi Pembayaran', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14)),
+              child: Text(
+                isDebt ? 'Konfirmasi Bayar Hutang' : 'Konfirmasi Terima Piutang',
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
             ),
           ],
         ),

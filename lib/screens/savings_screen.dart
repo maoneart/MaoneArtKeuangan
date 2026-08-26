@@ -26,36 +26,38 @@ class SavingsScreen extends ConsumerWidget {
         icon: const Icon(Icons.add_rounded, size: 20),
         label: Text('Buat Target', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13)),
       ),
-      body: savingsAsync.when(
-        data: (savings) {
-          if (savings.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.savings_outlined, color: Colors.white24, size: 64),
-                  const SizedBox(height: 16),
-                  Text('Belum ada target tabungan', style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 6),
-                  Text('Buat target impian Anda (misal: Beli Gadget, Liburan, Dana Darurat)', style: GoogleFonts.inter(color: AppTheme.textMuted, fontSize: 12), textAlign: TextAlign.center),
-                ],
-              ),
-            );
-          }
+      body: SafeArea(
+        child: savingsAsync.when(
+          data: (savings) {
+            if (savings.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.savings_outlined, color: Colors.white24, size: 64),
+                    const SizedBox(height: 16),
+                    Text('Belum ada target tabungan', style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 6),
+                    Text('Buat target impian Anda (misal: Beli Gadget, Liburan, Dana Darurat)', style: GoogleFonts.inter(color: AppTheme.textMuted, fontSize: 12), textAlign: TextAlign.center),
+                  ],
+                ),
+              );
+            }
 
-          final bottomPadding = MediaQuery.of(context).padding.bottom + 90;
-          return ListView.separated(
-            padding: EdgeInsets.fromLTRB(16, 12, 16, bottomPadding),
-            itemCount: savings.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 14),
-            itemBuilder: (ctx, i) {
-              final saving = savings[i];
-              return _buildSavingCard(context, ref, saving);
-            },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => const Center(child: Text('Gagal memuat target tabungan')),
+            final bottomPadding = MediaQuery.of(context).padding.bottom + 120;
+            return ListView.separated(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, bottomPadding),
+              itemCount: savings.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 14),
+              itemBuilder: (ctx, i) {
+                final saving = savings[i];
+                return _buildSavingCard(context, ref, saving);
+              },
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, __) => const Center(child: Text('Gagal memuat target tabungan')),
+        ),
       ),
     );
   }

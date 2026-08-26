@@ -52,16 +52,24 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.0.2
-          name: 'MaoneArt Keuangan v1.0.2 (Release)'
+          tag_name: v1.0.3
+          name: 'MaoneArt Keuangan v1.0.3 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.2)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.3)
             
-            - **Fitur Baru Grafik Batang (*FL BarChart*)**: Menambahkan visualisasi Grafik Batang interaktif untuk menganalisis perbandingan Arus Kas Mingguan (Pemasukan Hijau vs Pengeluaran Merah) lengkap dengan tooltip nominal Rupiah.
-            - **Diagram Lingkaran (*FL PieChart*)**: Visualisasi proporsi pengeluaran per kategori yang interaktif.
-            - **Perbaikan UI Bug Navbar & FAB Overlap**: Menambahkan `SafeArea` dan kalkulasi *dynamic bottom safe-padding* (+120px) pada layar Kelola Kategori, Transaksi, Tabungan, Hutang, dan Beranda agar item terbawah 100% bebas dari tertutup bilah navigasi bawaan ponsel atau tombol FAB.
+            - **Integrasi Saldo Kas & Pelunasan Hutang Piutang Real-Time**:
+              * Pelunasan / Cicilan Hutang wajib memvalidasi saldo kas. Jika saldo kosong / tidak mencukupi, sistem mencegah transaksi dan menampilkan peringatan.
+              * Setiap pembayaran hutang otomatis dicatat sebagai Pengeluaran yang mengurangi Saldo Kas.
+              * Setiap penerimaan piutang otomatis dicatat sebagai Pemasukan yang menambah Saldo Kas.
+              * Setoran tabungan impian otomatis memotong Saldo Kas utama.
+            - **Redesain Mewah Layar Hutang & Piutang**:
+              * Hero Card Dual-Metric Total Hutang vs Total Piutang dengan Cyber-Glow Neon Accent.
+              * Progress Bar Pelunasan interaktif per orang/pihak.
+              * Badge status pintar (`LUNAS 🎉` & Sisa Tenggat Waktu).
+            - **Perbaikan Menyeluruh UI Bug Navbar & FAB Overlap**:
+              * Menambahkan `SafeArea` dan kalkulasi *dynamic bottom safe-padding* (+120px) pada SEMUA layar (Transaksi, Kategori, Tabungan, Hutang, Laporan, dan Beranda). Item terbawah 100% bebas dari tertutup bilah navigasi bawaan ponsel.
+            - **Grafik Batang (*FL BarChart*) & Grafik Lingkaran (*FL PieChart*)**: Visualisasi Arus Kas Mingguan dan proporsi kategori pengeluaran interaktif.
             - **100% Offline SQLite Storage**: Data tersimpan aman di internal HP tanpa perlu server atau kuota internet.
-            - **Ekspor Laporan PDF & CSV/Excel**: Cetak lembar laporan keuangan profesional atau bagikan langsung ke WhatsApp.
           files: build/app/outputs/flutter-apk/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

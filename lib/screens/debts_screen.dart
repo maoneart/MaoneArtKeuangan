@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/debt_model.dart';
 import '../providers/financial_provider.dart';
 import '../utils/app_theme.dart';
+import '../utils/currency_formatter.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/debt_modals.dart';
 
@@ -32,51 +33,190 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
   @override
   Widget build(BuildContext context) {
     final debtsAsync = ref.watch(debtsProvider);
+    final summaryAsync = ref.watch(financialSummaryProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.bgDark,
       appBar: AppBar(
         title: Text('Hutang & Piutang', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: AppTheme.accentEmerald,
-          indicatorWeight: 3,
-          labelColor: Colors.white,
-          unselectedLabelColor: AppTheme.textSecondary,
-          labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
-          tabs: const [
-            Tab(text: 'Hutang Saya (Wajib Bayar)'),
-            Tab(text: 'Piutang Orang (Harus Ditagih)'),
-          ],
-        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => AddDebtModal.show(context, type: _tabController.index == 0 ? 'hutang' : 'piutang'),
-        backgroundColor: _tabController.index == 0 ? AppTheme.accentRose : AppTheme.accentAmber,
-        foregroundColor: Colors.white,
+        backgroundColor: _tabController.index == 0 ? AppTheme.accentRose : AppTheme.accentCyan,
+        foregroundColor: _tabController.index == 0 ? Colors.white : Colors.black,
         icon: const Icon(Icons.add_rounded, size: 20),
-        label: Text(_tabController.index == 0 ? 'Catat Hutang' : 'Catat Piutang', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13)),
+        label: Text(
+          _tabController.index == 0 ? '+ Catat Hutang' : '+ Catat Piutang',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13),
+        ),
       ),
-      body: debtsAsync.when(
-        data: (allDebts) {
-          final myDebts = allDebts.where((d) => d.isDebt).toList();
-          final myReceivables = allDebts.where((d) => d.isReceivable).toList();
+      body: SafeArea(
+        child: Column(
+          children: [
+            // 1. Hero Card: Dual Metric Summary (Hutang Saya vs Piutang Orang)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: summaryAsync.when(
+                data: (summary) => Row(
+                  children: [
+                    // Box Total Hutang Saya
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(18),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              const Color(0xFF1E293B),
+                              AppTheme.accentRose.withValues(alpha: 0.15),
+                            ],
+                          ),
+                          border: Border.all(color: AppTheme.accentRose.withValues(alpha: 0.3), width: 1.2),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(color: AppTheme.accentRose.withValues(alpha: 0.2), shape: BoxShape.circle),
+                                  child: const Icon(Icons.arrow_upward_rounded, color: AppTheme.accentRose, size: 14),
+                                ),
+                                const SizedBox(width: 6),
+                                Text('Hutang Saya', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                summary.formattedDebt,
+                                style: GoogleFonts.outfit(color: AppTheme.accentRose, fontWeight: FontWeight.w900, fontSize: 15),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text('Wajib Dilunasi', style: GoogleFonts.inter(color: AppTheme.textMuted, fontSize: 9)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
 
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _buildDebtList(context, ref, myDebts, isDebt: true),
-              _buildDebtList(context, ref, myReceivables, isDebt: false),
-            ],
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => const Center(child: Text('Gagal memuat data hutang piutang')),
+                    // Box Total Piutang Orang
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(18),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              const Color(0xFF1E293B),
+                              AppTheme.accentCyan.withValues(alpha: 0.15),
+                            ],
+                          ),
+                          border: Border.all(color: AppTheme.accentCyan.withValues(alpha: 0.3), width: 1.2),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(color: AppTheme.accentCyan.withValues(alpha: 0.2), shape: BoxShape.circle),
+                                  child: const Icon(Icons.arrow_downward_rounded, color: AppTheme.accentCyan, size: 14),
+                                ),
+                                const SizedBox(width: 6),
+                                Text('Piutang Orang', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                summary.formattedReceivable,
+                                style: GoogleFonts.outfit(color: AppTheme.accentCyan, fontWeight: FontWeight.w900, fontSize: 15),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text('Harus Ditagih', style: GoogleFonts.inter(color: AppTheme.textMuted, fontSize: 9)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
+            ),
+            const SizedBox(height: 6),
+
+            // 2. Tab Bar Selector
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.bgCard,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.white12),
+                ),
+                padding: const EdgeInsets.all(4),
+                child: TabBar(
+                  controller: _tabController,
+                  indicator: BoxDecoration(
+                    color: _tabController.index == 0 ? AppTheme.accentRose : AppTheme.accentCyan,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  labelColor: _tabController.index == 0 ? Colors.white : Colors.black,
+                  unselectedLabelColor: AppTheme.textSecondary,
+                  labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12),
+                  onTap: (_) => setState(() {}),
+                  tabs: const [
+                    Tab(text: 'Hutang Saya (Wajib Bayar)'),
+                    Tab(text: 'Piutang Orang (Harus Ditagih)'),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // 3. TabBarView Lists
+            Expanded(
+              child: debtsAsync.when(
+                data: (allDebts) {
+                  final myDebts = allDebts.where((d) => d.isDebt).toList();
+                  final myReceivables = allDebts.where((d) => d.isReceivable).toList();
+
+                  return TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildDebtList(context, ref, myDebts, isDebt: true),
+                      _buildDebtList(context, ref, myReceivables, isDebt: false),
+                    ],
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (_, __) => const Center(child: Text('Gagal memuat data hutang piutang')),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildDebtList(BuildContext context, WidgetRef ref, List<DebtModel> list, {required bool isDebt}) {
+    final bottomPadding = MediaQuery.of(context).padding.bottom + 120;
+
     if (list.isEmpty) {
       return Center(
         child: Column(
@@ -99,9 +239,8 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
       );
     }
 
-    final bottomPadding = MediaQuery.of(context).padding.bottom + 90;
     return ListView.separated(
-      padding: EdgeInsets.fromLTRB(16, 14, 16, bottomPadding),
+      padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPadding),
       itemCount: list.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (ctx, i) {
@@ -112,36 +251,61 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
   }
 
   Widget _buildDebtCard(BuildContext context, WidgetRef ref, DebtModel item, {required bool isDebt}) {
-    final color = isDebt ? AppTheme.accentRose : AppTheme.accentAmber;
+    final mainColor = isDebt ? AppTheme.accentRose : AppTheme.accentCyan;
+    final percent = (item.progressPercentage * 100).toInt();
 
     return GlassCard(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
+      border: Border.all(
+        color: item.isSettled ? AppTheme.accentEmerald.withValues(alpha: 0.4) : mainColor.withValues(alpha: 0.3),
+        width: 1.2,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header: Nama Orang, Kategori & Badge Status
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: (item.isSettled ? AppTheme.accentEmerald : mainColor).withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  item.isSettled ? Icons.check_circle_rounded : (isDebt ? Icons.person_rounded : Icons.account_balance_wallet_rounded),
+                  color: item.isSettled ? AppTheme.accentEmerald : mainColor,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(item.debtorName, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                    Text(item.categoryDebt, style: GoogleFonts.inter(color: AppTheme.textMuted, fontSize: 11)),
+                    Text(
+                      item.debtorName,
+                      style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                    Text(
+                      item.categoryDebt,
+                      style: GoogleFonts.inter(color: AppTheme.textMuted, fontSize: 11),
+                    ),
                   ],
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: item.isSettled ? AppTheme.accentEmerald.withValues(alpha: 0.2) : color.withValues(alpha: 0.2),
+                  color: item.isSettled ? AppTheme.accentEmerald.withValues(alpha: 0.2) : mainColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: item.isSettled ? AppTheme.accentEmerald : color),
+                  border: Border.all(color: item.isSettled ? AppTheme.accentEmerald : mainColor),
                 ),
                 child: Text(
-                  item.isSettled ? 'LUNAS' : 'BELUM LUNAS',
+                  item.isSettled ? 'LUNAS 🎉' : 'BELUM LUNAS ($percent%)',
                   style: GoogleFonts.outfit(
-                    color: item.isSettled ? AppTheme.accentEmerald : color,
+                    color: item.isSettled ? AppTheme.accentEmerald : (isDebt ? AppTheme.accentRose : AppTheme.accentCyan),
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
@@ -149,33 +313,69 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
+          // Nominal: Sisa vs Total Awal
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Sisa ${isDebt ? 'Hutang' : 'Piutang'}', style: GoogleFonts.outfit(color: AppTheme.textSecondary, fontSize: 11)),
-                  Text(item.formattedRemaining, style: GoogleFonts.outfit(color: item.isSettled ? AppTheme.accentEmerald : color, fontWeight: FontWeight.w900, fontSize: 16)),
+                  Text(
+                    isDebt ? 'Sisa Hutang Wajib Bayar' : 'Sisa Piutang Harus Ditagih',
+                    style: GoogleFonts.outfit(color: AppTheme.textSecondary, fontSize: 11),
+                  ),
+                  Text(
+                    item.formattedRemaining,
+                    style: GoogleFonts.outfit(
+                      color: item.isSettled ? AppTheme.accentEmerald : mainColor,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 18,
+                    ),
+                  ),
                 ],
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('Total Awal', style: GoogleFonts.outfit(color: AppTheme.textSecondary, fontSize: 11)),
-                  Text(item.formattedTotal, style: GoogleFonts.outfit(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 13)),
+                  Text('Total Nominal Awal', style: GoogleFonts.outfit(color: AppTheme.textSecondary, fontSize: 11)),
+                  Text(
+                    item.formattedTotal,
+                    style: GoogleFonts.outfit(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 12),
 
+          // Progress Bar Pelunasan
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: item.progressPercentage,
+              minHeight: 6,
+              backgroundColor: Colors.white12,
+              valueColor: AlwaysStoppedAnimation<Color>(item.isSettled ? AppTheme.accentEmerald : mainColor),
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Info Jatuh Tempo & Action Buttons
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Jatuh Tempo: ${item.formattedDueDate}', style: GoogleFonts.inter(color: AppTheme.textMuted, fontSize: 11)),
+              Row(
+                children: [
+                  const Icon(Icons.event_outlined, color: Colors.white38, size: 14),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Tenggat: ${item.formattedDueDate}',
+                    style: GoogleFonts.inter(color: AppTheme.textMuted, fontSize: 11),
+                  ),
+                ],
+              ),
               Row(
                 children: [
                   IconButton(
@@ -189,7 +389,11 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
                           content: Text('Hapus catatan ${isDebt ? 'hutang' : 'piutang'} ${item.debtorName}?'),
                           actions: [
                             TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Batal')),
-                            ElevatedButton(onPressed: () => Navigator.pop(c, true), style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentRose), child: const Text('Hapus')),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(c, true),
+                              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentRose),
+                              child: const Text('Hapus'),
+                            ),
                           ],
                         ),
                       );
@@ -198,18 +402,23 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
                       }
                     },
                   ),
-                  if (!item.isSettled)
+                  if (!item.isSettled) ...[
+                    const SizedBox(width: 4),
                     ElevatedButton.icon(
                       onPressed: () => PayDebtModal.show(context, item),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.accentEmerald,
-                        foregroundColor: Colors.black,
+                        backgroundColor: isDebt ? AppTheme.accentRose : AppTheme.accentCyan,
+                        foregroundColor: isDebt ? Colors.white : Colors.black,
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
-                      icon: const Icon(Icons.payment_rounded, size: 15),
-                      label: Text('Bayar / Cicil', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 11)),
+                      icon: Icon(isDebt ? Icons.payment_rounded : Icons.archive_rounded, size: 15),
+                      label: Text(
+                        isDebt ? 'Bayar Cicilan' : 'Terima Bayaran',
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 11),
+                      ),
                     ),
+                  ],
                 ],
               ),
             ],
