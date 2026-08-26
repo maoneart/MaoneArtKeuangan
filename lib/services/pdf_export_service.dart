@@ -38,7 +38,7 @@ class PdfExportService {
                 ),
                 pw.Text(
                   'MaoneArt Keuangan',
-                  style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.emerald700),
+                  style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.green700),
                 ),
               ],
             ),
@@ -56,7 +56,7 @@ class PdfExportService {
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
                 children: [
-                  _buildSummaryItem('Total Pemasukan', summary.formattedIncome, PdfColors.emerald700),
+                  _buildSummaryItem('Total Pemasukan', summary.formattedIncome, PdfColors.green700),
                   _buildSummaryItem('Total Pengeluaran', summary.formattedExpense, PdfColors.red700),
                   _buildSummaryItem('Arus Kas Bersih', summary.formattedBalance, summary.netBalance >= 0 ? PdfColors.blue700 : PdfColors.red700),
                 ],
