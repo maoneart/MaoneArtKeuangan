@@ -1,15 +1,71 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../providers/financial_provider.dart';
+import '../services/gemini_service.dart';
 import '../utils/app_theme.dart';
 import '../widgets/glass_card.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  final TextEditingController _apiKeyController = TextEditingController();
+  bool _obscureKey = true;
+  bool _hasSavedKey = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadApiKey();
+  }
+
+  void _loadApiKey() async {
+    final key = await GeminiService.getApiKey();
+    if (key != null && key.isNotEmpty && mounted) {
+      setState(() {
+        _apiKeyController.text = key;
+        _hasSavedKey = true;
+      });
+    }
+  }
+
+  void _saveApiKey() async {
+    final key = _apiKeyController.text.trim();
+    if (key.isEmpty) {
+      await GeminiService.removeApiKey();
+      setState(() => _hasSavedKey = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Gemini API Key telah dihapus.')),
+        );
+      }
+      return;
+    }
+
+    await GeminiService.saveApiKey(key);
+    setState(() => _hasSavedKey = true);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gemini API Key berhasil disimpan! ✨'),
+          backgroundColor: AppTheme.greenMain,
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _apiKeyController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom + 40;
 
     return Scaffold(
@@ -73,7 +129,7 @@ class SettingsScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        'Versi 1.0.0 (Official Release)',
+                        'Versi 1.0.1 (Official Release)',
                         style: GoogleFonts.plusJakartaSans(
                           color: AppTheme.bluePrimary,
                           fontWeight: FontWeight.bold,
@@ -96,7 +152,148 @@ class SettingsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
 
-              // ==================== 2. FITUR UNGGULAN ====================
+              // ==================== 2. GEMINI AI CONFIGURATION ====================
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'INTEGRASI GOOGLE GEMINI AI',
+                    style: GoogleFonts.plusJakartaSans(
+                      color: AppTheme.textMuted,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: _hasSavedKey ? AppTheme.greenSoft : const Color(0xFFFEF3C7),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      _hasSavedKey ? 'Aktif ✅' : 'Belum Diatur ⚠️',
+                      style: GoogleFonts.plusJakartaSans(
+                        color: _hasSavedKey ? const Color(0xFF047857) : const Color(0xFFD97706),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              GlassCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(colors: [Color(0xFF8B5CF6), Color(0xFF0047CC)]),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 16),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Google Gemini API Key',
+                          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textDark),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Kunci ini digunakan untuk fitur "Chat AI" agar Anda bisa curhat pengeluaran/pemasukan dan langsung dicatat otomatis.',
+                      style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11.5, height: 1.4),
+                    ),
+                    const SizedBox(height: 12),
+
+                    TextField(
+                      controller: _apiKeyController,
+                      obscureText: _obscureKey,
+                      style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 13),
+                      decoration: InputDecoration(
+                        hintText: 'Tempel API Key (AIzaSy...)',
+                        hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                        filled: true,
+                        fillColor: const Color(0xFFF8FAFC),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscureKey ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18, color: AppTheme.textMuted),
+                          onPressed: () => setState(() => _obscureKey = !_obscureKey),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _saveApiKey,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.bluePrimary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              elevation: 0,
+                            ),
+                            icon: const Icon(Icons.save_rounded, size: 16),
+                            label: Text('Simpan API Key', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12)),
+                          ),
+                        ),
+                        if (_hasSavedKey) ...[
+                          const SizedBox(width: 8),
+                          OutlinedButton(
+                            onPressed: () {
+                              _apiKeyController.clear();
+                              _saveApiKey();
+                            },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppTheme.redMain,
+                              side: const BorderSide(color: AppTheme.redMain),
+                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            child: const Text('Hapus', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.shield_outlined, color: AppTheme.textMuted, size: 14),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              'API Key tersimpan 100% aman di internal HP Anda (tidak diunggah ke internet).',
+                              style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+
+              // ==================== 3. FITUR UNGGULAN ====================
               Text(
                 'FITUR UNGGULAN APLIKASI',
                 style: GoogleFonts.plusJakartaSans(
@@ -105,6 +302,14 @@ class SettingsScreen extends ConsumerWidget {
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.1,
                 ),
+              ),
+              const SizedBox(height: 8),
+
+              _buildFeatureItem(
+                icon: Icons.auto_awesome_rounded,
+                iconColor: const Color(0xFF8B5CF6),
+                title: 'Smart AI Financial Assistant (Chat Curhat)',
+                description: 'Ceritakan pengeluaran Anda secara santai, AI otomatis menganalisis dan mencatatkannya ke database.',
               ),
               const SizedBox(height: 8),
 
@@ -142,21 +347,13 @@ class SettingsScreen extends ConsumerWidget {
 
               _buildFeatureItem(
                 icon: Icons.pie_chart_rounded,
-                iconColor: const Color(0xFF8B5CF6),
+                iconColor: const Color(0xFFEC4899),
                 title: 'Laporan Visual & Grafik Batang Rapi',
                 description: 'Diagram Lingkaran kategori dan Grafik Batang Arus Kas Mingguan dengan tata letak proporsional.',
               ),
-              const SizedBox(height: 8),
-
-              _buildFeatureItem(
-                icon: Icons.shield_rounded,
-                iconColor: const Color(0xFF059669),
-                title: '100% Offline & Privasi Terjaga',
-                description: 'Data disimpan lokal di database SQLite HP Anda tanpa internet dan tanpa server pihak ketiga.',
-              ),
               const SizedBox(height: 20),
 
-              // ==================== 3. INFORMASI SISTEM & PENGEMBANG ====================
+              // ==================== 4. INFORMASI SISTEM & PENGEMBANG ====================
               Text(
                 'INFORMASI PENGEMBANG',
                 style: GoogleFonts.plusJakartaSans(
@@ -178,7 +375,7 @@ class SettingsScreen extends ConsumerWidget {
                     const Divider(color: AppTheme.borderLight, height: 16),
                     _buildInfoRow('Platform', 'Android (Flutter + SQLite)'),
                     const Divider(color: AppTheme.borderLight, height: 16),
-                    _buildInfoRow('Status Rilis', 'v1.0.0 (Final Official)'),
+                    _buildInfoRow('Status Rilis', 'v1.0.1 (Official Release)'),
                   ],
                 ),
               ),

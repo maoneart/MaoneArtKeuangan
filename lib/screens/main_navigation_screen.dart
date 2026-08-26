@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
 import 'home_screen.dart';
 import 'transaction_screen.dart';
+import 'ai_chat_screen.dart';
 import 'reports_screen.dart';
 import 'settings_screen.dart';
 
@@ -24,6 +25,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final screens = [
       HomeScreen(onNavigateTab: _onTabChanged),
       const TransactionScreen(),
+      const AiChatScreen(),
       const ReportsScreen(),
       const SettingsScreen(),
     ];
@@ -68,6 +70,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 icon: Icon(Icons.receipt_long_rounded),
                 activeIcon: Icon(Icons.receipt_long_rounded, color: AppTheme.bluePrimary),
                 label: 'Transaksi',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.auto_awesome_rounded),
+                activeIcon: Icon(Icons.auto_awesome_rounded, color: Color(0xFF8B5CF6)),
+                label: 'Chat AI',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.bar_chart_rounded),
