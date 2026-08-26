@@ -133,7 +133,8 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
         ),
       ),
     ),
-  );
+  ),
+);
 }
 
   @override

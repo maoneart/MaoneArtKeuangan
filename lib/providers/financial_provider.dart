@@ -131,6 +131,10 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
     } catch (_) {}
   }
 
+  Future<void> addSavingDeposit(SavingDepositModel deposit) async {
+    return depositSaving(deposit.savingId, deposit.amount, deposit.depositDate, note: deposit.note);
+  }
+
   Future<void> deleteSaving(int id) async {
     try {
       final db = ref.read(databaseProvider);
