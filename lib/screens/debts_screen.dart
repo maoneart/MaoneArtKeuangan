@@ -99,8 +99,9 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
       );
     }
 
+    final bottomPadding = MediaQuery.of(context).padding.bottom + 90;
     return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: EdgeInsets.fromLTRB(16, 14, 16, bottomPadding),
       itemCount: list.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (ctx, i) {

@@ -130,8 +130,9 @@ class _TransactionScreenState extends ConsumerState<TransactionScreen> {
                   );
                 }
 
+                final bottomPadding = MediaQuery.of(context).padding.bottom + 90;
                 return ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPadding),
                   itemCount: txs.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 8),
                   itemBuilder: (ctx, i) {

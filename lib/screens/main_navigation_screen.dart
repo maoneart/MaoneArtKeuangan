@@ -41,37 +41,40 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           color: AppTheme.bgCard,
           border: Border(top: BorderSide(color: AppTheme.borderGlass, width: 1)),
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: _onTabChanged,
-          backgroundColor: AppTheme.bgCard,
-          selectedItemColor: AppTheme.accentEmerald,
-          unselectedItemColor: AppTheme.textMuted,
-          selectedFontSize: 11,
-          unselectedFontSize: 10,
-          type: BottomNavigationBarType.fixed,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded),
-              label: 'Beranda',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.receipt_long_rounded),
-              label: 'Transaksi',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.savings_rounded),
-              label: 'Tabungan',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.handshake_rounded),
-              label: 'Hutang',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.bar_chart_rounded),
-              label: 'Laporan',
-            ),
-          ],
+        child: SafeArea(
+          top: false,
+          child: BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: _onTabChanged,
+            backgroundColor: AppTheme.bgCard,
+            selectedItemColor: AppTheme.accentEmerald,
+            unselectedItemColor: AppTheme.textMuted,
+            selectedFontSize: 11,
+            unselectedFontSize: 10,
+            type: BottomNavigationBarType.fixed,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home_rounded),
+                label: 'Beranda',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.receipt_long_rounded),
+                label: 'Transaksi',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.savings_rounded),
+                label: 'Tabungan',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.handshake_rounded),
+                label: 'Hutang',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.bar_chart_rounded),
+                label: 'Laporan',
+              ),
+            ],
+          ),
         ),
       ),
     );

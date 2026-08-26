@@ -196,13 +196,15 @@ class CategoryManagementScreen extends ConsumerWidget {
         icon: const Icon(Icons.add_rounded, size: 20),
         label: Text('Tambah Kategori', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13)),
       ),
-      body: categoriesAsync.when(
-        data: (cats) {
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            itemCount: cats.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (ctx, i) {
+      body: SafeArea(
+        child: categoriesAsync.when(
+          data: (cats) {
+            final bottomPadding = MediaQuery.of(context).padding.bottom + 120;
+            return ListView.separated(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, bottomPadding),
+              itemCount: cats.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (ctx, i) {
               final cat = cats[i];
               return GlassCard(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -255,7 +257,7 @@ class CategoryManagementScreen extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => const Center(child: Text('Gagal memuat kategori')),
-      ),
+      )),
     );
   }
 }

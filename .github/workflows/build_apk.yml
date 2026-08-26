@@ -52,19 +52,15 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.0.0
-          name: 'MaoneArt Keuangan v1.0.0 (Release)'
+          tag_name: v1.0.2
+          name: 'MaoneArt Keuangan v1.0.2 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.0)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.2)
             
-            Aplikasi Pencatatan Keuangan Pribadi, Arus Kas, Hutang Piutang & Tabungan Impian Cerdas berbasis Flutter & SQLite Offline 100%.
-            
-            ### ✨ Fitur Unggulan:
+            - **Fitur Baru Grafik Batang (*FL BarChart*)**: Menambahkan visualisasi Grafik Batang interaktif untuk menganalisis perbandingan Arus Kas Mingguan (Pemasukan Hijau vs Pengeluaran Merah) lengkap dengan tooltip nominal Rupiah.
+            - **Diagram Lingkaran (*FL PieChart*)**: Visualisasi proporsi pengeluaran per kategori yang interaktif.
+            - **Perbaikan UI Bug Navbar & FAB Overlap**: Menambahkan `SafeArea` dan kalkulasi *dynamic bottom safe-padding* (+120px) pada layar Kelola Kategori, Transaksi, Tabungan, Hutang, dan Beranda agar item terbawah 100% bebas dari tertutup bilah navigasi bawaan ponsel atau tombol FAB.
             - **100% Offline SQLite Storage**: Data tersimpan aman di internal HP tanpa perlu server atau kuota internet.
-            - **Arus Kas & Saldo Real-Time**: Pencatatan pemasukan & pengeluaran cepat dengan format otomatis Rupiah (Rp).
-            - **Manajemen Hutang & Piutang**: Lacak hutang yang harus dibayar dan piutang yang harus ditagih, lengkap dengan cicilan/pelunasan bertahap.
-            - **Tabungan Impian (*Savings Goal*)**: Tetapkan target tabungan impian dengan progress bar persentase dan setoran berkala.
-            - **Statistik & Diagram Lingkaran (*FL Chart*)**: Analisis proporsi pengeluaran per kategori secara visual interaktif.
             - **Ekspor Laporan PDF & CSV/Excel**: Cetak lembar laporan keuangan profesional atau bagikan langsung ke WhatsApp.
           files: build/app/outputs/flutter-apk/app-release.apk
         env:

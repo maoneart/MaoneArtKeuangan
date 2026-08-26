@@ -43,8 +43,9 @@ class SavingsScreen extends ConsumerWidget {
             );
           }
 
+          final bottomPadding = MediaQuery.of(context).padding.bottom + 90;
           return ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: EdgeInsets.fromLTRB(16, 12, 16, bottomPadding),
             itemCount: savings.length,
             separatorBuilder: (_, __) => const SizedBox(height: 14),
             itemBuilder: (ctx, i) {
