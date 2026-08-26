@@ -2,13 +2,17 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/category_model.dart';
+import '../models/saving_model.dart';
 import '../models/financial_summary.dart';
 
 class ParsedTransaction {
-  final String type; // 'pemasukan' atau 'pengeluaran'
+  final String type; // 'pemasukan', 'pengeluaran', 'hutang', 'piutang', 'target_tabungan', 'setoran_tabungan'
   final int? categoryId;
   final String categoryName;
+  final String? personName; // untuk hutang & piutang
+  final String? targetName; // untuk target_tabungan & setoran_tabungan
   final double amount;
+  final double? targetAmount; // untuk target_tabungan
   final String note;
   bool isSaved;
 
@@ -16,18 +20,44 @@ class ParsedTransaction {
     required this.type,
     this.categoryId,
     required this.categoryName,
+    this.personName,
+    this.targetName,
     required this.amount,
+    this.targetAmount,
     required this.note,
     this.isSaved = false,
   });
 
   factory ParsedTransaction.fromJson(Map<String, dynamic> json) {
+    final rawType = (json['tipe'] ?? json['type'] ?? 'pengeluaran').toString().toLowerCase();
+    String normalizedType = 'pengeluaran';
+
+    if (rawType.contains('masuk') || rawType == 'pemasukan' || rawType == 'income') {
+      normalizedType = 'pemasukan';
+    } else if (rawType.contains('piutang') || rawType == 'receivable') {
+      normalizedType = 'piutang';
+    } else if (rawType.contains('hutang') || rawType == 'utang' || rawType == 'debt') {
+      normalizedType = 'hutang';
+    } else if (rawType.contains('target') || rawType.contains('buat_tabungan') || rawType == 'target_tabungan') {
+      normalizedType = 'target_tabungan';
+    } else if (rawType.contains('setor') || rawType.contains('nabung') || rawType == 'setoran_tabungan') {
+      normalizedType = 'setoran_tabungan';
+    } else {
+      normalizedType = 'pengeluaran';
+    }
+
+    final amt = double.tryParse(json['jumlah']?.toString() ?? json['amount']?.toString() ?? json['saldo_awal']?.toString() ?? '0') ?? 0.0;
+    final tgtAmt = double.tryParse(json['target_nominal']?.toString() ?? json['target_amount']?.toString() ?? '0') ?? (amt > 0 ? amt : 0.0);
+
     return ParsedTransaction(
-      type: json['tipe']?.toString().toLowerCase() == 'pemasukan' ? 'pemasukan' : 'pengeluaran',
+      type: normalizedType,
       categoryId: json['id_kategori'] is int ? json['id_kategori'] : int.tryParse(json['id_kategori']?.toString() ?? ''),
       categoryName: json['nama_kategori']?.toString() ?? 'Lain-lain',
-      amount: double.tryParse(json['jumlah']?.toString() ?? '0') ?? 0.0,
-      note: json['keterangan']?.toString() ?? 'Catatan dari AI',
+      personName: json['nama_orang']?.toString() ?? json['nama_pihak']?.toString() ?? 'Teman / Rekan',
+      targetName: json['nama_target']?.toString() ?? json['target_name']?.toString() ?? 'Tabungan Impian',
+      amount: amt,
+      targetAmount: tgtAmt > 0 ? tgtAmt : amt,
+      note: json['keterangan']?.toString() ?? json['catatan']?.toString() ?? 'Catatan dari AI',
     );
   }
 }
@@ -65,13 +95,14 @@ class GeminiService {
   static Future<AiChatResponse> sendMessage({
     required String userMessage,
     required List<CategoryModel> categories,
+    List<SavingModel> existingSavings = const [],
     FinancialSummary? summary,
     List<Map<String, String>> history = const [],
   }) async {
     final apiKey = await getApiKey();
     if (apiKey == null || apiKey.trim().isEmpty) {
       return AiChatResponse(
-        replyText: 'Halo! Kunci **Gemini API Key** belum diatur.\n\nSilakan masukkan API Key Gemini Anda di menu pengaturan di atas agar saya dapat mencatat curhat keuangan Anda secara otomatis!',
+        replyText: 'Halo! Kunci **Gemini API Key** belum diatur.\n\nSilakan masukkan API Key Gemini Anda di menu Pengaturan agar saya dapat mencatat curhat keuangan, hutang, maupun tabungan Anda secara otomatis!',
         isError: true,
       );
     }
@@ -81,22 +112,37 @@ class GeminiService {
           .map((c) => '- [ID: ${c.id}] ${c.name} (${c.type})')
           .join('\n');
 
+      final savingsDesc = existingSavings.isNotEmpty
+          ? existingSavings.map((s) => '- Target: "${s.name}" (Terkumpul: ${s.collectedAmount}/${s.targetAmount})').join('\n')
+          : '- Belum ada target tabungan aktif';
+
       final currentBalanceInfo = summary != null
           ? 'Saldo Kas Saat Ini: ${summary.formattedBalance}, Total Pemasukan: ${summary.formattedIncome}, Total Pengeluaran: ${summary.formattedExpense}'
           : 'Status Saldo: Normal';
 
       final systemInstruction = '''
-Anda adalah "MaoneArt Financial Assistant", asisten AI keuangan pribadi cerdas dan ramah dalam aplikasi MaoneArt Keuangan.
+Anda adalah "MaoneArt Financial Assistant", asisten AI keuangan pribadi cerdas, ramah, dan solutif dalam aplikasi MaoneArt Keuangan.
 Tugas Anda:
-1. Dengarkan curhat, cerita pengeluaran/pemasukan, atau pertanyaan keuangan pengguna dalam bahasa Indonesia yang santun, akrab, dan solutif.
+1. Dengarkan curhat, cerita transaksi, hutang, piutang, tabungan, atau pertanyaan keuangan pengguna dalam bahasa Indonesia yang akrab dan santun.
 2. Informasi Keuangan Pengguna Saat Ini:
 $currentBalanceInfo
 
-Daftar Kategori Aplikasi:
+Daftar Kategori Transaksi Aplikasi:
 $categoriesDesc
 
-3. ATURAN EKSTRAKSI TRANSAKSI:
-Jika pengguna menyebutkan pengeluaran atau pemasukan (contoh: "tadi makan soto 20rb dan isi bensin 30rb", atau "dapat transferan 500rb"), Anda WAJIB menganalisis dan menyertakan blok JSON di akhir respons Anda persis dengan format berikut:
+Daftar Target Tabungan Pengguna yang Sudah Ada:
+$savingsDesc
+
+3. ATURAN ANALISIS & DETEKSI TRANSAKSI:
+Analisis pesan pengguna untuk mendeteksi 5 jenis transaksi berikut:
+- **pengeluaran**: Saat pengguna belanja, makan, beli barang, bayar tagihan, servis, sedekah, dsb.
+- **pemasukan**: Saat pengguna menerima gaji, transferan uang, hasil jualan, bonus, dsb.
+- **hutang**: Saat pengguna meminjam uang dari orang lain / bank / pinjol / kartu kredit (contoh: "pinjam uang ke Budi 500rb").
+- **piutang**: Saat orang lain meminjam uang ke pengguna (contoh: "si Joko minjam uang ke saya 200rb").
+- **target_tabungan**: Saat pengguna ingin membuat target impian tabungan baru (contoh: "saya mau bikin target nabung beli Laptop 10 juta").
+- **setoran_tabungan**: Saat pengguna menabung atau menyisihkan uang ke tabungan tertentu (contoh: "nabung 100rb buat tabungan Laptop").
+
+Jika terdeteksi satu atau lebih transaksi di atas, Anda WAJIB menyertakan blok JSON di akhir respons Anda persis dengan format berikut:
 ```json
 {
   "transactions": [
@@ -104,14 +150,45 @@ Jika pengguna menyebutkan pengeluaran atau pemasukan (contoh: "tadi makan soto 2
       "tipe": "pengeluaran",
       "id_kategori": 1,
       "nama_kategori": "Makanan & Minuman",
-      "jumlah": 20000,
-      "keterangan": "Makan soto"
+      "jumlah": 25000,
+      "keterangan": "Makan siang"
+    },
+    {
+      "tipe": "pemasukan",
+      "id_kategori": 2,
+      "nama_kategori": "Gaji & Upah",
+      "jumlah": 3000000,
+      "keterangan": "Gaji bulanan"
+    },
+    {
+      "tipe": "hutang",
+      "nama_orang": "Budi",
+      "jumlah": 500000,
+      "keterangan": "Pinjam uang benerin motor"
+    },
+    {
+      "tipe": "piutang",
+      "nama_orang": "Joko",
+      "jumlah": 200000,
+      "keterangan": "Joko minjam uang"
+    },
+    {
+      "tipe": "target_tabungan",
+      "nama_target": "Beli Laptop Baru",
+      "target_nominal": 10000000,
+      "saldo_awal": 0,
+      "keterangan": "Target nabung beli laptop"
+    },
+    {
+      "tipe": "setoran_tabungan",
+      "nama_target": "Beli Laptop Baru",
+      "jumlah": 100000,
+      "keterangan": "Setor tabungan laptop"
     }
   ]
 }
 ```
-Cocokkan id_kategori dan nama_kategori dengan daftar kategori yang ada.
-Jika tidak ada transaksi (hanya konsultasi biasa), JANGAN sertakan blok json transactions.
+Jika tidak ada transaksi (hanya ngobrol/konsultasi biasa), JANGAN sertakan blok json transactions.
 Berikan tanggapan singkat, ramah, dan memotivasi sebelum blok JSON.
 ''';
 
@@ -143,7 +220,7 @@ Berikan tanggapan singkat, ramah, dan memotivasi sebelum blok JSON.
         'contents': contents,
         'generationConfig': {
           'temperature': 0.4,
-          'maxOutputTokens': 1000,
+          'maxOutputTokens': 1200,
         },
       });
 

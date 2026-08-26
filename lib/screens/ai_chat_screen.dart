@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/category_model.dart';
+import '../models/debt_model.dart';
+import '../models/saving_model.dart';
 import '../models/transaction_model.dart';
 import '../providers/financial_provider.dart';
 import '../services/gemini_service.dart';
@@ -46,7 +48,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     _messages.add(
       ChatBubbleMessage(
         sender: 'ai',
-        text: 'Halo! Saya **MaoneArt AI Assistant** 🤖✨\n\nAnda bisa curhat tentang pengeluaran atau pemasukan hari ini (misal: *"Tadi makan siang 25rb dan beli bensin 30rb"*), dan saya akan otomatis merangkum serta mencatatkannya ke database keuangan Anda!',
+        text: 'Halo! Saya **MaoneArt AI Assistant** 🤖✨\n\nAnda bisa curhat tentang segala hal seputar keuangan Anda:\n• 💸 **Pemasukan & Pengeluaran** *(misal: "Makan siang 25rb & bensin 30rb")*\n• 🤝 **Hutang & Piutang** *(misal: "Pinjam uang ke Budi 500rb")*\n• 🎯 **Target Tabungan & Setoran** *(misal: "Bikin target nabung beli HP 3jt")*\n\nSemua akan otomatis saya rangkum dan bisa langsung Anda simpan dengan 1 klik!',
         timestamp: DateTime.now(),
       ),
     );
@@ -89,6 +91,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     _scrollToBottom();
 
     final categories = ref.read(categoriesProvider).valueOrNull ?? [];
+    final savings = ref.read(savingsProvider).valueOrNull ?? [];
     final summary = ref.read(financialSummaryProvider).valueOrNull;
 
     // Riwayat percakapan terakhir
@@ -103,6 +106,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     final response = await GeminiService.sendMessage(
       userMessage: text,
       categories: categories,
+      existingSavings: savings,
       summary: summary,
       history: history,
     );
@@ -124,35 +128,93 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     }
   }
 
-  void _saveTransactions(List<ParsedTransaction> txs, List<CategoryModel> categories) async {
+  void _saveTransactions(List<ParsedTransaction> txs, List<CategoryModel> categories, List<SavingModel> savings) async {
     int savedCount = 0;
     for (final tx in txs) {
       if (!tx.isSaved) {
-        // Cocokkan id kategori
-        int catId = tx.categoryId ?? 1;
-        if (tx.categoryId == null) {
-          final matched = categories.firstWhere(
-            (c) => c.name.toLowerCase().contains(tx.categoryName.toLowerCase()) ||
-                tx.categoryName.toLowerCase().contains(c.name.toLowerCase()),
-            orElse: () => categories.firstWhere(
-              (c) => c.type == tx.type,
-              orElse: () => categories.first,
-            ),
+        if (tx.type == 'pemasukan' || tx.type == 'pengeluaran') {
+          // 1. Simpan Transaksi Arus Kas
+          int catId = tx.categoryId ?? 1;
+          if (tx.categoryId == null) {
+            final matched = categories.firstWhere(
+              (c) => c.name.toLowerCase().contains(tx.categoryName.toLowerCase()) ||
+                  tx.categoryName.toLowerCase().contains(c.name.toLowerCase()),
+              orElse: () => categories.firstWhere(
+                (c) => c.type == tx.type,
+                orElse: () => categories.first,
+              ),
+            );
+            catId = matched.id ?? 1;
+          }
+
+          final newTx = TransactionModel(
+            date: DateTime.now(),
+            type: tx.type,
+            categoryId: catId,
+            amount: tx.amount,
+            note: tx.note,
           );
-          catId = matched.id ?? 1;
+
+          await ref.read(financialControllerProvider.notifier).addTransaction(newTx);
+          tx.isSaved = true;
+          savedCount++;
+        } else if (tx.type == 'hutang' || tx.type == 'piutang') {
+          // 2. Simpan Hutang atau Piutang
+          final newDebt = DebtModel(
+            debtorName: tx.personName != null && tx.personName!.isNotEmpty ? tx.personName! : 'Rekan / Pihak Lain',
+            type: tx.type,
+            totalAmount: tx.amount,
+            remainingAmount: tx.amount,
+            borrowDate: DateTime.now(),
+            note: tx.note,
+          );
+
+          await ref.read(financialControllerProvider.notifier).addDebt(newDebt);
+          tx.isSaved = true;
+          savedCount++;
+        } else if (tx.type == 'target_tabungan') {
+          // 3. Buat Target Impian Tabungan Baru
+          final newSaving = SavingModel(
+            name: tx.targetName != null && tx.targetName!.isNotEmpty ? tx.targetName! : 'Tabungan Impian',
+            targetAmount: (tx.targetAmount != null && tx.targetAmount! > 0) ? tx.targetAmount! : tx.amount,
+            collectedAmount: 0.0,
+            note: tx.note,
+          );
+
+          await ref.read(financialControllerProvider.notifier).addSaving(newSaving);
+          tx.isSaved = true;
+          savedCount++;
+        } else if (tx.type == 'setoran_tabungan') {
+          // 4. Setor ke Tabungan yang Ada
+          SavingModel? targetSaving;
+          if (savings.isNotEmpty) {
+            targetSaving = savings.firstWhere(
+              (s) => tx.targetName != null && (s.name.toLowerCase().contains(tx.targetName!.toLowerCase()) ||
+                  tx.targetName!.toLowerCase().contains(s.name.toLowerCase())),
+              orElse: () => savings.first,
+            );
+          }
+
+          if (targetSaving != null && targetSaving.id != null) {
+            await ref.read(financialControllerProvider.notifier).depositSaving(
+              targetSaving.id!,
+              tx.amount,
+              DateTime.now(),
+              note: tx.note,
+            );
+          } else {
+            // Jika belum ada target, buat target baru lalu setorkan
+            final newSaving = SavingModel(
+              name: tx.targetName != null && tx.targetName!.isNotEmpty ? tx.targetName! : 'Tabungan Impian',
+              targetAmount: tx.amount * 5,
+              collectedAmount: tx.amount,
+              note: tx.note,
+            );
+            await ref.read(financialControllerProvider.notifier).addSaving(newSaving);
+          }
+          tx.isSaved = true;
+          savedCount++;
         }
-
-        final newTx = TransactionModel(
-          date: DateTime.now(),
-          type: tx.type,
-          categoryId: catId,
-          amount: tx.amount,
-          note: tx.note,
-        );
-
-        await ref.read(financialControllerProvider.notifier).addTransaction(newTx);
-        tx.isSaved = true;
-        savedCount++;
       }
     }
 
@@ -160,7 +222,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       setState(() {});
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('$savedCount transaksi berhasil disimpan ke catatan keuangan! 🎉'),
+          content: Text('$savedCount catatan berhasil disimpan ke database keuangan! 🎉'),
           backgroundColor: AppTheme.greenMain,
         ),
       );
@@ -170,6 +232,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   @override
   Widget build(BuildContext context) {
     final categories = ref.watch(categoriesProvider).valueOrNull ?? [];
+    final savings = ref.watch(savingsProvider).valueOrNull ?? [];
     final savedApiKey = ref.watch(geminiApiKeyProvider);
     final hasApiKey = savedApiKey.trim().isNotEmpty;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
@@ -199,7 +262,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                   style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textDark),
                 ),
                 Text(
-                  'Curhat Keuangan & Catat Otomatis',
+                  'Curhat Transaksi, Hutang & Tabungan',
                   style: GoogleFonts.plusJakartaSans(color: AppTheme.greenMain, fontSize: 11, fontWeight: FontWeight.w600),
                 ),
               ],
@@ -228,7 +291,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 _messages.add(
                   ChatBubbleMessage(
                     sender: 'ai',
-                    text: 'Percakapan telah dibersihkan. Silakan ceritakan transaksi atau tanyakan apa saja seputar keuangan Anda!',
+                    text: 'Percakapan telah dibersihkan. Silakan ceritakan transaksi, hutang, atau tabungan apa saja!',
                     timestamp: DateTime.now(),
                   ),
                 );
@@ -305,7 +368,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 itemBuilder: (ctx, i) {
                   final msg = _messages[i];
                   final isUser = msg.sender == 'user';
-                  return _buildChatBubble(msg, isUser, categories);
+                  return _buildChatBubble(msg, isUser, categories, savings);
                 },
               ),
             ),
@@ -327,7 +390,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 ),
               ),
 
-            // Suggestion Chips (if few messages)
+            // Suggestion Chips
             if (_messages.length <= 2 && !_isLoading)
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -336,9 +399,11 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                   children: [
                     _buildSuggestionChip('🍜 Makan siang 25rb & bensin 30rb'),
                     const SizedBox(width: 8),
-                    _buildSuggestionChip('💰 Dapat bonus transferan 500rb'),
+                    _buildSuggestionChip('🤝 Pinjam uang ke Budi 500rb'),
                     const SizedBox(width: 8),
-                    _buildSuggestionChip('💡 Beri tips hemat bulan ini'),
+                    _buildSuggestionChip('📱 Bikin target nabung HP 3jt'),
+                    const SizedBox(width: 8),
+                    _buildSuggestionChip('💰 Setor 100rb tabungan HP'),
                   ],
                 ),
               ),
@@ -366,7 +431,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                         minLines: 1,
                         maxLines: 4,
                         decoration: const InputDecoration(
-                          hintText: 'Ketik curhat keuangan Anda...',
+                          hintText: 'Curhat transaksi, hutang, atau tabungan...',
                           hintStyle: TextStyle(color: AppTheme.textMuted, fontSize: 13),
                           border: InputBorder.none,
                           isDense: true,
@@ -406,12 +471,12 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     );
   }
 
-  Widget _buildChatBubble(ChatBubbleMessage msg, bool isUser, List<CategoryModel> categories) {
+  Widget _buildChatBubble(ChatBubbleMessage msg, bool isUser, List<CategoryModel> categories, List<SavingModel> savings) {
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.82),
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.84),
         child: Column(
           crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
@@ -458,7 +523,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                           const Icon(Icons.bolt_rounded, color: Color(0xFFD97706), size: 16),
                           const SizedBox(width: 6),
                           Text(
-                            '${msg.detectedTransactions.length} TRANSAKSI TERDETEKSI',
+                            '${msg.detectedTransactions.length} CATATAN TERDETEKSI',
                             style: GoogleFonts.plusJakartaSans(
                               color: const Color(0xFFD97706),
                               fontWeight: FontWeight.w800,
@@ -477,7 +542,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                         child: ElevatedButton.icon(
                           onPressed: msg.detectedTransactions.every((t) => t.isSaved)
                               ? null
-                              : () => _saveTransactions(msg.detectedTransactions, categories),
+                              : () => _saveTransactions(msg.detectedTransactions, categories, savings),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.greenMain,
                             foregroundColor: Colors.white,
@@ -495,7 +560,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                           ),
                           label: Text(
                             msg.detectedTransactions.every((t) => t.isSaved)
-                                ? 'Semua Transaksi Telah Disimpan ✅'
+                                ? 'Semua Catatan Telah Disimpan ✅'
                                 : 'Simpan ke Catatan Keuangan',
                             style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12),
                           ),
@@ -512,7 +577,67 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   }
 
   Widget _buildDetectedTransactionItem(ParsedTransaction tx) {
-    final isIncome = tx.type == 'pemasukan';
+    IconData iconData;
+    Color iconColor;
+    Color iconBg;
+    String badgeLabel;
+    String mainTitle;
+    String subTitle;
+    String amountPrefix;
+    double displayAmount = tx.amount;
+
+    if (tx.type == 'pemasukan') {
+      iconData = Icons.arrow_downward_rounded;
+      iconColor = AppTheme.greenMain;
+      iconBg = AppTheme.greenSoft;
+      badgeLabel = 'Pemasukan';
+      mainTitle = tx.note;
+      subTitle = tx.categoryName;
+      amountPrefix = '+';
+    } else if (tx.type == 'pengeluaran') {
+      iconData = Icons.arrow_upward_rounded;
+      iconColor = AppTheme.redMain;
+      iconBg = AppTheme.redSoft;
+      badgeLabel = 'Pengeluaran';
+      mainTitle = tx.note;
+      subTitle = tx.categoryName;
+      amountPrefix = '-';
+    } else if (tx.type == 'hutang') {
+      iconData = Icons.handshake_rounded;
+      iconColor = const Color(0xFFD97706);
+      iconBg = const Color(0xFFFEF3C7);
+      badgeLabel = 'Hutang Saya';
+      mainTitle = 'Hutang ke ${tx.personName ?? "Pihak Lain"}';
+      subTitle = tx.note;
+      amountPrefix = '';
+    } else if (tx.type == 'piutang') {
+      iconData = Icons.account_balance_wallet_rounded;
+      iconColor = AppTheme.bluePrimary;
+      iconBg = AppTheme.blueLight;
+      badgeLabel = 'Piutang';
+      mainTitle = 'Piutang di ${tx.personName ?? "Pihak Lain"}';
+      subTitle = tx.note;
+      amountPrefix = '';
+    } else if (tx.type == 'target_tabungan') {
+      iconData = Icons.savings_rounded;
+      iconColor = const Color(0xFF8B5CF6);
+      iconBg = const Color(0xFFEDE9FE);
+      badgeLabel = 'Target Tabungan';
+      mainTitle = tx.targetName ?? 'Target Impian';
+      subTitle = tx.note;
+      amountPrefix = 'Target ';
+      displayAmount = tx.targetAmount != null && tx.targetAmount! > 0 ? tx.targetAmount! : tx.amount;
+    } else {
+      // setoran_tabungan
+      iconData = Icons.add_circle_rounded;
+      iconColor = const Color(0xFF059669);
+      iconBg = const Color(0xFFD1FAE5);
+      badgeLabel = 'Setoran Tabungan';
+      mainTitle = 'Setor ke ${tx.targetName ?? "Tabungan"}';
+      subTitle = tx.note;
+      amountPrefix = '+';
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.all(8),
@@ -526,37 +651,54 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: isIncome ? AppTheme.greenSoft : AppTheme.redSoft,
+              color: iconBg,
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              isIncome ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
-              color: isIncome ? AppTheme.greenMain : AppTheme.redMain,
-              size: 14,
-            ),
+            child: Icon(iconData, color: iconColor, size: 14),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  tx.note,
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.textDark),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: iconBg,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        badgeLabel,
+                        style: GoogleFonts.plusJakartaSans(color: iconColor, fontSize: 9, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        mainTitle,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 11.5, color: AppTheme.textDark),
+                      ),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 2),
                 Text(
-                  tx.categoryName,
-                  style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10.5),
+                  subTitle,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10),
                 ),
               ],
             ),
           ),
           Text(
-            '${isIncome ? '+' : '-'}${CurrencyFormatter.formatRupiah(tx.amount)}',
+            '$amountPrefix${CurrencyFormatter.formatRupiah(displayAmount)}',
             style: GoogleFonts.plusJakartaSans(
-              color: isIncome ? AppTheme.greenMain : AppTheme.redMain,
+              color: iconColor,
               fontWeight: FontWeight.w800,
-              fontSize: 12.5,
+              fontSize: 12,
             ),
           ),
         ],
