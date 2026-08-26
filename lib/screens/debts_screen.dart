@@ -576,65 +576,104 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
           const Divider(color: AppTheme.borderLight, height: 1),
           const SizedBox(height: 10),
 
-          // Action Buttons matching www/Keuangan (Bayar Cicilan, Log Cicilan, Delete)
+          // Action Buttons (Bayar Cicilan/Terima Bayar, Log Cicilan, Hapus)
           Row(
             children: [
               if (!isLunas) ...[
-                ElevatedButton.icon(
-                  onPressed: () => PayDebtModal.show(context, item),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isDebt ? AppTheme.bluePrimary : AppTheme.greenMain,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    elevation: 0,
-                  ),
-                  icon: const Icon(Icons.paid_rounded, size: 16, color: Colors.white),
-                  label: Text(
-                    isDebt ? 'Bayar Cicilan' : 'Terima Pembayaran',
-                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.white),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => PayDebtModal.show(context, item),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isDebt ? AppTheme.bluePrimary : AppTheme.greenMain,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      elevation: 0,
+                    ),
+                    icon: const Icon(Icons.paid_rounded, size: 15, color: Colors.white),
+                    label: Text(
+                      isDebt ? 'Bayar Cicilan' : 'Terima Bayar',
+                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.white),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
               ],
-              OutlinedButton.icon(
-                onPressed: () => _showPaymentHistoryModal(context, item),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppTheme.borderLight),
-                  backgroundColor: AppTheme.cardBg,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                icon: const Icon(Icons.history_rounded, size: 16, color: AppTheme.bluePrimary),
-                label: Text(
-                  'Log Cicilan (${item.payments.length})',
-                  style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _showPaymentHistoryModal(context, item),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppTheme.borderLight),
+                    backgroundColor: const Color(0xFFF8FAFC),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  icon: const Icon(Icons.history_rounded, size: 15, color: AppTheme.bluePrimary),
+                  label: Text(
+                    'Log (${item.payments.length})',
+                    style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
                 ),
               ),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.redMain, size: 20),
-                onPressed: () async {
-                  final confirm = await showDialog(
-                    context: context,
-                    builder: (c) => AlertDialog(
-                      backgroundColor: AppTheme.cardBg,
-                      title: const Text('Hapus Catatan?'),
-                      content: Text('Hapus catatan ${isDebt ? 'hutang' : 'piutang'} "${item.debtorName}"?'),
-                      actions: [
-                        TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Batal')),
-                        ElevatedButton(
-                          onPressed: () => Navigator.pop(c, true),
-                          style: ElevatedButton.styleFrom(backgroundColor: AppTheme.redMain),
-                          child: const Text('Hapus', style: TextStyle(color: Colors.white)),
+              const SizedBox(width: 8),
+              Material(
+                color: const Color(0xFFFEE2E2),
+                borderRadius: BorderRadius.circular(10),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (c) => AlertDialog(
+                        backgroundColor: AppTheme.cardBg,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                        title: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFFEE2E2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.delete_outline_rounded, color: AppTheme.redMain, size: 20),
+                            ),
+                            const SizedBox(width: 10),
+                            const Text('Hapus Catatan?'),
+                          ],
                         ),
-                      ],
-                    ),
-                  );
-                  if (confirm == true) {
-                    ref.read(financialControllerProvider.notifier).deleteDebt(item.id!);
-                  }
-                },
+                        content: Text(
+                          'Yakin ingin menghapus catatan ${isDebt ? 'hutang' : 'piutang'} "${item.debtorName}"?',
+                          style: GoogleFonts.plusJakartaSans(fontSize: 13),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(c, false),
+                            child: Text('Batal', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontWeight: FontWeight.bold)),
+                          ),
+                          ElevatedButton(
+                            onPressed: () => Navigator.pop(c, true),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.redMain,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              elevation: 0,
+                            ),
+                            child: const Text('Hapus', style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirm == true) {
+                      ref.read(financialControllerProvider.notifier).deleteDebt(item.id!);
+                    }
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.delete_outline_rounded, color: AppTheme.redMain, size: 19),
+                  ),
+                ),
               ),
             ],
           ),

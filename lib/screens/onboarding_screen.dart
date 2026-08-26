@@ -517,7 +517,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              'Versi 1.0.4 (Official Release)',
+              'Versi 1.0.5 (Official Release)',
               style: GoogleFonts.plusJakartaSans(
                 color: AppTheme.bluePrimary,
                 fontWeight: FontWeight.bold,
@@ -535,7 +535,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 const Divider(color: AppTheme.borderLight, height: 16),
                 _buildInfoRow('Pengembang / Developer', 'Hermawan'),
                 const Divider(color: AppTheme.borderLight, height: 16),
-                _buildInfoRow('Versi Resmi', 'v1.0.4'),
+                _buildInfoRow('Versi Resmi', 'v1.0.5'),
                 const Divider(color: AppTheme.borderLight, height: 16),
                 _buildInfoRow('Teknologi', 'Flutter, SQLite & Gemini AI'),
                 const Divider(color: AppTheme.borderLight, height: 16),
