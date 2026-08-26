@@ -1,0 +1,71 @@
+name: Build MaoneArt Keuangan APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Android Release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Generate Launcher Icons
+        run: flutter pub run flutter_launcher_icons
+
+      - name: Build Universal Release APK
+        run: flutter build apk --release
+
+      - name: Upload APK to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: MaoneArt-Keuangan-Release-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 14
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
+        with:
+          tag_name: v1.0.0
+          name: 'MaoneArt Keuangan v1.0.0 (Release)'
+          body: |
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.0)
+            
+            Aplikasi Pencatatan Keuangan Pribadi, Arus Kas, Hutang Piutang & Tabungan Impian Cerdas berbasis Flutter & SQLite Offline 100%.
+            
+            ### ✨ Fitur Unggulan:
+            - **100% Offline SQLite Storage**: Data tersimpan aman di internal HP tanpa perlu server atau kuota internet.
+            - **Arus Kas & Saldo Real-Time**: Pencatatan pemasukan & pengeluaran cepat dengan format otomatis Rupiah (Rp).
+            - **Manajemen Hutang & Piutang**: Lacak hutang yang harus dibayar dan piutang yang harus ditagih, lengkap dengan cicilan/pelunasan bertahap.
+            - **Tabungan Impian (*Savings Goal*)**: Tetapkan target tabungan impian dengan progress bar persentase dan setoran berkala.
+            - **Statistik & Diagram Lingkaran (*FL Chart*)**: Analisis proporsi pengeluaran per kategori secara visual interaktif.
+            - **Ekspor Laporan PDF & CSV/Excel**: Cetak lembar laporan keuangan profesional atau bagikan langsung ke WhatsApp.
+          files: build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,409 @@
+import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
+import '../models/category_model.dart';
+import '../models/transaction_model.dart';
+import '../models/debt_model.dart';
+import '../models/saving_model.dart';
+import '../models/financial_summary.dart';
+
+class DatabaseHelper {
+  static final DatabaseHelper instance = DatabaseHelper._init();
+  static Database? _database;
+
+  DatabaseHelper._init();
+
+  Future<Database> get database async {
+    if (_database != null) return _database!;
+    _database = await _initDB('maoneart_keuangan.db');
+    return _database!;
+  }
+
+  Future<Database> _initDB(String filePath) async {
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, filePath);
+
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: _createDB,
+    );
+  }
+
+  Future<void> _createDB(Database db, int version) async {
+    // 1. Tabel Kategori
+    await db.execute('''
+      CREATE TABLE kategori (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nama_kategori TEXT NOT NULL,
+        tipe TEXT NOT NULL,
+        ikon TEXT DEFAULT 'bi-bookmark',
+        warna TEXT DEFAULT '#10B981',
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
+
+    // 2. Tabel Transaksi
+    await db.execute('''
+      CREATE TABLE transaksi (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        tanggal TEXT NOT NULL,
+        tipe TEXT NOT NULL,
+        id_kategori INTEGER NOT NULL,
+        jumlah REAL NOT NULL,
+        keterangan TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (id_kategori) REFERENCES kategori (id) ON DELETE CASCADE
+      )
+    ''');
+
+    // 3. Tabel Hutang & Piutang
+    await db.execute('''
+      CREATE TABLE hutang (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nama_penghutang TEXT NOT NULL,
+        tipe TEXT NOT NULL,
+        kategori_hutang TEXT DEFAULT 'Perorangan / Teman',
+        total_hutang REAL NOT NULL,
+        sisa_hutang REAL NOT NULL,
+        status TEXT DEFAULT 'belum_lunas',
+        tanggal_pinjam TEXT NOT NULL,
+        tenggat_waktu TEXT,
+        keterangan TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
+
+    // 4. Tabel Pembayaran Hutang
+    await db.execute('''
+      CREATE TABLE pembayaran_hutang (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id_hutang INTEGER NOT NULL,
+        tanggal_bayar TEXT NOT NULL,
+        jumlah_bayar REAL NOT NULL,
+        keterangan TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (id_hutang) REFERENCES hutang (id) ON DELETE CASCADE
+      )
+    ''');
+
+    // 5. Tabel Tabungan & Target Impian
+    await db.execute('''
+      CREATE TABLE tabungan (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nama_tabungan TEXT NOT NULL,
+        target_jumlah REAL NOT NULL,
+        saldo_terkumpul REAL DEFAULT 0.0,
+        tenggat_waktu TEXT,
+        status TEXT DEFAULT 'berlangsung',
+        keterangan TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
+
+    // 6. Tabel Setoran Tabungan
+    await db.execute('''
+      CREATE TABLE setoran_tabungan (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id_tabungan INTEGER NOT NULL,
+        tanggal_setor TEXT NOT NULL,
+        jumlah_setor REAL NOT NULL,
+        keterangan TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (id_tabungan) REFERENCES tabungan (id) ON DELETE CASCADE
+      )
+    ''');
+
+    // Seed Data Kategori Standar
+    await _seedDefaultCategories(db);
+  }
+
+  Future<void> _seedDefaultCategories(Database db) async {
+    final defaultCategories = [
+      // Pemasukan
+      {'nama_kategori': 'Gaji & Upah', 'tipe': 'pemasukan', 'ikon': 'bi-wallet2', 'warna': '#10B981'},
+      {'nama_kategori': 'Usaha & Sampingan', 'tipe': 'pemasukan', 'ikon': 'bi-briefcase', 'warna': '#06B6D4'},
+      {'nama_kategori': 'Investasi & Bunga', 'tipe': 'pemasukan', 'ikon': 'bi-piggy-bank', 'warna': '#3B82F6'},
+      {'nama_kategori': 'Bonus & Hadiah', 'tipe': 'pemasukan', 'ikon': 'bi-gift', 'warna': '#8B5CF6'},
+      
+      // Pengeluaran
+      {'nama_kategori': 'Makanan & Minuman', 'tipe': 'pengeluaran', 'ikon': 'bi-cup-hot', 'warna': '#F43F5E'},
+      {'nama_kategori': 'Belanja Harian', 'tipe': 'pengeluaran', 'ikon': 'bi-cart3', 'warna': '#F59E0B'},
+      {'nama_kategori': 'Transportasi & Bensin', 'tipe': 'pengeluaran', 'ikon': 'bi-fuel-pump', 'warna': '#EAB308'},
+      {'nama_kategori': 'Tagihan & Listrik', 'tipe': 'pengeluaran', 'ikon': 'bi-lightning-charge', 'warna': '#EC4899'},
+      {'nama_kategori': 'Hiburan & Liburan', 'tipe': 'pengeluaran', 'ikon': 'bi-controller', 'warna': '#A855F7'},
+      {'nama_kategori': 'Kesehatan & Medis', 'tipe': 'pengeluaran', 'ikon': 'bi-heart-pulse', 'warna': '#14B8A6'},
+      {'nama_kategori': 'Pendidikan & Kursus', 'tipe': 'pengeluaran', 'ikon': 'bi-journal-bookmark', 'warna': '#6366F1'},
+      {'nama_kategori': 'Lain-lain', 'tipe': 'pengeluaran', 'ikon': 'bi-bookmark', 'warna': '#64748B'},
+    ];
+
+    for (final cat in defaultCategories) {
+      await db.insert('kategori', cat);
+    }
+  }
+
+  // ==================== KATEGORI CRUD ====================
+  Future<List<CategoryModel>> getCategories({String? type}) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps;
+    if (type != null) {
+      maps = await db.query('kategori', where: 'tipe = ?', whereArgs: [type], orderBy: 'id ASC');
+    } else {
+      maps = await db.query('kategori', orderBy: 'tipe DESC, id ASC');
+    }
+    return maps.map((e) => CategoryModel.fromMap(e)).toList();
+  }
+
+  Future<int> insertCategory(CategoryModel category) async {
+    final db = await database;
+    return await db.insert('kategori', category.toMap());
+  }
+
+  Future<int> updateCategory(CategoryModel category) async {
+    final db = await database;
+    return await db.update('kategori', category.toMap(), where: 'id = ?', whereArgs: [category.id]);
+  }
+
+  Future<int> deleteCategory(int id) async {
+    final db = await database;
+    return await db.delete('kategori', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ==================== TRANSAKSI CRUD ====================
+  Future<List<TransactionModel>> getTransactions({
+    String? type,
+    int? categoryId,
+    String? month, // 'YYYY-MM'
+    String? searchQuery,
+    int limit = 50,
+  }) async {
+    final db = await database;
+    String query = '''
+      SELECT t.*, k.nama_kategori, k.tipe as kategori_tipe, k.ikon, k.warna
+      FROM transaksi t
+      LEFT JOIN kategori k ON t.id_kategori = k.id
+      WHERE 1=1
+    ''';
+    final List<dynamic> args = [];
+
+    if (type != null && type.isNotEmpty && type != 'semua') {
+      query += ' AND t.tipe = ?';
+      args.add(type);
+    }
+
+    if (categoryId != null) {
+      query += ' AND t.id_kategori = ?';
+      args.add(categoryId);
+    }
+
+    if (month != null && month.isNotEmpty) {
+      query += " AND strftime('%Y-%m', t.tanggal) = ?";
+      args.add(month);
+    }
+
+    if (searchQuery != null && searchQuery.trim().isNotEmpty) {
+      query += ' AND (t.keterangan LIKE ? OR k.nama_kategori LIKE ?)';
+      args.add('%$searchQuery%');
+      args.add('%$searchQuery%');
+    }
+
+    query += ' ORDER BY t.tanggal DESC, t.id DESC LIMIT ?';
+    args.add(limit);
+
+    final maps = await db.rawQuery(query, args);
+    return maps.map((e) => TransactionModel.fromMap(e)).toList();
+  }
+
+  Future<int> insertTransaction(TransactionModel transaction) async {
+    final db = await database;
+    return await db.insert('transaksi', transaction.toMap());
+  }
+
+  Future<int> updateTransaction(TransactionModel transaction) async {
+    final db = await database;
+    return await db.update('transaksi', transaction.toMap(), where: 'id = ?', whereArgs: [transaction.id]);
+  }
+
+  Future<int> deleteTransaction(int id) async {
+    final db = await database;
+    return await db.delete('transaksi', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ==================== FINANCIAL SUMMARY ====================
+  Future<FinancialSummary> getFinancialSummary({String? month}) async {
+    final db = await database;
+    
+    // 1. Total Pemasukan & Pengeluaran
+    String query = '''
+      SELECT 
+        SUM(CASE WHEN tipe = 'pemasukan' THEN jumlah ELSE 0 END) as total_pemasukan,
+        SUM(CASE WHEN tipe = 'pengeluaran' THEN jumlah ELSE 0 END) as total_pengeluaran
+      FROM transaksi
+    ''';
+    List<dynamic> args = [];
+    if (month != null && month.isNotEmpty) {
+      query += " WHERE strftime('%Y-%m', tanggal) = ?";
+      args.add(month);
+    }
+
+    final txResult = await db.rawQuery(query, args);
+    double income = 0.0;
+    double expense = 0.0;
+    if (txResult.isNotEmpty) {
+      income = double.tryParse(txResult.first['total_pemasukan']?.toString() ?? '0') ?? 0.0;
+      expense = double.tryParse(txResult.first['total_pengeluaran']?.toString() ?? '0') ?? 0.0;
+    }
+
+    // 2. Total Hutang (Belum Lunas)
+    final debtResult = await db.rawQuery("SELECT SUM(sisa_hutang) as total FROM hutang WHERE tipe = 'hutang' AND status = 'belum_lunas'");
+    double debt = 0.0;
+    if (debtResult.isNotEmpty) {
+      debt = double.tryParse(debtResult.first['total']?.toString() ?? '0') ?? 0.0;
+    }
+
+    // 3. Total Piutang (Belum Lunas)
+    final recResult = await db.rawQuery("SELECT SUM(sisa_hutang) as total FROM hutang WHERE tipe = 'piutang' AND status = 'belum_lunas'");
+    double receivable = 0.0;
+    if (recResult.isNotEmpty) {
+      receivable = double.tryParse(recResult.first['total']?.toString() ?? '0') ?? 0.0;
+    }
+
+    // 4. Total Tabungan Terkumpul
+    final saveResult = await db.rawQuery("SELECT SUM(saldo_terkumpul) as total FROM tabungan");
+    double savings = 0.0;
+    if (saveResult.isNotEmpty) {
+      savings = double.tryParse(saveResult.first['total']?.toString() ?? '0') ?? 0.0;
+    }
+
+    return FinancialSummary(
+      totalIncome: income,
+      totalExpense: expense,
+      netBalance: income - expense,
+      totalDebt: debt,
+      totalReceivable: receivable,
+      totalSavings: savings,
+    );
+  }
+
+  // ==================== HUTANG & PIUTANG CRUD ====================
+  Future<List<DebtModel>> getDebts({String? type, String? status}) async {
+    final db = await database;
+    String where = '1=1';
+    List<dynamic> args = [];
+
+    if (type != null && type.isNotEmpty && type != 'semua') {
+      where += ' AND tipe = ?';
+      args.add(type);
+    }
+    if (status != null && status.isNotEmpty && status != 'semua') {
+      where += ' AND status = ?';
+      args.add(status);
+    }
+
+    final maps = await db.query('hutang', where: where, whereArgs: args, orderBy: 'status ASC, tanggal_pinjam DESC');
+    
+    final List<DebtModel> list = [];
+    for (final map in maps) {
+      final id = map['id'] as int;
+      final paymentsMap = await db.query('pembayaran_hutang', where: 'id_hutang = ?', whereArgs: [id], orderBy: 'tanggal_bayar DESC');
+      final payments = paymentsMap.map((p) => DebtPaymentModel.fromMap(p)).toList();
+      list.add(DebtModel.fromMap(map, payments: payments));
+    }
+    return list;
+  }
+
+  Future<int> insertDebt(DebtModel debt) async {
+    final db = await database;
+    return await db.insert('hutang', debt.toMap());
+  }
+
+  Future<void> addDebtPayment(int debtId, double amount, DateTime paymentDate, {String? note}) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      // 1. Simpan bukti pembayaran
+      await txn.insert('pembayaran_hutang', {
+        'id_hutang': debtId,
+        'tanggal_bayar': paymentDate.toIso8601String().substring(0, 10),
+        'jumlah_bayar': amount,
+        'keterangan': note,
+      });
+
+      // 2. Ambil data hutang
+      final debtMap = await txn.query('hutang', where: 'id = ?', whereArgs: [debtId]);
+      if (debtMap.isNotEmpty) {
+        final currentRemaining = double.tryParse(debtMap.first['sisa_hutang']?.toString() ?? '0') ?? 0.0;
+        final newRemaining = (currentRemaining - amount).clamp(0.0, double.infinity);
+        final newStatus = newRemaining <= 0 ? 'lunas' : 'belum_lunas';
+
+        await txn.update('hutang', {
+          'sisa_hutang': newRemaining,
+          'status': newStatus,
+        }, where: 'id = ?', whereArgs: [debtId]);
+      }
+    });
+  }
+
+  Future<int> deleteDebt(int id) async {
+    final db = await database;
+    return await db.delete('hutang', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ==================== TABUNGAN & IMPIAN CRUD ====================
+  Future<List<SavingModel>> getSavings({String? status}) async {
+    final db = await database;
+    String where = '1=1';
+    List<dynamic> args = [];
+
+    if (status != null && status.isNotEmpty && status != 'semua') {
+      where += ' AND status = ?';
+      args.add(status);
+    }
+
+    final maps = await db.query('tabungan', where: where, whereArgs: args, orderBy: 'status ASC, created_at DESC');
+    
+    final List<SavingModel> list = [];
+    for (final map in maps) {
+      final id = map['id'] as int;
+      final depositsMap = await db.query('setoran_tabungan', where: 'id_tabungan = ?', whereArgs: [id], orderBy: 'tanggal_setor DESC');
+      final deposits = depositsMap.map((d) => SavingDepositModel.fromMap(d)).toList();
+      list.add(SavingModel.fromMap(map, deposits: deposits));
+    }
+    return list;
+  }
+
+  Future<int> insertSaving(SavingModel saving) async {
+    final db = await database;
+    return await db.insert('tabungan', saving.toMap());
+  }
+
+  Future<void> addSavingDeposit(int savingId, double amount, DateTime depositDate, {String? note}) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      // 1. Simpan riwayat setoran
+      await txn.insert('setoran_tabungan', {
+        'id_tabungan': savingId,
+        'tanggal_setor': depositDate.toIso8601String().substring(0, 10),
+        'jumlah_setor': amount,
+        'keterangan': note,
+      });
+
+      // 2. Update saldo tabungan
+      final saveMap = await txn.query('tabungan', where: 'id = ?', whereArgs: [savingId]);
+      if (saveMap.isNotEmpty) {
+        final currentCollected = double.tryParse(saveMap.first['saldo_terkumpul']?.toString() ?? '0') ?? 0.0;
+        final targetAmount = double.tryParse(saveMap.first['target_jumlah']?.toString() ?? '0') ?? 0.0;
+        final newCollected = currentCollected + amount;
+        final newStatus = newCollected >= targetAmount ? 'tercapai' : 'berlangsung';
+
+        await txn.update('tabungan', {
+          'saldo_terkumpul': newCollected,
+          'status': newStatus,
+        }, where: 'id = ?', whereArgs: [savingId]);
+      }
+    });
+  }
+
+  Future<int> deleteSaving(int id) async {
+    final db = await database;
+    return await db.delete('tabungan', where: 'id = ?', whereArgs: [id]);
+  }
+}
