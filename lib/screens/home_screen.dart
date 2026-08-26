@@ -10,6 +10,8 @@ import '../utils/currency_formatter.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/quick_add_modal.dart';
 import 'category_management_screen.dart';
+import 'debts_screen.dart';
+import 'savings_screen.dart';
 import 'settings_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -116,57 +118,39 @@ class HomeScreen extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        Row(
-                          children: [
-                            InkWell(
-                              onTap: () async {
-                                final picked = await showDatePicker(
-                                  context: context,
-                                  initialDate: monthDate,
-                                  firstDate: DateTime(2020),
-                                  lastDate: DateTime(2035),
-                                  initialDatePickerMode: DatePickerMode.year,
-                                );
-                                if (picked != null) {
-                                  final newMonth = '${picked.year}-${picked.month.toString().padLeft(2, '0')}';
-                                  ref.read(selectedMonthProvider.notifier).state = newMonth;
-                                }
-                              },
+                        InkWell(
+                          onTap: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: monthDate,
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(2035),
+                              initialDatePickerMode: DatePickerMode.year,
+                            );
+                            if (picked != null) {
+                              final newMonth = '${picked.year}-${picked.month.toString().padLeft(2, '0')}';
+                              ref.read(selectedMonthProvider.notifier).state = newMonth;
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(10),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: Colors.white24, width: 0.8),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.calendar_month_rounded, color: Colors.white, size: 14),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      periodLabel,
-                                      style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                              border: Border.all(color: Colors.white24, width: 0.8),
                             ),
-                            const SizedBox(width: 8),
-                            InkWell(
-                              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
-                              borderRadius: BorderRadius.circular(10),
-                              child: Container(
-                                padding: const EdgeInsets.all(5),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: Colors.white24, width: 0.8),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.calendar_month_rounded, color: Colors.white, size: 14),
+                                const SizedBox(width: 4),
+                                Text(
+                                  periodLabel,
+                                  style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                                 ),
-                                child: const Icon(Icons.settings_rounded, color: Colors.white, size: 16),
-                              ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ],
                     ),
@@ -262,13 +246,13 @@ class HomeScreen extends ConsumerWidget {
                           label: 'Hutang',
                           icon: Icons.handshake_rounded,
                           color: const Color(0xFFF59E0B),
-                          onTap: () => onNavigateTab(3), // Hutang
+                          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DebtsScreen())),
                         ),
                         _buildGlassActionButton(
                           label: 'Tabungan',
                           icon: Icons.savings_rounded,
                           color: const Color(0xFF06B6D4),
-                          onTap: () => onNavigateTab(2), // Tabungan
+                          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SavingsScreen())),
                         ),
                       ],
                     ),

@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
 import 'home_screen.dart';
 import 'transaction_screen.dart';
-import 'savings_screen.dart';
-import 'debts_screen.dart';
 import 'reports_screen.dart';
+import 'settings_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -25,9 +24,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     final screens = [
       HomeScreen(onNavigateTab: _onTabChanged),
       const TransactionScreen(),
-      const SavingsScreen(),
-      const DebtsScreen(),
       const ReportsScreen(),
+      const SettingsScreen(),
     ];
 
     return Scaffold(
@@ -72,19 +70,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 label: 'Transaksi',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.savings_rounded),
-                activeIcon: Icon(Icons.savings_rounded, color: AppTheme.bluePrimary),
-                label: 'Tabungan',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.handshake_rounded),
-                activeIcon: Icon(Icons.handshake_rounded, color: AppTheme.bluePrimary),
-                label: 'Hutang',
-              ),
-              BottomNavigationBarItem(
                 icon: Icon(Icons.bar_chart_rounded),
                 activeIcon: Icon(Icons.bar_chart_rounded, color: AppTheme.bluePrimary),
                 label: 'Laporan',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.settings_rounded),
+                activeIcon: Icon(Icons.settings_rounded, color: AppTheme.bluePrimary),
+                label: 'Pengaturan',
               ),
             ],
           ),
