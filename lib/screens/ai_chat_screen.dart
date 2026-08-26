@@ -137,8 +137,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     for (final tx in txs) {
       if (!tx.isSaved) {
         // Cocokkan id kategori
-        int? catId = tx.categoryId;
-        if (catId == null) {
+        int catId = tx.categoryId ?? 1;
+        if (tx.categoryId == null) {
           final matched = categories.firstWhere(
             (c) => c.name.toLowerCase().contains(tx.categoryName.toLowerCase()) ||
                 tx.categoryName.toLowerCase().contains(c.name.toLowerCase()),
@@ -147,7 +147,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               orElse: () => categories.first,
             ),
           );
-          catId = matched.id;
+          catId = matched.id ?? 1;
         }
 
         final newTx = TransactionModel(
@@ -541,7 +541,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
             ],
           ],
         ),
-      );
-    }
+      ),
+    );
   }
 }
