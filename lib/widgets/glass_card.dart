@@ -7,6 +7,7 @@ class GlassCard extends StatelessWidget {
   final double borderRadius;
   final Color? backgroundColor;
   final Border? border;
+  final List<BoxShadow>? boxShadow;
   final VoidCallback? onTap;
 
   const GlassCard({
@@ -16,6 +17,7 @@ class GlassCard extends StatelessWidget {
     this.borderRadius = 18,
     this.backgroundColor,
     this.border,
+    this.boxShadow,
     this.onTap,
   });
 
@@ -24,13 +26,13 @@ class GlassCard extends StatelessWidget {
     Widget content = Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: backgroundColor ?? AppTheme.bgCard,
+        color: backgroundColor ?? AppTheme.cardBg,
         borderRadius: BorderRadius.circular(borderRadius),
-        border: border ?? Border.all(color: AppTheme.borderGlass, width: 1),
-        boxShadow: [
+        border: border ?? Border.all(color: AppTheme.borderLight, width: 1),
+        boxShadow: boxShadow ?? [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 12,
+            color: const Color(0xFF0047CC).withValues(alpha: 0.04),
+            blurRadius: 16,
             offset: const Offset(0, 4),
           ),
         ],

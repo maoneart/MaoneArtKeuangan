@@ -20,7 +20,6 @@ class ReportsScreen extends ConsumerStatefulWidget {
 
 class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   int _touchedPieIndex = -1;
-  int _touchedBarGroupIndex = -1;
 
   @override
   Widget build(BuildContext context) {
@@ -32,12 +31,15 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     final monthDate = DateTime(int.parse(parts[0]), int.parse(parts[1]));
     final periodLabel = AppDateFormatter.formatMonthYear(monthDate);
 
-    final bottomPadding = MediaQuery.of(context).padding.bottom + 40;
+    final bottomPadding = MediaQuery.of(context).padding.bottom + 80;
 
     return Scaffold(
-      backgroundColor: AppTheme.bgDark,
+      backgroundColor: AppTheme.bgApp,
       appBar: AppBar(
-        title: Text('Laporan & Statistik', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(
+          'Laporan & Statistik',
+          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textDark),
+        ),
         actions: [
           // Filter Periode Bulan
           TextButton.icon(
@@ -54,8 +56,11 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 ref.read(selectedMonthProvider.notifier).state = newMonth;
               }
             },
-            icon: const Icon(Icons.calendar_month_rounded, color: AppTheme.accentEmerald, size: 16),
-            label: Text(periodLabel, style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+            icon: const Icon(Icons.calendar_month_rounded, color: AppTheme.bluePrimary, size: 16),
+            label: Text(
+              periodLabel,
+              style: GoogleFonts.plusJakartaSans(color: AppTheme.bluePrimary, fontSize: 12, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -87,13 +92,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         await PdfExportService.sharePdf(path, subject: 'Laporan Keuangan $periodLabel');
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.accentEmerald,
-                        foregroundColor: Colors.black,
+                        backgroundColor: AppTheme.bluePrimary,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
-                      icon: const Icon(Icons.picture_as_pdf_rounded, size: 18, color: Colors.black),
-                      label: Text('Ekspor PDF', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13)),
+                      icon: const Icon(Icons.picture_as_pdf_rounded, size: 18, color: Colors.white),
+                      label: Text('Ekspor PDF', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13)),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -111,39 +116,47 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         await CsvExportService.shareCsv(path);
                       },
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-                        backgroundColor: Colors.white.withValues(alpha: 0.05),
+                        side: const BorderSide(color: AppTheme.borderLight),
+                        backgroundColor: AppTheme.cardBg,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
-                      icon: const Icon(Icons.table_chart_rounded, size: 18, color: AppTheme.accentCyan),
-                      label: Text('Ekspor Excel/CSV', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                      icon: const Icon(Icons.table_chart_rounded, size: 18, color: AppTheme.bluePrimary),
+                      label: Text('Ekspor Excel/CSV', style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 13)),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
 
-              // 2. Ringkasan Finansial Periode
+              // 2. Ringkasan Finansial Periode (Clean White Card)
               summaryAsync.when(
                 data: (summary) => GlassCard(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Ringkasan Arus Kas $periodLabel', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                      const Divider(color: Colors.white12, height: 20),
-                      _buildSummaryRow('Total Pemasukan', summary.formattedIncome, color: AppTheme.accentEmerald),
-                      _buildSummaryRow('Total Pengeluaran', summary.formattedExpense, color: AppTheme.accentRose),
-                      const Divider(color: Colors.white24, height: 20),
-                      _buildSummaryRow('Arus Kas Bersih (Surplus/Defisit)', summary.formattedBalance, color: summary.netBalance >= 0 ? AppTheme.accentCyan : AppTheme.accentRose, isBold: true),
+                      Text(
+                        'Ringkasan Arus Kas $periodLabel',
+                        style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                      const Divider(color: AppTheme.borderLight, height: 20),
+                      _buildSummaryRow('Total Pemasukan', summary.formattedIncome, color: AppTheme.greenMain),
+                      _buildSummaryRow('Total Pengeluaran', summary.formattedExpense, color: AppTheme.redMain),
+                      const Divider(color: AppTheme.borderLight, height: 20),
+                      _buildSummaryRow(
+                        'Arus Kas Bersih (Surplus/Defisit)',
+                        summary.formattedBalance,
+                        color: summary.netBalance >= 0 ? AppTheme.bluePrimary : AppTheme.redMain,
+                        isBold: true,
+                      ),
                     ],
                   ),
                 ),
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (_, __) => const SizedBox.shrink(),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
 
               // 3. GRAFIK BATANG (Bar Chart) Arus Kas Mingguan
               transactionsAsync.when(
@@ -151,7 +164,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (_, __) => const SizedBox.shrink(),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 16),
 
               // 4. GRAFIK LINGKARAN (Pie Chart) Pengeluaran per Kategori
               transactionsAsync.when(
@@ -175,16 +188,15 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         child: Center(
           child: Column(
             children: [
-              const Icon(Icons.bar_chart_rounded, color: Colors.white24, size: 44),
+              const Icon(Icons.bar_chart_rounded, color: AppTheme.textLight, size: 44),
               const SizedBox(height: 8),
-              Text('Belum ada data untuk grafik batang mingguan', style: GoogleFonts.outfit(color: AppTheme.textMuted, fontSize: 12)),
+              Text('Belum ada data untuk grafik batang mingguan', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 12)),
             ],
           ),
         ),
       );
     }
 
-    // Hitung Pemasukan & Pengeluaran per Minggu (W1: 1-7, W2: 8-14, W3: 15-21, W4: 22-akhir)
     final List<double> weeklyIncome = [0.0, 0.0, 0.0, 0.0];
     final List<double> weeklyExpense = [0.0, 0.0, 0.0, 0.0];
 
@@ -213,7 +225,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       maxY = max(maxY, max(weeklyIncome[i], weeklyExpense[i]));
     }
     if (maxY <= 0) maxY = 1000000;
-    maxY = maxY * 1.25; // Beri ruang di atas bar
+    maxY = maxY * 1.25;
 
     final barGroups = <BarChartGroupData>[];
     final weekLabels = ['Mgg 1\n(1-7)', 'Mgg 2\n(8-14)', 'Mgg 3\n(15-21)', 'Mgg 4\n(22+)'];
@@ -223,17 +235,15 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         BarChartGroupData(
           x: i,
           barRods: [
-            // Batang Pemasukan (Hijau)
             BarChartRodData(
               toY: weeklyIncome[i],
-              color: AppTheme.accentEmerald,
+              color: AppTheme.greenMain,
               width: 12,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
             ),
-            // Batang Pengeluaran (Merah)
             BarChartRodData(
               toY: weeklyExpense[i],
-              color: AppTheme.accentRose,
+              color: AppTheme.redMain,
               width: 12,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
             ),
@@ -250,17 +260,19 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Grafik Batang: Arus Kas Mingguan', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-              // Legend Singkat
+              Text(
+                'Grafik Batang: Arus Kas Mingguan',
+                style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 15),
+              ),
               Row(
                 children: [
-                  Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppTheme.accentEmerald, shape: BoxShape.circle)),
+                  Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppTheme.greenMain, shape: BoxShape.circle)),
                   const SizedBox(width: 4),
-                  Text('Masuk', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 10)),
+                  Text('Masuk', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10)),
                   const SizedBox(width: 10),
-                  Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppTheme.accentRose, shape: BoxShape.circle)),
+                  Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppTheme.redMain, shape: BoxShape.circle)),
                   const SizedBox(width: 4),
-                  Text('Keluar', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 10)),
+                  Text('Keluar', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10)),
                 ],
               ),
             ],
@@ -274,29 +286,20 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 maxY: maxY,
                 barTouchData: BarTouchData(
                   touchTooltipData: BarTouchTooltipData(
-                    getTooltipColor: (_) => const Color(0xFF1E293B),
+                    getTooltipColor: (_) => const Color(0xFF0F172A),
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       final isIncomeRod = rodIndex == 0;
                       final typeName = isIncomeRod ? 'Pemasukan' : 'Pengeluaran';
                       return BarTooltipItem(
                         '$typeName\n${CurrencyFormatter.formatRupiah(rod.toY)}',
                         TextStyle(
-                          color: isIncomeRod ? AppTheme.accentEmerald : AppTheme.accentRose,
+                          color: isIncomeRod ? const Color(0xFF6EE7B7) : const Color(0xFFFCA5A5),
                           fontWeight: FontWeight.bold,
                           fontSize: 11,
                         ),
                       );
                     },
                   ),
-                  touchCallback: (event, response) {
-                    setState(() {
-                      if (!event.isInterestedForInteractions || response == null || response.spot == null) {
-                        _touchedBarGroupIndex = -1;
-                        return;
-                      }
-                      _touchedBarGroupIndex = response.spot!.touchedBarGroupIndex;
-                    });
-                  },
                 ),
                 titlesData: FlTitlesData(
                   show: true,
@@ -310,7 +313,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         if (val == 0) return const SizedBox.shrink();
                         return Text(
                           CurrencyFormatter.formatCompact(val),
-                          style: const TextStyle(color: Colors.white38, fontSize: 9),
+                          style: const TextStyle(color: AppTheme.textMuted, fontSize: 9),
                         );
                       },
                     ),
@@ -326,7 +329,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                             child: Text(
                               weekLabels[idx],
                               textAlign: TextAlign.center,
-                              style: GoogleFonts.outfit(color: Colors.white70, fontSize: 9, fontWeight: FontWeight.bold),
+                              style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 9, fontWeight: FontWeight.bold),
                             ),
                           );
                         }
@@ -338,7 +341,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  getDrawingHorizontalLine: (_) => const FlLine(color: Colors.white10, strokeWidth: 0.8),
+                  getDrawingHorizontalLine: (_) => const FlLine(color: AppTheme.borderLight, strokeWidth: 0.8),
                 ),
                 borderData: FlBorderData(show: false),
                 barGroups: barGroups,
@@ -359,9 +362,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         child: Center(
           child: Column(
             children: [
-              const Icon(Icons.pie_chart_outline_rounded, color: Colors.white24, size: 44),
+              const Icon(Icons.pie_chart_outline_rounded, color: AppTheme.textLight, size: 44),
               const SizedBox(height: 8),
-              Text('Belum ada data pengeluaran untuk dianalisis', style: GoogleFonts.outfit(color: AppTheme.textMuted, fontSize: 12)),
+              Text('Belum ada data pengeluaran untuk dianalisis', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 12)),
             ],
           ),
         ),
@@ -385,7 +388,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       final isTouched = idx == _touchedPieIndex;
       final radius = isTouched ? 50.0 : 42.0;
       final percentage = (sum / totalExpense * 100).toStringAsFixed(1);
-      final color = categoryColors[catName] ?? AppTheme.accentRose;
+      final color = categoryColors[catName] ?? AppTheme.redMain;
 
       pieSections.add(
         PieChartSectionData(
@@ -393,7 +396,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           value: sum,
           title: '$percentage%',
           radius: radius,
-          titleStyle: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+          titleStyle: GoogleFonts.plusJakartaSans(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
         ),
       );
       idx++;
@@ -404,7 +407,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Grafik Lingkaran: Proporsi Pengeluaran', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+          Text(
+            'Grafik Lingkaran: Proporsi Pengeluaran',
+            style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 15),
+          ),
           const SizedBox(height: 16),
           SizedBox(
             height: 180,
@@ -430,7 +436,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           const SizedBox(height: 16),
           // Legend Kategori List
           ...categorySums.entries.map((entry) {
-            final color = categoryColors[entry.key] ?? AppTheme.accentRose;
+            final color = categoryColors[entry.key] ?? AppTheme.redMain;
             final percent = (entry.value / totalExpense * 100).toStringAsFixed(1);
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 3),
@@ -438,8 +444,16 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 children: [
                   Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
                   const SizedBox(width: 8),
-                  Expanded(child: Text(entry.key, style: GoogleFonts.outfit(color: Colors.white70, fontSize: 12))),
-                  Text('$percent% • ${CurrencyFormatter.formatRupiah(entry.value)}', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                  Expanded(
+                    child: Text(
+                      entry.key,
+                      style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 12, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                  Text(
+                    '$percent% • ${CurrencyFormatter.formatRupiah(entry.value)}',
+                    style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
                 ],
               ),
             );
@@ -455,8 +469,22 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: GoogleFonts.outfit(color: isBold ? Colors.white : AppTheme.textSecondary, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, fontSize: 13)),
-          Text(value, style: GoogleFonts.outfit(color: color, fontWeight: isBold ? FontWeight.w900 : FontWeight.bold, fontSize: isBold ? 15 : 13)),
+          Text(
+            label,
+            style: GoogleFonts.plusJakartaSans(
+              color: isBold ? AppTheme.textDark : AppTheme.textMuted,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              fontSize: 13,
+            ),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.plusJakartaSans(
+              color: color,
+              fontWeight: isBold ? FontWeight.w900 : FontWeight.bold,
+              fontSize: isBold ? 15 : 13,
+            ),
+          ),
         ],
       ),
     );

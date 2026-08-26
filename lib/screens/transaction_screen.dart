@@ -35,9 +35,12 @@ class _TransactionScreenState extends ConsumerState<TransactionScreen> {
     final periodLabel = AppDateFormatter.formatMonthYear(monthDate);
 
     return Scaffold(
-      backgroundColor: AppTheme.bgDark,
+      backgroundColor: AppTheme.bgApp,
       appBar: AppBar(
-        title: Text('Daftar Transaksi', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(
+          'Daftar Transaksi',
+          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textDark),
+        ),
         actions: [
           // Filter Periode Bulan
           TextButton.icon(
@@ -54,17 +57,20 @@ class _TransactionScreenState extends ConsumerState<TransactionScreen> {
                 ref.read(selectedMonthProvider.notifier).state = newMonth;
               }
             },
-            icon: const Icon(Icons.calendar_month_rounded, color: AppTheme.accentEmerald, size: 16),
-            label: Text(periodLabel, style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+            icon: const Icon(Icons.calendar_month_rounded, color: AppTheme.bluePrimary, size: 16),
+            label: Text(
+              periodLabel,
+              style: GoogleFonts.plusJakartaSans(color: AppTheme.bluePrimary, fontSize: 12, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => QuickAddModal.show(context),
-        backgroundColor: AppTheme.accentEmerald,
-        foregroundColor: Colors.black,
+        backgroundColor: AppTheme.bluePrimary,
+        foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded, size: 20),
-        label: Text('Catat Transaksi', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13)),
+        label: Text('Catat Transaksi', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13)),
       ),
       body: SafeArea(
         child: Column(
@@ -77,11 +83,11 @@ class _TransactionScreenState extends ConsumerState<TransactionScreen> {
                   TextField(
                     controller: _searchController,
                     onChanged: (val) => ref.read(transactionSearchQueryProvider.notifier).state = val,
-                    style: GoogleFonts.outfit(color: Colors.white, fontSize: 14),
+                    style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 14),
                     decoration: InputDecoration(
                       hintText: 'Cari transaksi atau kategori...',
-                      hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
-                      prefixIcon: const Icon(Icons.search_rounded, color: Colors.white60, size: 20),
+                      hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 13),
+                      prefixIcon: const Icon(Icons.search_rounded, color: AppTheme.textMuted, size: 20),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
                               icon: const Icon(Icons.clear_rounded, size: 18),
@@ -92,9 +98,11 @@ class _TransactionScreenState extends ConsumerState<TransactionScreen> {
                             )
                           : null,
                       filled: true,
-                      fillColor: AppTheme.bgCard,
+                      fillColor: AppTheme.cardBg,
                       contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: AppTheme.borderGlass)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.bluePrimary, width: 1.5)),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -104,9 +112,9 @@ class _TransactionScreenState extends ConsumerState<TransactionScreen> {
                     children: [
                       _buildFilterChip('Semua', 'semua', currentFilter),
                       const SizedBox(width: 8),
-                      _buildFilterChip('Pemasukan (+)', 'pemasukan', currentFilter, activeColor: AppTheme.accentEmerald),
+                      _buildFilterChip('Pemasukan (+)', 'pemasukan', currentFilter, activeColor: AppTheme.greenMain),
                       const SizedBox(width: 8),
-                      _buildFilterChip('Pengeluaran (-)', 'pengeluaran', currentFilter, activeColor: AppTheme.accentRose),
+                      _buildFilterChip('Pengeluaran (-)', 'pengeluaran', currentFilter, activeColor: AppTheme.redMain),
                     ],
                   ),
                 ],
@@ -123,9 +131,9 @@ class _TransactionScreenState extends ConsumerState<TransactionScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.receipt_long_outlined, color: Colors.white24, size: 56),
+                          const Icon(Icons.receipt_long_outlined, color: AppTheme.textLight, size: 56),
                           const SizedBox(height: 12),
-                          Text('Tidak ada transaksi ditemukan', style: GoogleFonts.outfit(color: AppTheme.textMuted, fontSize: 14)),
+                          Text('Tidak ada transaksi ditemukan', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 14)),
                         ],
                       ),
                     );
@@ -135,111 +143,124 @@ class _TransactionScreenState extends ConsumerState<TransactionScreen> {
                   return ListView.separated(
                     padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPadding),
                     itemCount: txs.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (ctx, i) {
-                    final tx = txs[i];
-                    return Dismissible(
-                      key: Key('tx_${tx.id}'),
-                      direction: DismissDirection.endToStart,
-                      background: Container(
-                        decoration: BoxDecoration(color: Colors.redAccent.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(16)),
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: 20),
-                        child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
-                      ),
-                      confirmDismiss: (_) async {
-                        return await showDialog(
-                          context: context,
-                          builder: (c) => AlertDialog(
-                            backgroundColor: AppTheme.bgCard,
-                            title: const Text('Hapus Transaksi?'),
-                            content: Text('Hapus catatan ${tx.category?.name ?? 'transaksi'} senilai ${tx.formattedAmount}?'),
-                            actions: [
-                              TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Batal')),
-                              ElevatedButton(
-                                onPressed: () => Navigator.pop(c, true),
-                                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentRose),
-                                child: const Text('Hapus'),
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (ctx, i) {
+                      final tx = txs[i];
+                      return Dismissible(
+                        key: Key('tx_${tx.id}'),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          decoration: BoxDecoration(color: AppTheme.redMain, borderRadius: BorderRadius.circular(16)),
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
+                        ),
+                        confirmDismiss: (_) async {
+                          return await showDialog(
+                            context: context,
+                            builder: (c) => AlertDialog(
+                              backgroundColor: AppTheme.cardBg,
+                              title: const Text('Hapus Transaksi?'),
+                              content: Text('Hapus catatan ${tx.category?.name ?? 'transaksi'} senilai ${tx.formattedAmount}?'),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Batal')),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.pop(c, true),
+                                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.redMain),
+                                  child: const Text('Hapus', style: TextStyle(color: Colors.white)),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        onDismissed: (_) {
+                          ref.read(financialControllerProvider.notifier).deleteTransaction(tx.id!);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Transaksi berhasil dihapus')),
+                          );
+                        },
+                        child: GlassCard(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: (tx.category?.color ?? AppTheme.bluePrimary).withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Icon(
+                                  tx.category?.iconData ?? Icons.receipt_rounded,
+                                  color: tx.category?.color ?? AppTheme.bluePrimary,
+                                  size: 22,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      tx.note != null && tx.note!.isNotEmpty ? tx.note! : (tx.category?.name ?? (tx.isIncome ? 'Pemasukan' : 'Pengeluaran')),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.plusJakartaSans(
+                                        color: AppTheme.textDark,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${tx.formattedFullDate} • ${tx.category?.name ?? "Umum"}',
+                                      style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                '${tx.isIncome ? '+' : '-'} ${tx.formattedAmount}',
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: tx.isIncome ? AppTheme.greenMain : AppTheme.redMain,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 14,
+                                ),
                               ),
                             ],
                           ),
-                        );
-                      },
-                      onDismissed: (_) {
-                        ref.read(financialControllerProvider.notifier).deleteTransaction(tx.id!);
-                      },
-                      child: GlassCard(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: (tx.category?.color ?? AppTheme.accentEmerald).withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(tx.category?.iconData ?? Icons.receipt_rounded, color: tx.category?.color ?? AppTheme.accentEmerald, size: 20),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    tx.category?.name ?? (tx.isIncome ? 'Pemasukan' : 'Pengeluaran'),
-                                    style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    tx.note != null && tx.note!.isNotEmpty ? '${tx.formattedShortDate} • ${tx.note}' : tx.formattedShortDate,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.inter(color: AppTheme.textMuted, fontSize: 11),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Text(
-                              '${tx.isIncome ? '+' : '-'} ${tx.formattedAmount}',
-                              style: GoogleFonts.outfit(
-                                color: tx.isIncome ? AppTheme.accentEmerald : AppTheme.accentRose,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
                         ),
-                      ),
-                    );
-                  },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, __) => const Center(child: Text('Gagal memuat daftar transaksi')),
+                      );
+                    },
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (_, __) => const Center(child: Text('Gagal memuat daftar transaksi')),
+              ),
             ),
-          ),
-        ],
-      )),
+          ],
+        ),
+      ),
     );
   }
 
   Widget _buildFilterChip(String label, String value, String current, {Color? activeColor}) {
     final isSelected = current == value;
-    final color = activeColor ?? AppTheme.accentCyan;
+    final color = activeColor ?? AppTheme.bluePrimary;
 
     return GestureDetector(
       onTap: () => ref.read(transactionTypeFilterProvider.notifier).state = value,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.2) : AppTheme.bgCard,
+          color: isSelected ? color.withValues(alpha: 0.12) : AppTheme.cardBg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isSelected ? color : Colors.white12, width: isSelected ? 1.5 : 1),
+          border: Border.all(color: isSelected ? color : AppTheme.borderLight, width: isSelected ? 1.5 : 1),
         ),
         child: Text(
           label,
-          style: GoogleFonts.outfit(
-            color: isSelected ? Colors.white : AppTheme.textSecondary,
+          style: GoogleFonts.plusJakartaSans(
+            color: isSelected ? color : AppTheme.textMuted,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             fontSize: 12,
           ),

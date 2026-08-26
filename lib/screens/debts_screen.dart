@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/debt_model.dart';
 import '../providers/financial_provider.dart';
 import '../utils/app_theme.dart';
-import '../utils/currency_formatter.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/debt_modals.dart';
 
@@ -36,24 +35,27 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
     final summaryAsync = ref.watch(financialSummaryProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.bgDark,
+      backgroundColor: AppTheme.bgApp,
       appBar: AppBar(
-        title: Text('Hutang & Piutang', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(
+          'Hutang & Piutang',
+          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textDark),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => AddDebtModal.show(context, type: _tabController.index == 0 ? 'hutang' : 'piutang'),
-        backgroundColor: _tabController.index == 0 ? AppTheme.accentRose : AppTheme.accentCyan,
-        foregroundColor: _tabController.index == 0 ? Colors.white : Colors.black,
+        backgroundColor: _tabController.index == 0 ? AppTheme.redMain : AppTheme.bluePrimary,
+        foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded, size: 20),
         label: Text(
           _tabController.index == 0 ? '+ Catat Hutang' : '+ Catat Piutang',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13),
+          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13),
         ),
       ),
       body: SafeArea(
         child: Column(
           children: [
-            // 1. Hero Card: Dual Metric Summary (Hutang Saya vs Piutang Orang)
+            // 1. Dual Metric Summary (Hutang Saya vs Piutang Orang)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: summaryAsync.when(
@@ -64,16 +66,12 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
                       child: Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
+                          color: AppTheme.cardBg,
                           borderRadius: BorderRadius.circular(18),
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              const Color(0xFF1E293B),
-                              AppTheme.accentRose.withValues(alpha: 0.15),
-                            ],
-                          ),
-                          border: Border.all(color: AppTheme.accentRose.withValues(alpha: 0.3), width: 1.2),
+                          border: Border.all(color: AppTheme.borderLight),
+                          boxShadow: [
+                            BoxShadow(color: AppTheme.redMain.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0, 4)),
+                          ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,11 +80,11 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
                               children: [
                                 Container(
                                   padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(color: AppTheme.accentRose.withValues(alpha: 0.2), shape: BoxShape.circle),
-                                  child: const Icon(Icons.arrow_upward_rounded, color: AppTheme.accentRose, size: 14),
+                                  decoration: BoxDecoration(color: AppTheme.redSoft, shape: BoxShape.circle),
+                                  child: const Icon(Icons.arrow_upward_rounded, color: AppTheme.redMain, size: 14),
                                 ),
                                 const SizedBox(width: 6),
-                                Text('Hutang Saya', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold)),
+                                Text('Hutang Saya', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold)),
                               ],
                             ),
                             const SizedBox(height: 8),
@@ -95,11 +93,11 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
                               alignment: Alignment.centerLeft,
                               child: Text(
                                 summary.formattedDebt,
-                                style: GoogleFonts.outfit(color: AppTheme.accentRose, fontWeight: FontWeight.w900, fontSize: 15),
+                                style: GoogleFonts.plusJakartaSans(color: AppTheme.redMain, fontWeight: FontWeight.w900, fontSize: 16),
                               ),
                             ),
                             const SizedBox(height: 2),
-                            Text('Wajib Dilunasi', style: GoogleFonts.inter(color: AppTheme.textMuted, fontSize: 9)),
+                            Text('Wajib Dilunasi', style: GoogleFonts.plusJakartaSans(color: AppTheme.textLight, fontSize: 10)),
                           ],
                         ),
                       ),
@@ -111,16 +109,12 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
                       child: Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
+                          color: AppTheme.cardBg,
                           borderRadius: BorderRadius.circular(18),
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              const Color(0xFF1E293B),
-                              AppTheme.accentCyan.withValues(alpha: 0.15),
-                            ],
-                          ),
-                          border: Border.all(color: AppTheme.accentCyan.withValues(alpha: 0.3), width: 1.2),
+                          border: Border.all(color: AppTheme.borderLight),
+                          boxShadow: [
+                            BoxShadow(color: AppTheme.bluePrimary.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0, 4)),
+                          ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,11 +123,11 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
                               children: [
                                 Container(
                                   padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(color: AppTheme.accentCyan.withValues(alpha: 0.2), shape: BoxShape.circle),
-                                  child: const Icon(Icons.arrow_downward_rounded, color: AppTheme.accentCyan, size: 14),
+                                  decoration: BoxDecoration(color: AppTheme.blueLight, shape: BoxShape.circle),
+                                  child: const Icon(Icons.arrow_downward_rounded, color: AppTheme.bluePrimary, size: 14),
                                 ),
                                 const SizedBox(width: 6),
-                                Text('Piutang Orang', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold)),
+                                Text('Piutang Orang', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold)),
                               ],
                             ),
                             const SizedBox(height: 8),
@@ -142,11 +136,11 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
                               alignment: Alignment.centerLeft,
                               child: Text(
                                 summary.formattedReceivable,
-                                style: GoogleFonts.outfit(color: AppTheme.accentCyan, fontWeight: FontWeight.w900, fontSize: 15),
+                                style: GoogleFonts.plusJakartaSans(color: AppTheme.bluePrimary, fontWeight: FontWeight.w900, fontSize: 16),
                               ),
                             ),
                             const SizedBox(height: 2),
-                            Text('Harus Ditagih', style: GoogleFonts.inter(color: AppTheme.textMuted, fontSize: 9)),
+                            Text('Harus Ditagih', style: GoogleFonts.plusJakartaSans(color: AppTheme.textLight, fontSize: 10)),
                           ],
                         ),
                       ),
@@ -164,21 +158,20 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.bgCard,
+                  color: const Color(0xFFE2E8F0),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white12),
                 ),
                 padding: const EdgeInsets.all(4),
                 child: TabBar(
                   controller: _tabController,
                   indicator: BoxDecoration(
-                    color: _tabController.index == 0 ? AppTheme.accentRose : AppTheme.accentCyan,
+                    color: _tabController.index == 0 ? AppTheme.redMain : AppTheme.bluePrimary,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   indicatorSize: TabBarIndicatorSize.tab,
-                  labelColor: _tabController.index == 0 ? Colors.white : Colors.black,
-                  unselectedLabelColor: AppTheme.textSecondary,
-                  labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12),
+                  labelColor: Colors.white,
+                  unselectedLabelColor: AppTheme.textMuted,
+                  labelStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12),
                   onTap: (_) => setState(() {}),
                   tabs: const [
                     Tab(text: 'Hutang Saya (Wajib Bayar)'),
@@ -222,16 +215,16 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(isDebt ? Icons.check_circle_outline_rounded : Icons.handshake_outlined, color: Colors.white24, size: 64),
+            Icon(isDebt ? Icons.check_circle_outline_rounded : Icons.handshake_outlined, color: AppTheme.textLight, size: 64),
             const SizedBox(height: 16),
             Text(
               isDebt ? 'Tidak ada tanggungan hutang' : 'Tidak ada piutang yang tercatat',
-              style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
             Text(
               isDebt ? 'Keuangan Anda bebas dari catatan hutang aktif!' : 'Catat uang Anda yang dipinjam teman atau pihak lain.',
-              style: GoogleFonts.inter(color: AppTheme.textMuted, fontSize: 12),
+              style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 12),
               textAlign: TextAlign.center,
             ),
           ],
@@ -251,31 +244,28 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
   }
 
   Widget _buildDebtCard(BuildContext context, WidgetRef ref, DebtModel item, {required bool isDebt}) {
-    final mainColor = isDebt ? AppTheme.accentRose : AppTheme.accentCyan;
+    final mainColor = isDebt ? AppTheme.redMain : AppTheme.bluePrimary;
+    final softColor = isDebt ? AppTheme.redSoft : AppTheme.blueLight;
     final percent = (item.progressPercentage * 100).toInt();
 
     return GlassCard(
-      padding: const EdgeInsets.all(18),
-      border: Border.all(
-        color: item.isSettled ? AppTheme.accentEmerald.withValues(alpha: 0.4) : mainColor.withValues(alpha: 0.3),
-        width: 1.2,
-      ),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header: Nama Orang, Kategori & Badge Status
+          // Header: Nama Orang, Kategori & Status Badge
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: (item.isSettled ? AppTheme.accentEmerald : mainColor).withValues(alpha: 0.15),
+                  color: item.isSettled ? AppTheme.greenSoft : softColor,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   item.isSettled ? Icons.check_circle_rounded : (isDebt ? Icons.person_rounded : Icons.account_balance_wallet_rounded),
-                  color: item.isSettled ? AppTheme.accentEmerald : mainColor,
+                  color: item.isSettled ? AppTheme.greenMain : mainColor,
                   size: 20,
                 ),
               ),
@@ -286,11 +276,11 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
                   children: [
                     Text(
                       item.debtorName,
-                      style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                      style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 15),
                     ),
                     Text(
                       item.categoryDebt,
-                      style: GoogleFonts.inter(color: AppTheme.textMuted, fontSize: 11),
+                      style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11),
                     ),
                   ],
                 ),
@@ -298,14 +288,13 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: item.isSettled ? AppTheme.accentEmerald.withValues(alpha: 0.2) : mainColor.withValues(alpha: 0.2),
+                  color: item.isSettled ? AppTheme.greenSoft : softColor,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: item.isSettled ? AppTheme.accentEmerald : mainColor),
                 ),
                 child: Text(
                   item.isSettled ? 'LUNAS 🎉' : 'BELUM LUNAS ($percent%)',
-                  style: GoogleFonts.outfit(
-                    color: item.isSettled ? AppTheme.accentEmerald : (isDebt ? AppTheme.accentRose : AppTheme.accentCyan),
+                  style: GoogleFonts.plusJakartaSans(
+                    color: item.isSettled ? AppTheme.greenMain : mainColor,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
@@ -324,14 +313,14 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
                 children: [
                   Text(
                     isDebt ? 'Sisa Hutang Wajib Bayar' : 'Sisa Piutang Harus Ditagih',
-                    style: GoogleFonts.outfit(color: AppTheme.textSecondary, fontSize: 11),
+                    style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11),
                   ),
                   Text(
                     item.formattedRemaining,
-                    style: GoogleFonts.outfit(
-                      color: item.isSettled ? AppTheme.accentEmerald : mainColor,
+                    style: GoogleFonts.plusJakartaSans(
+                      color: item.isSettled ? AppTheme.greenMain : mainColor,
                       fontWeight: FontWeight.w900,
-                      fontSize: 18,
+                      fontSize: 17,
                     ),
                   ),
                 ],
@@ -339,10 +328,10 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('Total Nominal Awal', style: GoogleFonts.outfit(color: AppTheme.textSecondary, fontSize: 11)),
+                  Text('Total Nominal Awal', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11)),
                   Text(
                     item.formattedTotal,
-                    style: GoogleFonts.outfit(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 13),
+                    style: GoogleFonts.plusJakartaSans(color: AppTheme.textBody, fontWeight: FontWeight.bold, fontSize: 13),
                   ),
                 ],
               ),
@@ -356,8 +345,8 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
             child: LinearProgressIndicator(
               value: item.progressPercentage,
               minHeight: 6,
-              backgroundColor: Colors.white12,
-              valueColor: AlwaysStoppedAnimation<Color>(item.isSettled ? AppTheme.accentEmerald : mainColor),
+              backgroundColor: const Color(0xFFE2E8F0),
+              valueColor: AlwaysStoppedAnimation<Color>(item.isSettled ? AppTheme.greenMain : mainColor),
             ),
           ),
           const SizedBox(height: 14),
@@ -368,31 +357,31 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
             children: [
               Row(
                 children: [
-                  const Icon(Icons.event_outlined, color: Colors.white38, size: 14),
+                  const Icon(Icons.event_outlined, color: AppTheme.textMuted, size: 14),
                   const SizedBox(width: 4),
                   Text(
                     'Tenggat: ${item.formattedDueDate}',
-                    style: GoogleFonts.inter(color: AppTheme.textMuted, fontSize: 11),
+                    style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11),
                   ),
                 ],
               ),
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.delete_outline_rounded, color: Colors.white38, size: 18),
+                    icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.textMuted, size: 18),
                     onPressed: () async {
                       final confirm = await showDialog(
                         context: context,
                         builder: (c) => AlertDialog(
-                          backgroundColor: AppTheme.bgCard,
+                          backgroundColor: AppTheme.cardBg,
                           title: const Text('Hapus Catatan?'),
                           content: Text('Hapus catatan ${isDebt ? 'hutang' : 'piutang'} ${item.debtorName}?'),
                           actions: [
                             TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Batal')),
                             ElevatedButton(
                               onPressed: () => Navigator.pop(c, true),
-                              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentRose),
-                              child: const Text('Hapus'),
+                              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.redMain),
+                              child: const Text('Hapus', style: TextStyle(color: Colors.white)),
                             ),
                           ],
                         ),
@@ -407,15 +396,15 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> with SingleTickerProv
                     ElevatedButton.icon(
                       onPressed: () => PayDebtModal.show(context, item),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isDebt ? AppTheme.accentRose : AppTheme.accentCyan,
-                        foregroundColor: isDebt ? Colors.white : Colors.black,
+                        backgroundColor: isDebt ? AppTheme.redMain : AppTheme.bluePrimary,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
                       icon: Icon(isDebt ? Icons.payment_rounded : Icons.archive_rounded, size: 15),
                       label: Text(
                         isDebt ? 'Bayar Cicilan' : 'Terima Bayaran',
-                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 11),
+                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 11),
                       ),
                     ),
                   ],

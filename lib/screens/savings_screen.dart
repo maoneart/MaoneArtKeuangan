@@ -15,16 +15,19 @@ class SavingsScreen extends ConsumerWidget {
     final savingsAsync = ref.watch(savingsProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.bgDark,
+      backgroundColor: AppTheme.bgApp,
       appBar: AppBar(
-        title: Text('Tabungan & Impian', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(
+          'Tabungan & Impian',
+          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textDark),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => AddSavingModal.show(context),
-        backgroundColor: AppTheme.accentCyan,
-        foregroundColor: Colors.black,
+        backgroundColor: AppTheme.bluePrimary,
+        foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded, size: 20),
-        label: Text('Buat Target', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13)),
+        label: Text('Buat Target', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13)),
       ),
       body: SafeArea(
         child: savingsAsync.when(
@@ -34,11 +37,18 @@ class SavingsScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.savings_outlined, color: Colors.white24, size: 64),
+                    const Icon(Icons.savings_outlined, color: AppTheme.textLight, size: 64),
                     const SizedBox(height: 16),
-                    Text('Belum ada target tabungan', style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text(
+                      'Belum ada target tabungan',
+                      style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
                     const SizedBox(height: 6),
-                    Text('Buat target impian Anda (misal: Beli Gadget, Liburan, Dana Darurat)', style: GoogleFonts.inter(color: AppTheme.textMuted, fontSize: 12), textAlign: TextAlign.center),
+                    Text(
+                      'Buat target impian Anda (misal: Beli Gadget, Liburan, Dana Darurat)',
+                      style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
                   ],
                 ),
               );
@@ -72,50 +82,81 @@ class SavingsScreen extends ConsumerWidget {
         children: [
           // Header: Nama Target & Status Badge
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: saving.isAchieved ? AppTheme.greenSoft : AppTheme.blueLight,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  saving.isAchieved ? Icons.check_circle_rounded : Icons.savings_rounded,
+                  color: saving.isAchieved ? AppTheme.greenMain : AppTheme.bluePrimary,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  saving.name,
-                  style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      saving.savingName,
+                      style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                    Text(
+                      'Tenggat: ${saving.formattedTargetDate}',
+                      style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11),
+                    ),
+                  ],
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: saving.isAchieved ? AppTheme.accentEmerald.withValues(alpha: 0.2) : AppTheme.accentCyan.withValues(alpha: 0.2),
+                  color: saving.isAchieved ? AppTheme.greenSoft : AppTheme.blueLight,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: saving.isAchieved ? AppTheme.accentEmerald : AppTheme.accentCyan),
                 ),
                 child: Text(
-                  saving.isAchieved ? 'TERCAPAI 🎉' : '$percent% Terkumpul',
-                  style: GoogleFonts.outfit(
-                    color: saving.isAchieved ? AppTheme.accentEmerald : AppTheme.accentCyan,
-                    fontSize: 11,
+                  saving.isAchieved ? 'TERCAPAI 🎉' : '$percent%',
+                  style: GoogleFonts.plusJakartaSans(
+                    color: saving.isAchieved ? AppTheme.greenMain : AppTheme.bluePrimary,
+                    fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
-          // Nominal: Terkumpul / Target
+          // Nominal: Terkumpul vs Target
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Dana Terkumpul', style: GoogleFonts.outfit(color: AppTheme.textSecondary, fontSize: 11)),
-                  Text(saving.formattedCollected, style: GoogleFonts.outfit(color: AppTheme.accentCyan, fontWeight: FontWeight.w900, fontSize: 16)),
+                  Text('Saldo Terkumpul', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11)),
+                  Text(
+                    saving.formattedCollected,
+                    style: GoogleFonts.plusJakartaSans(
+                      color: saving.isAchieved ? AppTheme.greenMain : AppTheme.bluePrimary,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 17,
+                    ),
+                  ),
                 ],
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('Target Akhir', style: GoogleFonts.outfit(color: AppTheme.textSecondary, fontSize: 11)),
-                  Text(saving.formattedTarget, style: GoogleFonts.outfit(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text('Target Akhir', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11)),
+                  Text(
+                    saving.formattedTarget,
+                    style: GoogleFonts.plusJakartaSans(color: AppTheme.textBody, fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
                 ],
               ),
             ],
@@ -124,38 +165,42 @@ class SavingsScreen extends ConsumerWidget {
 
           // Progress Bar
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(6),
             child: LinearProgressIndicator(
               value: saving.progressPercentage,
-              minHeight: 8,
-              backgroundColor: Colors.white12,
-              valueColor: AlwaysStoppedAnimation<Color>(saving.isAchieved ? AppTheme.accentEmerald : AppTheme.accentCyan),
+              minHeight: 6,
+              backgroundColor: const Color(0xFFE2E8F0),
+              valueColor: AlwaysStoppedAnimation<Color>(saving.isAchieved ? AppTheme.greenMain : AppTheme.bluePrimary),
             ),
           ),
           const SizedBox(height: 14),
 
-          // Footer: Tenggat & Action Button
+          // Action Buttons
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Tenggat: ${saving.formattedDueDate}',
-                style: GoogleFonts.inter(color: AppTheme.textMuted, fontSize: 11),
+                'Sisa: ${saving.formattedRemaining}',
+                style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.w600),
               ),
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.delete_outline_rounded, color: Colors.white38, size: 18),
+                    icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.textMuted, size: 18),
                     onPressed: () async {
                       final confirm = await showDialog(
                         context: context,
                         builder: (c) => AlertDialog(
-                          backgroundColor: AppTheme.bgCard,
+                          backgroundColor: AppTheme.cardBg,
                           title: const Text('Hapus Target?'),
-                          content: Text('Hapus target tabungan "${saving.name}"?'),
+                          content: Text('Hapus target tabungan "${saving.savingName}"?'),
                           actions: [
                             TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Batal')),
-                            ElevatedButton(onPressed: () => Navigator.pop(c, true), style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentRose), child: const Text('Hapus')),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(c, true),
+                              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.redMain),
+                              child: const Text('Hapus', style: TextStyle(color: Colors.white)),
+                            ),
                           ],
                         ),
                       );
@@ -164,18 +209,23 @@ class SavingsScreen extends ConsumerWidget {
                       }
                     },
                   ),
-                  const SizedBox(width: 4),
-                  ElevatedButton.icon(
-                    onPressed: saving.isAchieved ? null : () => DepositSavingModal.show(context, saving),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.accentCyan,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  if (!saving.isAchieved) ...[
+                    const SizedBox(width: 4),
+                    ElevatedButton.icon(
+                      onPressed: () => DepositSavingModal.show(context, saving),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.bluePrimary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      icon: const Icon(Icons.add_circle_outline_rounded, size: 15),
+                      label: Text(
+                        'Setor Dana',
+                        style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 11),
+                      ),
                     ),
-                    icon: const Icon(Icons.add_rounded, size: 16),
-                    label: Text('+ Setor Dana', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12)),
-                  ),
+                  ],
                 ],
               ),
             ],

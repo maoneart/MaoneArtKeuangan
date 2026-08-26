@@ -63,7 +63,10 @@ class _AddSavingModalState extends ConsumerState<AddSavingModal> {
     if (mounted) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Target impian tabungan baru berhasil dibuat!'), backgroundColor: AppTheme.accentCyan),
+        const SnackBar(
+          content: Text('Target impian berhasil dibuat!'),
+          backgroundColor: AppTheme.bluePrimary,
+        ),
       );
     }
   }
@@ -71,102 +74,154 @@ class _AddSavingModalState extends ConsumerState<AddSavingModal> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
+      decoration: const BoxDecoration(
+        color: AppTheme.cardBg,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      padding: EdgeInsets.only(left: 20, right: 20, top: 20, bottom: MediaQuery.of(context).viewInsets.bottom + 20),
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white30, borderRadius: BorderRadius.circular(10)))),
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(color: AppTheme.borderLight, borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
             const SizedBox(height: 16),
-            Text('BUAT TARGET TABUNGAN / IMPIAN', style: GoogleFonts.outfit(color: AppTheme.accentCyan, fontWeight: FontWeight.bold, fontSize: 16)),
+            Text(
+              'BUAT TARGET TABUNGAN IMPIAN',
+              style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 16),
+            ),
             const SizedBox(height: 16),
 
             // Nama Target Impian
-            Text('NAMA IMPIAN / TUJUAN', style: GoogleFonts.outfit(color: AppTheme.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)),
+            Text('NAMA TARGET IMPIAN', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             TextField(
               controller: _nameController,
               autofocus: true,
-              style: GoogleFonts.outfit(color: Colors.white, fontSize: 15),
+              style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 15),
               decoration: InputDecoration(
-                hintText: 'Contoh: Beli iPhone, Liburan ke Bali, DP Rumah...',
-                hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
+                hintText: 'Contoh: Beli Laptop Baru, Liburan ke Bali...',
+                hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 13),
                 filled: true,
-                fillColor: const Color(0xFF1E293B),
+                fillColor: const Color(0xFFF8FAFC),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
               ),
             ),
             const SizedBox(height: 14),
 
             // Target Nominal
-            Text('TARGET DANA (RP)', style: GoogleFonts.outfit(color: AppTheme.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)),
+            Text('TARGET JUMLAH DANA (RP)', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             TextField(
               controller: _targetController,
               keyboardType: TextInputType.number,
-              style: GoogleFonts.outfit(color: AppTheme.accentCyan, fontSize: 24, fontWeight: FontWeight.w900),
+              style: GoogleFonts.plusJakartaSans(color: AppTheme.bluePrimary, fontSize: 24, fontWeight: FontWeight.w900),
               decoration: InputDecoration(
                 prefixText: 'Rp ',
-                prefixStyle: GoogleFonts.outfit(color: Colors.white70, fontSize: 22, fontWeight: FontWeight.bold),
+                prefixStyle: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 22, fontWeight: FontWeight.bold),
                 hintText: '0',
-                hintStyle: const TextStyle(color: Colors.white24),
+                hintStyle: const TextStyle(color: AppTheme.textLight),
                 filled: true,
-                fillColor: const Color(0xFF1E293B),
+                fillColor: const Color(0xFFF8FAFC),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
               ),
             ),
             const SizedBox(height: 14),
 
-            // Setoran Awal (Opsional)
-            Text('SETORAN AWAL (OPSIONAL)', style: GoogleFonts.outfit(color: AppTheme.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
-            TextField(
-              controller: _initialDepositController,
-              keyboardType: TextInputType.number,
-              style: GoogleFonts.outfit(color: Colors.white, fontSize: 16),
-              decoration: InputDecoration(
-                prefixText: 'Rp ',
-                prefixStyle: const TextStyle(color: Colors.white70),
-                hintText: '0 (Bisa disetor nanti)',
-                hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
-                filled: true,
-                fillColor: const Color(0xFF1E293B),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // Tenggat Waktu Target
-            InkWell(
-              onTap: () async {
-                final picked = await showDatePicker(context: context, initialDate: _dueDate ?? DateTime.now().add(const Duration(days: 90)), firstDate: DateTime.now(), lastDate: DateTime(2040));
-                if (picked != null) setState(() => _dueDate = picked);
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(14)),
-                child: Row(
-                  children: [
-                    const Icon(Icons.flag_rounded, color: AppTheme.accentCyan, size: 18),
-                    const SizedBox(width: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Target Selesai', style: TextStyle(color: Colors.white60, fontSize: 10)),
-                        Text(_dueDate != null ? AppDateFormatter.formatFull(_dueDate!) : 'Pilih Tenggat Waktu (Opsional)', style: TextStyle(color: _dueDate != null ? Colors.white : Colors.white38, fontWeight: FontWeight.bold, fontSize: 12)),
-                      ],
-                    ),
-                  ],
+            // Saldo Awal & Tenggat Waktu
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('SALDO AWAL (RP)', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _initialDepositController,
+                        keyboardType: TextInputType.number,
+                        style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 14),
+                        decoration: InputDecoration(
+                          prefixText: 'Rp ',
+                          hintText: '0',
+                          filled: true,
+                          fillColor: const Color(0xFFF8FAFC),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('TARGET TANGGAL', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: _dueDate ?? DateTime.now().add(const Duration(days: 90)),
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime(2035),
+                          );
+                          if (picked != null) setState(() => _dueDate = picked);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: AppTheme.borderLight),
+                          ),
+                          child: Text(
+                            _dueDate != null ? AppDateFormatter.formatShort(_dueDate!) : 'Pilih Tanggal',
+                            style: GoogleFonts.plusJakartaSans(
+                              color: _dueDate != null ? AppTheme.bluePrimary : AppTheme.textMuted,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+
+            // Catatan
+            TextField(
+              controller: _noteController,
+              style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 13),
+              decoration: InputDecoration(
+                hintText: 'Keterangan tambahan...',
+                hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                filled: true,
+                fillColor: const Color(0xFFF8FAFC),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
               ),
             ),
             const SizedBox(height: 24),
@@ -174,12 +229,12 @@ class _AddSavingModalState extends ConsumerState<AddSavingModal> {
             ElevatedButton(
               onPressed: _submit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentCyan,
-                foregroundColor: Colors.black,
+                backgroundColor: AppTheme.bluePrimary,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
-              child: Text('Buat Target Impian', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15)),
+              child: Text('Simpan Target Impian', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 14)),
             ),
           ],
         ),
@@ -221,7 +276,36 @@ class _DepositSavingModalState extends ConsumerState<DepositSavingModal> {
   void _submit() async {
     final amount = CurrencyFormatter.parseRupiah(_amountController.text);
     if (amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Masukkan nominal setoran yang valid')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Masukkan nominal setoran yang valid')),
+      );
+      return;
+    }
+
+    final summary = await ref.read(financialSummaryProvider.future);
+    if (summary.netBalance < amount) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (c) => AlertDialog(
+            backgroundColor: AppTheme.cardBg,
+            title: Row(
+              children: const [
+                Icon(Icons.warning_amber_rounded, color: AppTheme.redMain),
+                SizedBox(width: 8),
+                Text('Saldo Tidak Cukup'),
+              ],
+            ),
+            content: Text(
+              'Saldo kas Anda (${CurrencyFormatter.formatRupiah(summary.netBalance)}) tidak mencukupi untuk setor tabungan sebesar ${CurrencyFormatter.formatRupiah(amount)}.',
+              style: const TextStyle(fontSize: 13),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(c), child: const Text('Tutup')),
+            ],
+          ),
+        );
+      }
       return;
     }
 
@@ -235,7 +319,10 @@ class _DepositSavingModalState extends ConsumerState<DepositSavingModal> {
     if (mounted) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Setoran tabungan berhasil disimpan!'), backgroundColor: AppTheme.accentCyan),
+        SnackBar(
+          content: Text('Setoran ${CurrencyFormatter.formatRupiah(amount)} berhasil! (Saldo Kas terpotong)'),
+          backgroundColor: AppTheme.greenMain,
+        ),
       );
     }
   }
@@ -243,57 +330,81 @@ class _DepositSavingModalState extends ConsumerState<DepositSavingModal> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
+      decoration: const BoxDecoration(
+        color: AppTheme.cardBg,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      padding: EdgeInsets.only(left: 20, right: 20, top: 20, bottom: MediaQuery.of(context).viewInsets.bottom + 20),
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white30, borderRadius: BorderRadius.circular(10)))),
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(color: AppTheme.borderLight, borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
             const SizedBox(height: 16),
-            Text('SETOR DANA TABUNGAN', style: GoogleFonts.outfit(color: AppTheme.accentCyan, fontWeight: FontWeight.bold, fontSize: 16)),
-            Text('${widget.saving.name} • Sisa Target: ${widget.saving.formattedRemaining}', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 13)),
+            Text(
+              'SETOR DANA TABUNGAN',
+              style: GoogleFonts.plusJakartaSans(color: AppTheme.bluePrimary, fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            Text(
+              '${widget.saving.savingName} • Target: ${widget.saving.formattedTarget}',
+              style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 13),
+            ),
             const SizedBox(height: 16),
+
+            // Input Nominal Setoran
+            Text('NOMINAL SETORAN (RP)', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
             TextField(
               controller: _amountController,
               keyboardType: TextInputType.number,
               autofocus: true,
-              style: GoogleFonts.outfit(color: AppTheme.accentCyan, fontSize: 24, fontWeight: FontWeight.bold),
+              style: GoogleFonts.plusJakartaSans(color: AppTheme.bluePrimary, fontSize: 24, fontWeight: FontWeight.bold),
               decoration: InputDecoration(
                 prefixText: 'Rp ',
-                prefixStyle: const TextStyle(color: Colors.white70, fontSize: 22, fontWeight: FontWeight.bold),
+                prefixStyle: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 22, fontWeight: FontWeight.bold),
                 filled: true,
-                fillColor: const Color(0xFF1E293B),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                fillColor: const Color(0xFFF8FAFC),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
               ),
             ),
             const SizedBox(height: 14),
+
             TextField(
               controller: _noteController,
-              style: const TextStyle(color: Colors.white, fontSize: 13),
+              style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 13),
               decoration: InputDecoration(
-                hintText: 'Keterangan (misal: Sisa gaji bulanan)...',
-                hintStyle: const TextStyle(color: Colors.white38, fontSize: 12),
+                hintText: 'Keterangan setoran (misal: Sisa gaji, bonus)...',
+                hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
                 filled: true,
-                fillColor: const Color(0xFF1E293B),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                fillColor: const Color(0xFFF8FAFC),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
               ),
             ),
             const SizedBox(height: 20),
+
             ElevatedButton(
               onPressed: _submit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentCyan,
-                foregroundColor: Colors.black,
+                backgroundColor: AppTheme.bluePrimary,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
-              child: Text('Simpan Setoran Tabungan', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14)),
+              child: Text('Konfirmasi Setor Dana', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 14)),
             ),
           ],
         ),

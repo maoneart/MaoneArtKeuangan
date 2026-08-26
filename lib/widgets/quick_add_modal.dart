@@ -61,11 +61,41 @@ class _QuickAddModalState extends ConsumerState<QuickAddModal> {
       return;
     }
 
+    // Validasi Saldo Kas jika Pengeluaran
+    if (_type == 'pengeluaran') {
+      final summary = await ref.read(financialSummaryProvider.future);
+      if (summary.netBalance < amount) {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (c) => AlertDialog(
+              backgroundColor: AppTheme.cardBg,
+              title: Row(
+                children: const [
+                  Icon(Icons.warning_amber_rounded, color: AppTheme.redMain),
+                  SizedBox(width: 8),
+                  Text('Saldo Tidak Cukup'),
+                ],
+              ),
+              content: Text(
+                'Saldo kas Anda (${CurrencyFormatter.formatRupiah(summary.netBalance)}) tidak mencukupi untuk pengeluaran sebesar ${CurrencyFormatter.formatRupiah(amount)}.',
+                style: const TextStyle(fontSize: 13),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(c), child: const Text('Tutup')),
+              ],
+            ),
+          );
+        }
+        return;
+      }
+    }
+
     final tx = TransactionModel(
-      date: _selectedDate,
+      amount: amount,
       type: _type,
       categoryId: _selectedCategoryId!,
-      amount: amount,
+      date: _selectedDate,
       note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
     );
 
@@ -74,8 +104,8 @@ class _QuickAddModalState extends ConsumerState<QuickAddModal> {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Transaksi ${_type == 'pemasukan' ? 'Pemasukan' : 'Pengeluaran'} berhasil dicatat!'),
-          backgroundColor: _type == 'pemasukan' ? AppTheme.accentEmerald : AppTheme.accentRose,
+          content: Text('${_type == 'pemasukan' ? 'Pemasukan' : 'Pengeluaran'} berhasil dicatat!'),
+          backgroundColor: _type == 'pemasukan' ? AppTheme.greenMain : AppTheme.redMain,
         ),
       );
     }
@@ -86,10 +116,9 @@ class _QuickAddModalState extends ConsumerState<QuickAddModal> {
     final categoriesAsync = ref.watch(categoriesProvider);
 
     return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
+      decoration: const BoxDecoration(
+        color: AppTheme.cardBg,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: EdgeInsets.only(
         left: 20,
@@ -102,15 +131,11 @@ class _QuickAddModalState extends ConsumerState<QuickAddModal> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Handle Bar
             Center(
               child: Container(
                 width: 40,
                 height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white30,
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                decoration: BoxDecoration(color: AppTheme.borderLight, borderRadius: BorderRadius.circular(10)),
               ),
             ),
             const SizedBox(height: 16),
@@ -118,34 +143,31 @@ class _QuickAddModalState extends ConsumerState<QuickAddModal> {
             // Tab Pilihan: Pengeluaran vs Pemasukan
             Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF1E293B),
+                color: const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.white12),
               ),
               padding: const EdgeInsets.all(4),
               child: Row(
                 children: [
                   Expanded(
                     child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _type = 'pengeluaran';
-                          _selectedCategoryId = null;
-                        });
-                      },
+                      onTap: () => setState(() {
+                        _type = 'pengeluaran';
+                        _selectedCategoryId = null;
+                      }),
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
-                          color: _type == 'pengeluaran' ? AppTheme.accentRose : Colors.transparent,
+                          color: _type == 'pengeluaran' ? AppTheme.redMain : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          'Pengeluaran',
-                          style: GoogleFonts.outfit(
-                            color: _type == 'pengeluaran' ? Colors.white : AppTheme.textSecondary,
+                          'Pengeluaran (-)',
+                          style: GoogleFonts.plusJakartaSans(
+                            color: _type == 'pengeluaran' ? Colors.white : AppTheme.textMuted,
                             fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                            fontSize: 13,
                           ),
                         ),
                       ),
@@ -153,25 +175,23 @@ class _QuickAddModalState extends ConsumerState<QuickAddModal> {
                   ),
                   Expanded(
                     child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _type = 'pemasukan';
-                          _selectedCategoryId = null;
-                        });
-                      },
+                      onTap: () => setState(() {
+                        _type = 'pemasukan';
+                        _selectedCategoryId = null;
+                      }),
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
-                          color: _type == 'pemasukan' ? AppTheme.accentEmerald : Colors.transparent,
+                          color: _type == 'pemasukan' ? AppTheme.greenMain : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          'Pemasukan',
-                          style: GoogleFonts.outfit(
-                            color: _type == 'pemasukan' ? Colors.white : AppTheme.textSecondary,
+                          'Pemasukan (+)',
+                          style: GoogleFonts.plusJakartaSans(
+                            color: _type == 'pemasukan' ? Colors.white : AppTheme.textMuted,
                             fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                            fontSize: 13,
                           ),
                         ),
                       ),
@@ -180,84 +200,91 @@ class _QuickAddModalState extends ConsumerState<QuickAddModal> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
 
-            // Input Nominal Rupiah
+            // Nominal Input
             Text(
-              'NOMINAL RUPIAH',
-              style: GoogleFonts.outfit(color: AppTheme.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
+              'NOMINAL TRANSAKSI (RP)',
+              style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
             TextField(
               controller: _amountController,
               keyboardType: TextInputType.number,
               autofocus: true,
-              style: GoogleFonts.outfit(
-                color: _type == 'pemasukan' ? AppTheme.accentEmerald : AppTheme.accentRose,
+              style: GoogleFonts.plusJakartaSans(
+                color: _type == 'pemasukan' ? AppTheme.greenMain : AppTheme.redMain,
                 fontSize: 26,
                 fontWeight: FontWeight.w900,
               ),
               decoration: InputDecoration(
                 prefixText: 'Rp ',
-                prefixStyle: GoogleFonts.outfit(color: Colors.white70, fontSize: 24, fontWeight: FontWeight.bold),
+                prefixStyle: GoogleFonts.plusJakartaSans(
+                  color: AppTheme.textDark,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
                 hintText: '0',
-                hintStyle: const TextStyle(color: Colors.white24),
+                hintStyle: const TextStyle(color: AppTheme.textLight),
                 filled: true,
-                fillColor: const Color(0xFF1E293B),
+                fillColor: const Color(0xFFF8FAFC),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: _type == 'pemasukan' ? AppTheme.greenMain : AppTheme.redMain, width: 2),
+                ),
               ),
             ),
             const SizedBox(height: 16),
 
-            // Kategori Selector Grid
+            // Pilih Kategori
             Text(
               'PILIH KATEGORI',
-              style: GoogleFonts.outfit(color: AppTheme.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
+              style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
+
             categoriesAsync.when(
               data: (cats) {
                 final filtered = cats.where((c) => c.type == _type).toList();
                 if (filtered.isEmpty) {
-                  return const Text('Belum ada kategori', style: TextStyle(color: Colors.white54));
+                  return Text('Belum ada kategori untuk $_type', style: const TextStyle(color: AppTheme.textMuted));
                 }
+
                 return SizedBox(
-                  height: 90,
-                  child: ListView.builder(
+                  height: 48,
+                  child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: filtered.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
                     itemBuilder: (ctx, i) {
                       final cat = filtered[i];
                       final isSelected = _selectedCategoryId == cat.id;
+
                       return GestureDetector(
                         onTap: () => setState(() => _selectedCategoryId = cat.id),
                         child: Container(
-                          width: 80,
-                          margin: const EdgeInsets.only(right: 8),
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
-                            color: isSelected ? cat.color.withValues(alpha: 0.25) : const Color(0xFF1E293B),
-                            borderRadius: BorderRadius.circular(14),
+                            color: isSelected ? (_type == 'pemasukan' ? AppTheme.greenSoft : AppTheme.redSoft) : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isSelected ? cat.color : Colors.white10,
-                              width: isSelected ? 2 : 1,
+                              color: isSelected ? (_type == 'pemasukan' ? AppTheme.greenMain : AppTheme.redMain) : Colors.transparent,
+                              width: 1.5,
                             ),
                           ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          child: Row(
                             children: [
-                              Icon(cat.iconData, color: isSelected ? cat.color : Colors.white70, size: 24),
-                              const SizedBox(height: 4),
+                              Icon(cat.iconData, color: isSelected ? (_type == 'pemasukan' ? AppTheme.greenMain : AppTheme.redMain) : AppTheme.textMuted, size: 18),
+                              const SizedBox(width: 6),
                               Text(
                                 cat.name,
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.outfit(
-                                  color: isSelected ? Colors.white : AppTheme.textSecondary,
-                                  fontSize: 10,
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: isSelected ? AppTheme.textDark : AppTheme.textBody,
                                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
@@ -271,9 +298,9 @@ class _QuickAddModalState extends ConsumerState<QuickAddModal> {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (_, __) => const Text('Gagal memuat kategori'),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
 
-            // Tanggal & Catatan Keterangan
+            // Tanggal Transaksi & Keterangan
             Row(
               children: [
                 Expanded(
@@ -290,55 +317,55 @@ class _QuickAddModalState extends ConsumerState<QuickAddModal> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1E293B),
+                        color: const Color(0xFFF8FAFC),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.white12),
+                        border: Border.all(color: AppTheme.borderLight),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.calendar_today_rounded, color: AppTheme.accentCyan, size: 16),
+                          const Icon(Icons.calendar_today_rounded, color: AppTheme.bluePrimary, size: 16),
                           const SizedBox(width: 8),
                           Text(
                             AppDateFormatter.formatShort(_selectedDate),
-                            style: GoogleFonts.outfit(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                            style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 13),
                           ),
                         ],
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  flex: 2,
-                  child: TextField(
-                    controller: _noteController,
-                    style: GoogleFonts.outfit(color: Colors.white, fontSize: 13),
-                    decoration: InputDecoration(
-                      hintText: 'Catatan / Keterangan...',
-                      hintStyle: const TextStyle(color: Colors.white38, fontSize: 12),
-                      filled: true,
-                      fillColor: const Color(0xFF1E293B),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-                    ),
-                  ),
-                ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
 
-            // Tombol Simpan Transaksi
+            // Catatan
+            TextField(
+              controller: _noteController,
+              style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 13),
+              decoration: InputDecoration(
+                hintText: 'Keterangan/Catatan tambahan (opsional)...',
+                hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                filled: true,
+                fillColor: const Color(0xFFF8FAFC),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Submit Button
             ElevatedButton(
               onPressed: _submit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _type == 'pemasukan' ? AppTheme.accentEmerald : AppTheme.accentRose,
+                backgroundColor: _type == 'pemasukan' ? AppTheme.greenMain : AppTheme.redMain,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
               child: Text(
                 'Simpan ${_type == 'pemasukan' ? 'Pemasukan' : 'Pengeluaran'}',
-                style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15),
+                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 14),
               ),
             ),
           ],

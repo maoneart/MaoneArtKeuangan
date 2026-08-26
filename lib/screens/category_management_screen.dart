@@ -12,13 +12,13 @@ class CategoryManagementScreen extends ConsumerWidget {
   void _showAddCategoryDialog(BuildContext context, WidgetRef ref) {
     final nameController = TextEditingController();
     String selectedType = 'pengeluaran';
-    String selectedColor = '#F43F5E';
+    String selectedColor = '#DC2626';
     String selectedIcon = 'bi-bookmark';
 
     final colors = [
-      '#10B981', '#06B6D4', '#3B82F6', '#8B5CF6',
-      '#F43F5E', '#F59E0B', '#EAB308', '#EC4899',
-      '#14B8A6', '#6366F1', '#A855F7', '#64748B',
+      '#059669', '#0284C7', '#0047CC', '#7C3AED',
+      '#DC2626', '#D97706', '#EAB308', '#DB2777',
+      '#0D9488', '#4F46E5', '#9333EA', '#475569',
     ];
 
     final icons = [
@@ -35,10 +35,9 @@ class CategoryManagementScreen extends ConsumerWidget {
       builder: (ctx) => StatefulBuilder(
         builder: (context, setModalState) {
           return Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF0F172A),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1.5),
+            decoration: const BoxDecoration(
+              color: AppTheme.cardBg,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
             ),
             padding: EdgeInsets.only(
               left: 20,
@@ -51,33 +50,58 @@ class CategoryManagementScreen extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white30, borderRadius: BorderRadius.circular(10)))),
+                  Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppTheme.borderLight, borderRadius: BorderRadius.circular(10)))),
                   const SizedBox(height: 16),
-                  Text('TAMBAH KATEGORI BARU', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(
+                    'TAMBAH KATEGORI BARU',
+                    style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
                   const SizedBox(height: 16),
 
                   // Tipe Kategori
                   Row(
                     children: [
                       Expanded(
-                        child: ChoiceChip(
-                          label: const Text('Pengeluaran'),
-                          selected: selectedType == 'pengeluaran',
-                          selectedColor: AppTheme.accentRose.withValues(alpha: 0.3),
-                          onSelected: (val) {
-                            if (val) setModalState(() => selectedType = 'pengeluaran');
-                          },
+                        child: GestureDetector(
+                          onTap: () => setModalState(() => selectedType = 'pengeluaran'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: selectedType == 'pengeluaran' ? AppTheme.redMain : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              'Pengeluaran (-)',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: selectedType == 'pengeluaran' ? Colors.white : AppTheme.textMuted,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: ChoiceChip(
-                          label: const Text('Pemasukan'),
-                          selected: selectedType == 'pemasukan',
-                          selectedColor: AppTheme.accentEmerald.withValues(alpha: 0.3),
-                          onSelected: (val) {
-                            if (val) setModalState(() => selectedType = 'pemasukan');
-                          },
+                        child: GestureDetector(
+                          onTap: () => setModalState(() => selectedType = 'pemasukan'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: selectedType == 'pemasukan' ? AppTheme.greenMain : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              'Pemasukan (+)',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: selectedType == 'pemasukan' ? Colors.white : AppTheme.textMuted,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -88,88 +112,97 @@ class CategoryManagementScreen extends ConsumerWidget {
                   TextField(
                     controller: nameController,
                     autofocus: true,
-                    style: const TextStyle(color: Colors.white),
+                    style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 14),
                     decoration: InputDecoration(
-                      hintText: 'Nama Kategori (misal: Langganan Netflix)...',
-                      hintStyle: const TextStyle(color: Colors.white38),
+                      hintText: 'Nama kategori baru...',
+                      hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 13),
                       filled: true,
-                      fillColor: const Color(0xFF1E293B),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                      fillColor: const Color(0xFFF8FAFC),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.borderLight)),
                     ),
                   ),
                   const SizedBox(height: 14),
 
                   // Pilih Warna
-                  Text('PILIH WARNA', style: GoogleFonts.outfit(color: AppTheme.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)),
+                  Text('PILIH WARNA', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: colors.map((c) {
-                      final hex = c.replaceAll('#', '');
-                      final color = Color(int.parse('FF$hex', radix: 16));
-                      final isSelected = selectedColor == c;
+                    children: colors.map((hex) {
+                      final isSelected = selectedColor == hex;
+                      final color = Color(int.parse(hex.replaceFirst('#', '0xFF')));
                       return GestureDetector(
-                        onTap: () => setModalState(() => selectedColor = c),
+                        onTap: () => setModalState(() => selectedColor = hex),
                         child: Container(
                           width: 32,
                           height: 32,
                           decoration: BoxDecoration(
                             color: color,
                             shape: BoxShape.circle,
-                            border: Border.all(color: isSelected ? Colors.white : Colors.transparent, width: 2.5),
+                            border: isSelected ? Border.all(color: AppTheme.bluePrimary, width: 3) : null,
                           ),
+                          child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 16) : null,
                         ),
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
 
                   // Pilih Ikon
-                  Text('PILIH IKON', style: GoogleFonts.outfit(color: AppTheme.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)),
+                  Text('PILIH IKON', style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: icons.map((ic) {
-                      final isSelected = selectedIcon == ic;
-                      final dummyCat = CategoryModel(name: '', type: selectedType, iconName: ic);
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: icons.map((iconName) {
+                      final isSelected = selectedIcon == iconName;
+                      final iconData = CategoryModel.mapBootstrapIcon(iconName);
                       return GestureDetector(
-                        onTap: () => setModalState(() => selectedIcon = ic),
+                        onTap: () => setModalState(() => selectedIcon = iconName),
                         child: Container(
-                          padding: const EdgeInsets.all(10),
+                          width: 38,
+                          height: 38,
                           decoration: BoxDecoration(
-                            color: isSelected ? AppTheme.accentEmerald.withValues(alpha: 0.3) : const Color(0xFF1E293B),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: isSelected ? AppTheme.accentEmerald : Colors.white12),
+                            color: isSelected ? AppTheme.bluePrimary.withValues(alpha: 0.15) : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(10),
+                            border: isSelected ? Border.all(color: AppTheme.bluePrimary, width: 1.5) : null,
                           ),
-                          child: Icon(dummyCat.iconData, color: isSelected ? Colors.white : Colors.white60, size: 20),
+                          child: Icon(iconData, color: isSelected ? AppTheme.bluePrimary : AppTheme.textMuted, size: 20),
                         ),
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
                   ElevatedButton(
                     onPressed: () async {
                       final name = nameController.text.trim();
-                      if (name.isEmpty) return;
-                      final newCat = CategoryModel(
+                      if (name.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Masukkan nama kategori')));
+                        return;
+                      }
+                      final cat = CategoryModel(
                         name: name,
                         type: selectedType,
+                        icon: selectedIcon,
                         colorHex: selectedColor,
-                        iconName: selectedIcon,
                       );
-                      await ref.read(financialControllerProvider.notifier).addCategory(newCat);
-                      if (context.mounted) Navigator.pop(ctx);
+                      await ref.read(financialControllerProvider.notifier).addCategory(cat);
+                      if (context.mounted) {
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Kategori baru berhasil ditambahkan!')));
+                      }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.accentEmerald,
-                      foregroundColor: Colors.black,
+                      backgroundColor: AppTheme.bluePrimary,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
-                    child: Text('Simpan Kategori', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14)),
+                    child: Text('Simpan Kategori', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 14)),
                   ),
                 ],
               ),
@@ -185,16 +218,16 @@ class CategoryManagementScreen extends ConsumerWidget {
     final categoriesAsync = ref.watch(categoriesProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.bgDark,
+      backgroundColor: AppTheme.bgApp,
       appBar: AppBar(
-        title: Text('Kelola Kategori', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text('Kelola Kategori', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textDark)),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddCategoryDialog(context, ref),
-        backgroundColor: AppTheme.accentEmerald,
-        foregroundColor: Colors.black,
+        backgroundColor: AppTheme.bluePrimary,
+        foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded, size: 20),
-        label: Text('Tambah Kategori', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13)),
+        label: Text('Tambah Kategori', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13)),
       ),
       body: SafeArea(
         child: categoriesAsync.when(
@@ -205,59 +238,60 @@ class CategoryManagementScreen extends ConsumerWidget {
               itemCount: cats.length,
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (ctx, i) {
-              final cat = cats[i];
-              return GlassCard(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(color: cat.color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
-                      child: Icon(cat.iconData, color: cat.color, size: 22),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(cat.name, style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                          Text(
-                            cat.isIncome ? 'Kategori Pemasukan (+)' : 'Kategori Pengeluaran (-)',
-                            style: GoogleFonts.inter(color: cat.isIncome ? AppTheme.accentEmerald : AppTheme.accentRose, fontSize: 11),
-                          ),
-                        ],
+                final cat = cats[i];
+                return GlassCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(color: cat.color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(12)),
+                        child: Icon(cat.iconData, color: cat.color, size: 22),
                       ),
-                    ),
-                    if (cat.id != null && cat.id! > 12)
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline_rounded, color: Colors.white38, size: 18),
-                        onPressed: () async {
-                          final confirm = await showDialog(
-                            context: context,
-                            builder: (c) => AlertDialog(
-                              backgroundColor: AppTheme.bgCard,
-                              title: const Text('Hapus Kategori?'),
-                              content: Text('Hapus kategori "${cat.name}"?'),
-                              actions: [
-                                TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Batal')),
-                                ElevatedButton(onPressed: () => Navigator.pop(c, true), style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentRose), child: const Text('Hapus')),
-                              ],
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(cat.name, style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 14)),
+                            Text(
+                              cat.isIncome ? 'Kategori Pemasukan (+)' : 'Kategori Pengeluaran (-)',
+                              style: GoogleFonts.plusJakartaSans(color: cat.isIncome ? AppTheme.greenMain : AppTheme.redMain, fontSize: 11),
                             ),
-                          );
-                          if (confirm == true) {
-                            ref.read(financialControllerProvider.notifier).deleteCategory(cat.id!);
-                          }
-                        },
+                          ],
+                        ),
                       ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => const Center(child: Text('Gagal memuat kategori')),
-      )),
+                      if (cat.id != null && cat.id! > 12)
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.textMuted, size: 18),
+                          onPressed: () async {
+                            final confirm = await showDialog(
+                              context: context,
+                              builder: (c) => AlertDialog(
+                                backgroundColor: AppTheme.cardBg,
+                                title: const Text('Hapus Kategori?'),
+                                content: Text('Hapus kategori "${cat.name}"?'),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Batal')),
+                                  ElevatedButton(onPressed: () => Navigator.pop(c, true), style: ElevatedButton.styleFrom(backgroundColor: AppTheme.redMain), child: const Text('Hapus', style: TextStyle(color: Colors.white))),
+                                ],
+                              ),
+                            );
+                            if (confirm == true) {
+                              ref.read(financialControllerProvider.notifier).deleteCategory(cat.id!);
+                            }
+                          },
+                        ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, __) => const Center(child: Text('Gagal memuat kategori')),
+        ),
+      ),
     );
   }
 }

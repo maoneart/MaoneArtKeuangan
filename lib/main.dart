@@ -36,7 +36,7 @@ class MaoneArtKeuanganApp extends StatelessWidget {
     return MaterialApp(
       title: 'MaoneArt Keuangan',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.lightTheme,
       home: const MainNavigationScreen(),
     );
   }
