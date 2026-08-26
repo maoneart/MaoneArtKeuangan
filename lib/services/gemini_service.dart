@@ -116,9 +116,9 @@ Berikan tanggapan singkat, ramah, dan memotivasi sebelum blok JSON.
 ''';
 
       final cleanKey = apiKey.trim();
-      final url = cleanKey.startsWith('AIzaSy')
-          ? Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$cleanKey')
-          : Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent');
+      final url = Uri.parse(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=$cleanKey',
+      );
 
       final contents = <Map<String, dynamic>>[];
 
@@ -151,9 +151,6 @@ Berikan tanggapan singkat, ramah, dan memotivasi sebelum blok JSON.
         'Content-Type': 'application/json',
         'X-goog-api-key': cleanKey,
       };
-      if (!cleanKey.startsWith('AIzaSy')) {
-        headers['Authorization'] = 'Bearer $cleanKey';
-      }
 
       final response = await http.post(
         url,
@@ -165,13 +162,22 @@ Berikan tanggapan singkat, ramah, dan memotivasi sebelum blok JSON.
         final errJson = jsonDecode(response.body);
         final errMsg = errJson['error']?['message'] ?? 'Gagal menghubungi Gemini API (${response.statusCode})';
         return AiChatResponse(
-          replyText: 'Maaf, terjadi kendala saat menghubungi AI: $errMsg\n\nTips: Jika Anda menggunakan kunci $cleanKey, pastikan API Key tersebut sudah aktif di Google AI Studio atau Google Cloud Console.',
+          replyText: 'Maaf, terjadi kendala saat menghubungi AI: $errMsg\n\nPastikan API Key Gemini Anda aktif di Google AI Studio.',
           isError: true,
         );
       }
 
       final resData = jsonDecode(response.body);
-      final rawText = resData['candidates']?[0]?['content']?['parts']?[0]?['text'] as String? ?? 'Tidak ada tanggapan dari AI.';
+      final parts = resData['candidates']?[0]?['content']?['parts'] as List? ?? [];
+      String rawText = '';
+      for (final p in parts) {
+        if (p is Map && p['text'] is String) {
+          rawText += p['text'] as String;
+        }
+      }
+      if (rawText.isEmpty) {
+        rawText = 'Tidak ada tanggapan dari AI.';
+      }
 
       // Ekstrak JSON Transaksi dari rawText jika ada
       final transactions = <ParsedTransaction>[];
