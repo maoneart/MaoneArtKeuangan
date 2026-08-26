@@ -52,21 +52,28 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.0.9
-          name: 'MaoneArt Keuangan v1.0.9 (Release)'
+          tag_name: v1.0.0
+          name: 'MaoneArt Keuangan v1.0.0 (Official Final Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.9)
+            ## 💰 MaoneArt Keuangan - Android Official Release APK (v1.0.0)
             
-            - **Perbaikan Ikon Tombol Aksi (Bayar Cicilan, Terima Pembayaran, Setor Tabungan)**:
-              * Ikon tombol `Bayar Cicilan` dan `Terima Pembayaran` kini diberi warna putih solid (*pure white*) yang terang dan tegas sehingga selalu terlihat jelas dan tidak menyatu dengan background.
-              * Ikon tombol `Setor Tabungan` dan `Log Setoran` diperjelas dengan ikon kontras tinggi.
-            - **Koleksi Super Lengkap Ikon Kategori Baru (40+ Ikon)**:
-              * **Keagamaan & Sosial**: Sedekah & Infaq (🤲), Tahlil & Pengajian (📖), Zakat & Masjid (🕌), Sosial & Keluarga (👥).
-              * **Pajak & Finansial**: Pajak & Retribusi (🧾), Bank & Bunga (🏦), Investasi & Emas (🪙), Saham & Trading (📈).
-              * **Kendaraan & Utilitas**: Bensin & SPBU (⛽), Servis & Bengkel (🔧), Motor (🛵), Mobil (🚗), Listrik & Token (⚡), Air PDAM (💧), Wifi & Internet (📶), Pulsa (📱).
-              * **Belanja, Kesehatan & Pendidikan**: Pasar/Warung (🏪), Belanja (🛒), Rumah (🏠), SPP & Sekolah (🎓), Rumah Sakit & Dokter (🏥), Obat & Farmasi (💊), Anak & Balita (👶), dll.
-            - **100% Bebas Tertutup Navbar Sistem**: Seluruh tombol aksi modal dan list view aman dari bilah 3-tombol sistem HP.
-            - **100% Offline SQLite Storage**: Data tersimpan lokal di HP tanpa server.
+            - **Halaman Pengaturan & Tentang Aplikasi (About MaoneArt Keuangan)**:
+              * Menu Pengaturan & Tentang Aplikasi lengkap dengan identitas branding, informasi fitur unggulan, status privasi lokal 100% SQLite offline, dan profil pengembang MaoneArt 2026.
+            - **Pencatatan Arus Kas & Saldo Kas Cerdas**:
+              * Format angka ribuan otomatis (*Real-Time Thousand Separator*), input box simetris dengan label `Rp` tebal.
+              * Kalkulasi saldo kas riil terintegrasi penuh dengan hutang piutang dan tabungan impian.
+            - **Debt & Credit Manager (Hutang & Piutang)**:
+              * Segmented Switcher Hutang Saya vs Piutang, tombol aksi jelas `Bayar Cicilan` & `Terima Pembayaran`, progres pelunasan dan modal riwayat pembayaran.
+            - **Savings & Target Goals (Tabungan Impian)**:
+              * Redesain lengkap dual summary cards (`TOTAL TABUNGAN TERKUMPUL` vs `TARGET TABUNGAN AKTIF`), filter status, validasi saldo kas saat pengisian saldo awal, dan modal log setoran berkala.
+            - **40+ Koleksi Ikon Kategori Lengkap**:
+              * Sedekah, Infaq, Tahlil, Doa, Pajak, SPP, Servis Kendaraan, Zakat, Listrik, Wifi, Belanja, Medis, dsb.
+            - **Grafik Batang & Lingkaran Visual Rapi**:
+              * Diagram Pie Interaktif dan Bar Chart Mingguan dengan legenda terpisah dan reserved label yang proporsional.
+            - **100% Bebas Tertutup Navbar Sistem**:
+              * Safe area adaptif di seluruh modal dan form input di atas bilah 3-tombol sistem HP.
+            - **100% Offline SQLite Storage**:
+              * Data tersimpan aman di internal HP tanpa koneksi internet atau server pihak ketiga.
           files: build/app/outputs/flutter-apk/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
