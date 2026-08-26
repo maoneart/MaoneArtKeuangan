@@ -233,91 +233,104 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
 
               // 2. Dual Summary Cards Side-by-Side
               summaryAsync.when(
-                data: (summary) => Row(
-                  children: [
-                    // Total Hutang Saya Box
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: AppTheme.cardBg,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppTheme.borderLight),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF0047CC).withValues(alpha: 0.03),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'TOTAL HUTANG SAYA',
-                              style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10, fontWeight: FontWeight.w800),
-                            ),
-                            const SizedBox(height: 4),
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(
-                                summary.formattedDebt,
-                                style: GoogleFonts.plusJakartaSans(color: AppTheme.redMain, fontWeight: FontWeight.w900, fontSize: 16),
+                data: (summary) => IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Total Hutang Saya Box
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.cardBg,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppTheme.borderLight),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF0047CC).withValues(alpha: 0.03),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
                               ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Kartu Kredit, Bank, dll',
-                              style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10),
-                            ),
-                          ],
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              SizedBox(
+                                height: 26,
+                                child: Text(
+                                  'TOTAL HUTANG SAYA',
+                                  style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10, fontWeight: FontWeight.w800),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  summary.formattedDebt,
+                                  style: GoogleFonts.plusJakartaSans(color: AppTheme.redMain, fontWeight: FontWeight.w900, fontSize: 16),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Kartu Kredit, Bank, dll',
+                                style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
+                      const SizedBox(width: 10),
 
-                    // Total Piutang Saya Box
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: AppTheme.cardBg,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppTheme.borderLight),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF0047CC).withValues(alpha: 0.03),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'TOTAL PIUTANG SAYA',
-                              style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10, fontWeight: FontWeight.w800),
-                            ),
-                            const SizedBox(height: 4),
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(
-                                summary.formattedReceivable,
-                                style: GoogleFonts.plusJakartaSans(color: AppTheme.greenMain, fontWeight: FontWeight.w900, fontSize: 16),
+                      // Total Piutang Saya Box
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.cardBg,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppTheme.borderLight),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF0047CC).withValues(alpha: 0.03),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
                               ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Uang di Orang Lain',
-                              style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10),
-                            ),
-                          ],
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              SizedBox(
+                                height: 26,
+                                child: Text(
+                                  'TOTAL PIUTANG SAYA',
+                                  style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10, fontWeight: FontWeight.w800),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  summary.formattedReceivable,
+                                  style: GoogleFonts.plusJakartaSans(color: AppTheme.greenMain, fontWeight: FontWeight.w900, fontSize: 16),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Uang di Orang Lain',
+                                style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 loading: () => const SizedBox.shrink(),
                 error: (_, __) => const SizedBox.shrink(),

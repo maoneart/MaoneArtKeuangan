@@ -157,91 +157,104 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                   final totalTerkumpul = savings.fold<double>(0.0, (sum, s) => sum + s.collectedAmount);
                   final totalTargetAktif = savings.where((s) => !s.isAchieved).fold<double>(0.0, (sum, s) => sum + s.targetAmount);
 
-                  return Row(
-                    children: [
-                      // Total Tabungan Terkumpul Box
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: AppTheme.cardBg,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppTheme.borderLight),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF0047CC).withValues(alpha: 0.03),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'TOTAL TABUNGAN TERKUMPUL',
-                                style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 9.5, fontWeight: FontWeight.w800),
-                              ),
-                              const SizedBox(height: 4),
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  CurrencyFormatter.formatRupiah(totalTerkumpul),
-                                  style: GoogleFonts.plusJakartaSans(color: AppTheme.greenMain, fontWeight: FontWeight.w900, fontSize: 16),
+                  return IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Total Tabungan Terkumpul Box
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: AppTheme.cardBg,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppTheme.borderLight),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF0047CC).withValues(alpha: 0.03),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
                                 ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Dana Terkumpul',
-                                style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10),
-                              ),
-                            ],
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                SizedBox(
+                                  height: 26,
+                                  child: Text(
+                                    'TOTAL TERKUMPUL',
+                                    style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10, fontWeight: FontWeight.w800),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    CurrencyFormatter.formatRupiah(totalTerkumpul),
+                                    style: GoogleFonts.plusJakartaSans(color: AppTheme.greenMain, fontWeight: FontWeight.w900, fontSize: 16),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Dana Terkumpul',
+                                  style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 10),
+                        const SizedBox(width: 10),
 
-                      // Target Tabungan Aktif Box
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: AppTheme.cardBg,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppTheme.borderLight),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF0047CC).withValues(alpha: 0.03),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'TARGET TABUNGAN AKTIF',
-                                style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 9.5, fontWeight: FontWeight.w800),
-                              ),
-                              const SizedBox(height: 4),
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  CurrencyFormatter.formatRupiah(totalTargetAktif),
-                                  style: GoogleFonts.plusJakartaSans(color: AppTheme.bluePrimary, fontWeight: FontWeight.w900, fontSize: 16),
+                        // Target Tabungan Aktif Box
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: AppTheme.cardBg,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppTheme.borderLight),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF0047CC).withValues(alpha: 0.03),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
                                 ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Impian Berlangsung',
-                                style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10),
-                              ),
-                            ],
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                SizedBox(
+                                  height: 26,
+                                  child: Text(
+                                    'TARGET AKTIF',
+                                    style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10, fontWeight: FontWeight.w800),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    CurrencyFormatter.formatRupiah(totalTargetAktif),
+                                    style: GoogleFonts.plusJakartaSans(color: AppTheme.bluePrimary, fontWeight: FontWeight.w900, fontSize: 16),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Impian Berlangsung',
+                                  style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   );
                 },
                 loading: () => const SizedBox.shrink(),
