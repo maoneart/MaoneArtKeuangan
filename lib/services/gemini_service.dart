@@ -115,9 +115,10 @@ Jika tidak ada transaksi (hanya konsultasi biasa), JANGAN sertakan blok json tra
 Berikan tanggapan singkat, ramah, dan memotivasi sebelum blok JSON.
 ''';
 
-      final url = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}',
-      );
+      final cleanKey = apiKey.trim();
+      final url = cleanKey.startsWith('AIzaSy')
+          ? Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$cleanKey')
+          : Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent');
 
       final contents = <Map<String, dynamic>>[];
 
@@ -146,9 +147,17 @@ Berikan tanggapan singkat, ramah, dan memotivasi sebelum blok JSON.
         },
       });
 
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+        'X-goog-api-key': cleanKey,
+      };
+      if (!cleanKey.startsWith('AIzaSy')) {
+        headers['Authorization'] = 'Bearer $cleanKey';
+      }
+
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
         body: body,
       );
 
@@ -156,7 +165,7 @@ Berikan tanggapan singkat, ramah, dan memotivasi sebelum blok JSON.
         final errJson = jsonDecode(response.body);
         final errMsg = errJson['error']?['message'] ?? 'Gagal menghubungi Gemini API (${response.statusCode})';
         return AiChatResponse(
-          replyText: 'Maaf, terjadi kendala saat menghubungi AI: $errMsg\n\nPastikan API Key Gemini Anda valid dan aktif.',
+          replyText: 'Maaf, terjadi kendala saat menghubungi AI: $errMsg\n\nTips: Jika Anda menggunakan kunci $cleanKey, pastikan API Key tersebut sudah aktif di Google AI Studio atau Google Cloud Console.',
           isError: true,
         );
       }
