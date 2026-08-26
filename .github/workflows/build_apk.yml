@@ -52,24 +52,19 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.0.8
-          name: 'MaoneArt Keuangan v1.0.8 (Release)'
+          tag_name: v1.0.9
+          name: 'MaoneArt Keuangan v1.0.9 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.8)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.9)
             
-            - **Redesain 100% Layar Tabungan Impian (Identik www/Keuangan/tabungan.php)**:
-              * Header *Savings & Target Goals* dengan subteks rapi.
-              * 2 Kartu Ringkasan Berdampingan (*Dual Summary Cards*): `TOTAL TABUNGAN TERKUMPUL` (Hijau `#059669`) vs `TARGET TABUNGAN AKTIF` (Biru `#0047CC`).
-              * Filter Status Pills: `Berlangsung`, `Tercapai 🎉`, `Semua Target`.
-              * Kartu item impian lengkap dengan badge status `TERCAPAI 🎉` / `Berlangsung`, tanggal target selesai, progress bar persentase, serta tombol `Setor Tabungan`, `Log Setoran`, dan Hapus.
-            - **Integrasi Penuh Saldo Awal Tabungan & Pemotongan Saldo Kas Real-Time**:
-              * Pembuatan target tabungan dengan Saldo Awal memvalidasi ketersediaan saldo kas utama (mencegah menabung jika saldo kosong / tidak cukup).
-              * Saldo Awal otomatis dicatat sebagai Pengeluaran (*Investasi & Tabungan*) yang memotong Saldo Kas riil di SQLite.
-              * Setoran tabungan berkala otomatis memotong Saldo Kas utama.
-            - **Floating Action Button (FAB) Konsisten di Semua Layar**:
-              * Layar Transaksi: `+ Catat Transaksi`
-              * Layar Hutang & Piutang: `+ Catat Hutang / Piutang`
-              * Layar Tabungan Impian: `+ Buat Target Impian`
+            - **Perbaikan Ikon Tombol Aksi (Bayar Cicilan, Terima Pembayaran, Setor Tabungan)**:
+              * Ikon tombol `Bayar Cicilan` dan `Terima Pembayaran` kini diberi warna putih solid (*pure white*) yang terang dan tegas sehingga selalu terlihat jelas dan tidak menyatu dengan background.
+              * Ikon tombol `Setor Tabungan` dan `Log Setoran` diperjelas dengan ikon kontras tinggi.
+            - **Koleksi Super Lengkap Ikon Kategori Baru (40+ Ikon)**:
+              * **Keagamaan & Sosial**: Sedekah & Infaq (🤲), Tahlil & Pengajian (📖), Zakat & Masjid (🕌), Sosial & Keluarga (👥).
+              * **Pajak & Finansial**: Pajak & Retribusi (🧾), Bank & Bunga (🏦), Investasi & Emas (🪙), Saham & Trading (📈).
+              * **Kendaraan & Utilitas**: Bensin & SPBU (⛽), Servis & Bengkel (🔧), Motor (🛵), Mobil (🚗), Listrik & Token (⚡), Air PDAM (💧), Wifi & Internet (📶), Pulsa (📱).
+              * **Belanja, Kesehatan & Pendidikan**: Pasar/Warung (🏪), Belanja (🛒), Rumah (🏠), SPP & Sekolah (🎓), Rumah Sakit & Dokter (🏥), Obat & Farmasi (💊), Anak & Balita (👶), dll.
             - **100% Bebas Tertutup Navbar Sistem**: Seluruh tombol aksi modal dan list view aman dari bilah 3-tombol sistem HP.
             - **100% Offline SQLite Storage**: Data tersimpan lokal di HP tanpa server.
           files: build/app/outputs/flutter-apk/app-release.apk

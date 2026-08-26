@@ -128,11 +128,18 @@ class DatabaseHelper {
       // Pengeluaran
       {'nama_kategori': 'Makanan & Minuman', 'tipe': 'pengeluaran', 'ikon': 'bi-cup-hot', 'warna': '#F43F5E'},
       {'nama_kategori': 'Belanja Harian', 'tipe': 'pengeluaran', 'ikon': 'bi-cart3', 'warna': '#F59E0B'},
+      {'nama_kategori': 'Sedekah & Infaq', 'tipe': 'pengeluaran', 'ikon': 'bi-heart', 'warna': '#059669'},
+      {'nama_kategori': 'Tahlil & Pengajian', 'tipe': 'pengeluaran', 'ikon': 'bi-book-half', 'warna': '#0D9488'},
+      {'nama_kategori': 'Pajak & Retribusi', 'tipe': 'pengeluaran', 'ikon': 'bi-receipt', 'warna': '#D97706'},
       {'nama_kategori': 'Transportasi & Bensin', 'tipe': 'pengeluaran', 'ikon': 'bi-fuel-pump', 'warna': '#EAB308'},
+      {'nama_kategori': 'Servis & Bengkel', 'tipe': 'pengeluaran', 'ikon': 'bi-tools', 'warna': '#EA580C'},
       {'nama_kategori': 'Tagihan & Listrik', 'tipe': 'pengeluaran', 'ikon': 'bi-lightning-charge', 'warna': '#EC4899'},
-      {'nama_kategori': 'Hiburan & Liburan', 'tipe': 'pengeluaran', 'ikon': 'bi-controller', 'warna': '#A855F7'},
+      {'nama_kategori': 'Pulsa & Internet', 'tipe': 'pengeluaran', 'ikon': 'bi-wifi', 'warna': '#2563EB'},
+      {'nama_kategori': 'Pendidikan & SPP', 'tipe': 'pengeluaran', 'ikon': 'bi-journal-bookmark', 'warna': '#6366F1'},
       {'nama_kategori': 'Kesehatan & Medis', 'tipe': 'pengeluaran', 'ikon': 'bi-heart-pulse', 'warna': '#14B8A6'},
-      {'nama_kategori': 'Pendidikan & Kursus', 'tipe': 'pengeluaran', 'ikon': 'bi-journal-bookmark', 'warna': '#6366F1'},
+      {'nama_kategori': 'Keluarga & Anak', 'tipe': 'pengeluaran', 'ikon': 'bi-emoji-smile', 'warna': '#8B5CF6'},
+      {'nama_kategori': 'Hiburan & Liburan', 'tipe': 'pengeluaran', 'ikon': 'bi-controller', 'warna': '#A855F7'},
+      {'nama_kategori': 'Zakat & Sosial', 'tipe': 'pengeluaran', 'ikon': 'bi-moon-stars', 'warna': '#047857'},
       {'nama_kategori': 'Lain-lain', 'tipe': 'pengeluaran', 'ikon': 'bi-bookmark', 'warna': '#64748B'},
     ];
 

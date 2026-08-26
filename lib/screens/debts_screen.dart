@@ -570,16 +570,16 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
                 ElevatedButton.icon(
                   onPressed: () => PayDebtModal.show(context, item),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.bluePrimary,
+                    backgroundColor: isDebt ? AppTheme.bluePrimary : AppTheme.greenMain,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     elevation: 0,
                   ),
-                  icon: const Icon(Icons.payments_rounded, size: 16),
+                  icon: const Icon(Icons.paid_rounded, size: 16, color: Colors.white),
                   label: Text(
-                    'Bayar Cicilan',
-                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12),
+                    isDebt ? 'Bayar Cicilan' : 'Terima Pembayaran',
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.white),
                   ),
                 ),
                 const SizedBox(width: 8),

@@ -475,10 +475,10 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     elevation: 0,
                   ),
-                  icon: const Icon(Icons.add_circle_outline_rounded, size: 16),
+                  icon: const Icon(Icons.add_circle_rounded, size: 16, color: Colors.white),
                   label: Text(
                     'Setor Tabungan',
-                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12),
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.white),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -491,7 +491,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                icon: const Icon(Icons.history_rounded, size: 16, color: AppTheme.bluePrimary),
+                icon: const Icon(Icons.history_rounded, size: 16, color: Color(0xFF059669)),
                 label: Text(
                   'Log Setoran (${saving.deposits.length})',
                   style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 12),

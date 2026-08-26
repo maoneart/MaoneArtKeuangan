@@ -23,10 +23,22 @@ class CategoryManagementScreen extends ConsumerWidget {
     ];
 
     final icons = [
-      'bi-wallet2', 'bi-briefcase', 'bi-piggy-bank', 'bi-gift',
-      'bi-cup-hot', 'bi-cart3', 'bi-fuel-pump', 'bi-lightning-charge',
-      'bi-controller', 'bi-heart-pulse', 'bi-journal-bookmark', 'bi-bookmark',
-      'bi-house', 'bi-car',
+      // Keagamaan & Sosial
+      'bi-heart', 'bi-book-half', 'bi-moon-stars', 'bi-people',
+      // Keuangan & Pajak
+      'bi-receipt', 'bi-bank', 'bi-cash-coin', 'bi-graph-up-arrow', 'bi-wallet2', 'bi-briefcase', 'bi-piggy-bank', 'bi-credit-card',
+      // Belanja & Kebutuhan
+      'bi-cup-hot', 'bi-cart3', 'bi-bag', 'bi-shop', 'bi-house', 'bi-gift', 'bi-basket',
+      // Tagihan & Utilitas
+      'bi-lightning-charge', 'bi-droplet', 'bi-wifi', 'bi-phone',
+      // Transport & Kendaraan
+      'bi-fuel-pump', 'bi-bicycle', 'bi-car', 'bi-tools', 'bi-airplane',
+      // Kesehatan & Medis
+      'bi-heart-pulse', 'bi-capsule',
+      // Pendidikan & Keluarga
+      'bi-journal-bookmark', 'bi-mortarboard', 'bi-emoji-smile',
+      // Hiburan, Game & Wisata
+      'bi-controller', 'bi-film', 'bi-music-note-beamed', 'bi-dribbble', 'bi-sun', 'bi-bookmark',
     ];
 
     showModalBottomSheet(
