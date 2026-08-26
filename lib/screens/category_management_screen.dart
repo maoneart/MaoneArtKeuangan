@@ -232,7 +232,7 @@ class CategoryManagementScreen extends ConsumerWidget {
       body: SafeArea(
         child: categoriesAsync.when(
           data: (cats) {
-            final bottomPadding = MediaQuery.of(context).padding.bottom + 120;
+            final bottomPadding = MediaQuery.of(context).padding.bottom + 160;
             return ListView.separated(
               padding: EdgeInsets.fromLTRB(16, 12, 16, bottomPadding),
               itemCount: cats.length,

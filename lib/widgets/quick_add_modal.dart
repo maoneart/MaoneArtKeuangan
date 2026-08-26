@@ -211,6 +211,7 @@ class _QuickAddModalState extends ConsumerState<QuickAddModal> {
             TextField(
               controller: _amountController,
               keyboardType: TextInputType.number,
+              inputFormatters: [ThousandsSeparatorInputFormatter()],
               autofocus: true,
               style: GoogleFonts.plusJakartaSans(
                 color: _type == 'pemasukan' ? AppTheme.greenMain : AppTheme.redMain,

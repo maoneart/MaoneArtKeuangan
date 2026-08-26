@@ -128,6 +128,7 @@ class _AddSavingModalState extends ConsumerState<AddSavingModal> {
             TextField(
               controller: _targetController,
               keyboardType: TextInputType.number,
+              inputFormatters: [ThousandsSeparatorInputFormatter()],
               style: GoogleFonts.plusJakartaSans(color: AppTheme.bluePrimary, fontSize: 24, fontWeight: FontWeight.w900),
               decoration: InputDecoration(
                 prefixText: 'Rp ',
@@ -155,6 +156,7 @@ class _AddSavingModalState extends ConsumerState<AddSavingModal> {
                       TextField(
                         controller: _initialDepositController,
                         keyboardType: TextInputType.number,
+                        inputFormatters: [ThousandsSeparatorInputFormatter()],
                         style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 14),
                         decoration: InputDecoration(
                           prefixText: 'Rp ',
@@ -369,6 +371,7 @@ class _DepositSavingModalState extends ConsumerState<DepositSavingModal> {
             TextField(
               controller: _amountController,
               keyboardType: TextInputType.number,
+              inputFormatters: [ThousandsSeparatorInputFormatter()],
               autofocus: true,
               style: GoogleFonts.plusJakartaSans(color: AppTheme.bluePrimary, fontSize: 24, fontWeight: FontWeight.bold),
               decoration: InputDecoration(

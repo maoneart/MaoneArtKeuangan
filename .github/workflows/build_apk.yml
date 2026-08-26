@@ -52,26 +52,21 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.0.4
-          name: 'MaoneArt Keuangan v1.0.4 (Release)'
+          tag_name: v1.0.5
+          name: 'MaoneArt Keuangan v1.0.5 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.4)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.5)
             
-            - **Desain & Konsep Sesuai www/Keuangan (BuildWithAngga Royal Blue & Clean Plus Jakarta Sans)**:
-              * Header Royal Blue Gradient (`#002680` -> `#0047cc` -> `#0056fb`) dengan logo resmi MaoneArt.
-              * 4 Tombol Cepat Glassmorphic di Header: `Top Up` (+ Pemasukan), `Bayar` (- Pengeluaran), `Hutang` (Hutang & Piutang), `Tabungan` (Tabungan Impian).
-              * Grid 8 Kategori Unggulan (*APP FEATURES*) dengan wadah warna pastel modern.
-              * Daftar Transaksi (*LAST TRANSACTION*) dengan kartu putih bersih, ikon kategori pastel, dan tanggal Indonesia.
-            - **Integrasi Logo Resmi**:
-              * Menggunakan logo resmi di Header Aplikasi dan Ikon Launcher APK.
-            - **Integrasi Saldo Kas & Validasi Pelunasan Real-Time**:
-              * Pelunasan / Cicilan Hutang wajib memvalidasi saldo kas (mencegah pelunasan jika saldo tidak cukup).
-              * Pembayaran hutang otomatis memotong saldo kas (pengeluaran).
-              * Penerimaan piutang otomatis menambah saldo kas (pemasukan).
-              * Setoran tabungan otomatis memotong saldo kas utama.
-            - **Grafik Batang (*FL BarChart*) & Grafik Lingkaran (*FL PieChart*)**: Visualisasi Arus Kas Mingguan dan proporsi kategori interaktif.
-            - **Bebas Bug Navbar**: Dilengkapi `SafeArea` dan padding aman di semua layar ponsel.
-            - **100% Offline SQLite Storage**: Data tersimpan aman di internal HP tanpa perlu server atau kuota internet.
+            - **Format Nominal Otomatis (*Real-Time Thousand Separator*)**:
+              * Saat mengetik angka nominal di seluruh form transaksi, hutang, dan tabungan, angka otomatis diberi tanda pemisah titik (.) ribuan secara langsung (misal: ketik `1000000` langsung menjadi `1.000.000`).
+            - **Tampilan Hutang & Piutang 100% Identik dengan www/Keuangan/hutang.php**:
+              * Header Navigasi *Debt & Credit Manager* dengan Segmented Toggle `Hutang Saya` & `Piutang (Di Orang)`.
+              * Kartu Ringkasan Berdampingan `TOTAL HUTANG SAYA` (Merah) vs `TOTAL PIUTANG SAYA` (Hijau).
+              * Filter Status Pills: `Belum Lunas`, `Lunas`, `Semua Data`.
+              * Kartu item dengan tag kategori pill (`💳 Kartu Kredit`, `🏦 Pinjaman Bank`, `👤 Perorangan`, dll), badge `LUNAS` / `Belum Lunas`, Progress Bar cicilan, dan tombol aksi `Bayar Cicilan`, `Log Cicilan`, dan Hapus.
+            - **Bebas Total Bug Navbar Overlap**:
+              * Bottom safe-padding ditingkatkan hingga **+160px** di seluruh layar (Transaksi, Kategori, Tabungan, Hutang, Laporan), memastikan tidak ada satupun item atau tombol yang tertutup bilah navigasi ponsel atau floating action button.
+            - **100% Offline SQLite Storage**: Data tersimpan aman di internal HP tanpa server atau internet.
           files: build/app/outputs/flutter-apk/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

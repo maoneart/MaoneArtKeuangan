@@ -193,6 +193,7 @@ class _AddDebtModalState extends ConsumerState<AddDebtModal> {
             TextField(
               controller: _amountController,
               keyboardType: TextInputType.number,
+              inputFormatters: [ThousandsSeparatorInputFormatter()],
               style: GoogleFonts.plusJakartaSans(color: _type == 'hutang' ? AppTheme.redMain : AppTheme.bluePrimary, fontSize: 24, fontWeight: FontWeight.w900),
               decoration: InputDecoration(
                 prefixText: 'Rp ',
@@ -326,7 +327,7 @@ class _PayDebtModalState extends ConsumerState<PayDebtModal> {
   @override
   void initState() {
     super.initState();
-    _amountController.text = widget.debt.remainingAmount.toStringAsFixed(0);
+    _amountController.text = CurrencyFormatter.formatThousands(widget.debt.remainingAmount);
   }
 
   @override
@@ -475,6 +476,7 @@ class _PayDebtModalState extends ConsumerState<PayDebtModal> {
             TextField(
               controller: _amountController,
               keyboardType: TextInputType.number,
+              inputFormatters: [ThousandsSeparatorInputFormatter()],
               autofocus: true,
               style: GoogleFonts.plusJakartaSans(color: isDebt ? AppTheme.redMain : AppTheme.bluePrimary, fontSize: 24, fontWeight: FontWeight.bold),
               decoration: InputDecoration(

@@ -54,7 +54,7 @@ class SavingsScreen extends ConsumerWidget {
               );
             }
 
-            final bottomPadding = MediaQuery.of(context).padding.bottom + 120;
+            final bottomPadding = MediaQuery.of(context).padding.bottom + 160;
             return ListView.separated(
               padding: EdgeInsets.fromLTRB(16, 12, 16, bottomPadding),
               itemCount: savings.length,
