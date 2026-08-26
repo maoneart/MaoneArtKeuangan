@@ -52,16 +52,19 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.0.3
-          name: 'MaoneArt Keuangan v1.0.3 (Release)'
+          tag_name: v1.0.4
+          name: 'MaoneArt Keuangan v1.0.4 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.3)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.4)
             
-            - **Fitur Baru: Chat AI Mendukung Pencatatan Hutang, Piutang & Tabungan Impian**:
-              * **Hutang & Piutang**: Curhat pinjaman (misal: *"Pinjam uang ke Budi 500rb"*) otomatis terdeteksi sebagai Hutang/Piutang dan langsung tersimpan ke modul Debt Manager.
-              * **Target Tabungan Impian**: Curhat rencana nabung (misal: *"Bikin target nabung beli HP 3 juta"*) otomatis terdeteksi sebagai Target Impian baru.
-              * **Setoran Tabungan**: Curhat menyisihkan uang (misal: *"Setor 100rb ke tabungan HP"*) otomatis menambah tabungan terkait.
-            - **Sinkronisasi Real-Time Global API Key & Halaman Panduan Resmi**.
+            - **Intro & Panduan Onboarding 4 Slide (Saat Pertama Kali Install)**:
+              * **Slide 1**: Cara Penggunaan Smart AI Financial Assistant (Curhat Keuangan & Catat Otomatis).
+              * **Slide 2**: Pencatatan Arus Kas Harian, Hutang Piutang & Tabungan Impian Cerdas.
+              * **Slide 3**: Keunggulan Aplikasi 100% Offline SQLite, Tanpa Iklan & Privasi Terjaga.
+              * **Slide 4**: Profil Aplikasi & Pengembang (**Hermawan**, MaoneArt Keuangan v1.0.4).
+              * Dapat dibuka kembali kapan saja via menu Pengaturan -> *Lihat Panduan & Intro Aplikasi*.
+            - **Pencatatan Lengkap AI**: Arus Kas, Hutang, Piutang, Target Tabungan & Setoran.
+            - **Sinkronisasi Real-Time Global API Key**.
             - **100% Bebas Tertutup Navbar Sistem & 100% Offline SQLite Storage**.
           files: build/app/outputs/flutter-apk/app-release.apk
         env:

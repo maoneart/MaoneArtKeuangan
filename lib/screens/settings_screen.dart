@@ -5,6 +5,7 @@ import '../providers/financial_provider.dart';
 import '../utils/app_theme.dart';
 import '../widgets/glass_card.dart';
 import 'api_key_tutorial_screen.dart';
+import 'onboarding_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -127,7 +128,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        'Versi 1.0.3 (Official Release)',
+                        'Versi 1.0.4 (Official Release)',
                         style: GoogleFonts.plusJakartaSans(
                           color: AppTheme.bluePrimary,
                           fontWeight: FontWeight.bold,
@@ -150,7 +151,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               const SizedBox(height: 16),
 
-              // ==================== 2. GEMINI AI CONFIGURATION ====================
+              // ==================== 2. PANDUAN APLIKASI (INTRO SLIDES) ====================
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const OnboardingScreen(isFromSettings: true)),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.blueLight,
+                    foregroundColor: AppTheme.bluePrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: const BorderSide(color: Color(0xFFBFDBFE))),
+                    elevation: 0,
+                  ),
+                  icon: const Icon(Icons.slideshow_rounded, size: 18, color: AppTheme.bluePrimary),
+                  label: Text(
+                    '📱 Lihat Panduan & Intro Aplikasi (4 Slide)',
+                    style: GoogleFonts.plusJakartaSans(
+                      color: AppTheme.bluePrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.5,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // ==================== 3. GEMINI AI CONFIGURATION ====================
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -206,7 +234,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Kunci ini digunakan untuk fitur "Chat AI" agar Anda bisa curhat pengeluaran/pemasukan dan langsung dicatat otomatis.',
+                      'Kunci ini digunakan untuk fitur "Chat AI" agar Anda bisa curhat pengeluaran, pemasukan, hutang & tabungan dan langsung dicatat otomatis.',
                       style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11.5, height: 1.4),
                     ),
                     const SizedBox(height: 12),
@@ -318,7 +346,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               const SizedBox(height: 18),
 
-              // ==================== 3. FITUR UNGGULAN ====================
+              // ==================== 4. FITUR UNGGULAN ====================
               Text(
                 'FITUR UNGGULAN APLIKASI',
                 style: GoogleFonts.plusJakartaSans(
@@ -334,7 +362,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 icon: Icons.auto_awesome_rounded,
                 iconColor: const Color(0xFF8B5CF6),
                 title: 'Smart AI Financial Assistant (Chat Curhat)',
-                description: 'Ceritakan pengeluaran Anda secara santai, AI otomatis menganalisis dan mencatatkannya ke database.',
+                description: 'Ceritakan transaksi, hutang, atau tabungan secara santai, AI otomatis menganalisis dan mencatatkannya.',
               ),
               const SizedBox(height: 8),
 
@@ -378,7 +406,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               const SizedBox(height: 20),
 
-              // ==================== 4. INFORMASI SISTEM & PENGEMBANG ====================
+              // ==================== 5. INFORMASI SISTEM & PENGEMBANG ====================
               Text(
                 'INFORMASI PENGEMBANG',
                 style: GoogleFonts.plusJakartaSans(
@@ -394,13 +422,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    _buildInfoRow('Pengembang', 'MaoneArt'),
+                    _buildInfoRow('Nama Aplikasi', 'MaoneArt Keuangan'),
+                    const Divider(color: AppTheme.borderLight, height: 16),
+                    _buildInfoRow('Pengembang / Developer', 'Hermawan'),
                     const Divider(color: AppTheme.borderLight, height: 16),
                     _buildInfoRow('Tahun Rilis', '2026'),
                     const Divider(color: AppTheme.borderLight, height: 16),
                     _buildInfoRow('Platform', 'Android (Flutter + SQLite)'),
                     const Divider(color: AppTheme.borderLight, height: 16),
-                    _buildInfoRow('Status Rilis', 'v1.0.3 (Official Release)'),
+                    _buildInfoRow('Status Rilis', 'v1.0.4 (Official Release)'),
                   ],
                 ),
               ),
@@ -408,7 +438,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               Center(
                 child: Text(
-                  '© 2026 MaoneArt • All Rights Reserved',
+                  '© 2026 MaoneArt • Developer: Hermawan',
                   style: GoogleFonts.plusJakartaSans(
                     color: AppTheme.textLight,
                     fontSize: 11,
