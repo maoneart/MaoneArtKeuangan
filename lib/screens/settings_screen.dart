@@ -430,7 +430,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const Divider(color: AppTheme.borderLight, height: 16),
                     _buildInfoRow('Platform', 'Android (Flutter + SQLite)'),
                     const Divider(color: AppTheme.borderLight, height: 16),
-                    _buildInfoRow('Status Rilis', 'v1.0.5 (Official Release)'),
+                    _buildInfoRow('Status Rilis', 'v1.0.6 (Official Release)'),
                   ],
                 ),
               ),

@@ -535,7 +535,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 const Divider(color: AppTheme.borderLight, height: 16),
                 _buildInfoRow('Pengembang / Developer', 'Hermawan'),
                 const Divider(color: AppTheme.borderLight, height: 16),
-                _buildInfoRow('Versi Resmi', 'v1.0.5'),
+                _buildInfoRow('Versi Resmi', 'v1.0.6'),
                 const Divider(color: AppTheme.borderLight, height: 16),
                 _buildInfoRow('Teknologi', 'Flutter, SQLite & Gemini AI'),
                 const Divider(color: AppTheme.borderLight, height: 16),

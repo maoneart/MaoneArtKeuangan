@@ -52,18 +52,17 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.0.5
-          name: 'MaoneArt Keuangan v1.0.5 (Release)'
+          tag_name: v1.0.6
+          name: 'MaoneArt Keuangan v1.0.6 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.5)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.6)
             
-            - **Perbaikan Tampilan Tombol Aksi & Hapus pada Modul Hutang & Tabungan**:
-              * Tombol **Bayar Cicilan / Terima Bayar** dan **Log Cicilan** kini otomatis proporsional dan seimbang (`Expanded`).
-              * Tombol **Hapus (🗑)** kini berupa kotak aksi merah lembut rounded (40x40dp) yang rapi, elegan, dan bebas terhimpit.
-            - **Intro & Panduan Onboarding 4 Slide Interaktif** saat pertama kali install (Developer: **Hermawan**).
-            - **Pencatatan Cerdas Lengkap Gemini AI**: Arus Kas, Hutang, Piutang, Target Tabungan & Setoran.
-            - **Sinkronisasi Real-Time Global API Key**.
-            - **100% Bebas Tertutup Navbar Sistem & 100% Offline SQLite Storage**.
+            - **Pembaruan Stabilitas & Audit Lengkap**:
+              * Perbaikan sinkronisasi dan alur pencatatan keuangan, hutang piutang, dan tabungan.
+              * Standarisasi visual UI modal dan tombol aksi simetris.
+              * Intro & Panduan Onboarding 4 Slide Interaktif (Developer: **Hermawan**).
+              * Integrasi Cerdas Asisten Gemini AI.
+              * 100% Offline SQLite Storage & Export PDF/CSV.
           files: build/app/outputs/flutter-apk/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
