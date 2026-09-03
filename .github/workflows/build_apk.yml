@@ -52,17 +52,16 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.1.0
-          name: 'MaoneArt Keuangan v1.1.0 (Release)'
+          tag_name: v1.1.1
+          name: 'MaoneArt Keuangan v1.1.1 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.1.0)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.1.1)
             
-            - **Pembaruan Deteksi Tanggal AI & Multi-Transaksi Otomatis**:
-              * Deteksi tanggal alami (contoh: "tanggal 24 agustus 26", "kemarin", "24/08/2026") langsung menjadi tanggal transaksi buku kas.
-              * Tampilan badge tanggal pada setiap item transaksi hasil deteksi AI.
-              * Sinkronisasi instan database phpMyAdmin lokal (`db_keuangan`).
-              * Penyimpanan lokal persisten Gemini API Key di tabel `app_settings`.
-              * Standarisasi visual modal MaoneArt Glassmorphic dan tombol simetris.
+            - **Pembaruan Desain Modular Pengaturan & UI Glassmorphic**:
+              * Tampilan Pengaturan dirancang ulang menjadi menu tile modular yang rapi dan elegan.
+              * Menu terpisah: Google Gemini AI, phpMyAdmin MySQL Sync, Panduan Aplikasi, Reset Data, dan Tentang Pengembang.
+              * Setiap menu membuka dialog modal Glassmorphic modern dengan tombol aksi simetris.
+              * Deteksi tanggal alami otomatis AI dan badge tanggal transaksi.
           files: build/app/outputs/flutter-apk/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

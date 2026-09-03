@@ -468,4 +468,13 @@ class DatabaseHelper {
     final db = await database;
     return await db.delete('tabungan', where: 'id = ?', whereArgs: [id]);
   }
+
+  Future<void> resetAllTransactionsData() async {
+    final db = await database;
+    await db.delete('pembayaran_hutang');
+    await db.delete('hutang');
+    await db.delete('setoran_tabungan');
+    await db.delete('tabungan');
+    await db.delete('transaksi');
+  }
 }

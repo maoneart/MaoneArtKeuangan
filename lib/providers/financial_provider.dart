@@ -173,6 +173,16 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
   void _refreshAll() {
     ref.invalidate(transactionsProvider);
     ref.invalidate(financialSummaryProvider);
+    ref.invalidate(debtsProvider);
+    ref.invalidate(savingsProvider);
+  }
+
+  Future<void> resetAllData() async {
+    try {
+      final db = ref.read(databaseProvider);
+      await db.resetAllTransactionsData();
+      _refreshAll();
+    } catch (_) {}
   }
 }
 
