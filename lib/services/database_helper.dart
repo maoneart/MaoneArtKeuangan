@@ -476,5 +476,8 @@ class DatabaseHelper {
     await db.delete('setoran_tabungan');
     await db.delete('tabungan');
     await db.delete('transaksi');
+    try {
+      await db.rawDelete("DELETE FROM sqlite_sequence WHERE name IN ('transaksi', 'hutang', 'tabungan', 'pembayaran_hutang', 'setoran_tabungan')");
+    } catch (_) {}
   }
 }

@@ -52,16 +52,16 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.1.3
-          name: 'MaoneArt Keuangan v1.1.3 (Release)'
+          tag_name: v1.1.4
+          name: 'MaoneArt Keuangan v1.1.4 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.1.3)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.1.4)
             
-            - **Perbaikan Overlap Navbar Sistem Android & Safe Insets**:
-              * Halaman Pengaturan dan seluruh dialog modal kini menggunakan `SafeArea` dan padding dinamis `useSafeArea: true` sehingga tidak lagi tertindih oleh navbar/gesture bar bawaan HP.
-              * Padding bawah disesuaikan otomatis (`bottomPadding = 160`) agar seluruh konten dan tombol aksi selalu terlihat jelas di atas bottom navigation bar.
-              * Dukungan penuh mode Landscape dengan Navigation Rail samping kiri.
-              * Desain modular kartu pengaturan terpisah: Gemini AI, phpMyAdmin Termux Sync, Panduan, Reset Data, dan Tentang Developer.
+            - **Halaman Khusus "Tentang MaoneArt Keuangan" (Full Page Screen)**:
+              * Menu Tentang Aplikasi kini membuka halaman penuh tersendiri yang rapi dan elegan (`AboutScreen`), sama seperti Panduan Gemini API Key.
+              * Dilengkapi informasi developer (Hermawan), arsitektur keamanan offline-first, dan daftar fitur unggulan.
+              * Bebas tumpang tindih dengan navbar bawaan HP (*Safe Insets*).
+              * Dukungan penuh mode Landscape & Portrait.
           files: build/app/outputs/flutter-apk/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

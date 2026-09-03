@@ -6,6 +6,7 @@ import '../utils/app_theme.dart';
 import '../widgets/glass_card.dart';
 import 'api_key_tutorial_screen.dart';
 import 'onboarding_screen.dart';
+import 'about_screen.dart';
 import '../services/phpmyadmin_service.dart';
 import '../services/gemini_service.dart';
 import '../widgets/maoneart_modal.dart';
@@ -537,155 +538,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  // ==================== MODAL 4: TENTANG & DEVELOPER ====================
-  void _showAboutModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (modalCtx) {
-        final bottomPadding = MediaQuery.of(context).padding.bottom;
-
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + bottomPadding),
-          child: SafeArea(
-            top: false,
-            bottom: true,
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE2E8F0),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF047857)]),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 20),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Tentang MaoneArt Keuangan',
-                              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textDark),
-                            ),
-                            Text(
-                              'Informasi Pengembang & Spesifikasi',
-                              style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: AppTheme.textMuted, fontWeight: FontWeight.w600),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppTheme.borderLight),
-                    ),
-                    child: Column(
-                      children: [
-                        _buildInfoRow('Nama Aplikasi', 'MaoneArt Keuangan'),
-                        const Divider(color: AppTheme.borderLight, height: 16),
-                        _buildInfoRow('Pengembang / Developer', 'Hermawan'),
-                        const Divider(color: AppTheme.borderLight, height: 16),
-                        _buildInfoRow('Tahun Rilis', '2026'),
-                        const Divider(color: AppTheme.borderLight, height: 16),
-                        _buildInfoRow('Platform', 'Android (Flutter + MySQL & SQLite)'),
-                        const Divider(color: AppTheme.borderLight, height: 16),
-                        _buildInfoRow('Versi Rilis', 'v1.1.3 (Fix Navbar & Safe Insets)'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  Text(
-                    'Fitur Utama & Keunggulan:',
-                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textDark),
-                  ),
-                  const SizedBox(height: 8),
-
-                  _buildFeatureBullet('🤖 Asisten Gemini AI', 'Curhat transaksi dengan deteksi tanggal alami otomatis.'),
-                  _buildFeatureBullet('💾 Database Anti-Hilang', 'Sinkronisasi instan ke phpMyAdmin MariaDB lokal Termux.'),
-                  _buildFeatureBullet('🤝 Hutang & Piutang', 'Manajemen pelunasan dan cicilan memotong kas riil.'),
-                  _buildFeatureBullet('🎯 Tabungan Impian', 'Target tabungan dan setoran berkala otomatis.'),
-                  _buildFeatureBullet('📊 Laporan Lengkap', 'Grafik arus kas mingguan & diagram lingkaran kategori.'),
-                  const SizedBox(height: 18),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 44,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(modalCtx),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.bluePrimary,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: Text('Tutup', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildFeatureBullet(String title, String desc) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.check_circle_rounded, color: AppTheme.greenMain, size: 16),
-          const SizedBox(width: 8),
-          Expanded(
-            child: RichText(
-              text: TextSpan(
-                style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 12, height: 1.4),
-                children: [
-                  TextSpan(text: '$title: ', style: const TextStyle(fontWeight: FontWeight.bold)),
-                  TextSpan(text: desc, style: const TextStyle(color: AppTheme.textMuted)),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // ==================== MAIN SCREEN BUILD ====================
   @override
   Widget build(BuildContext context) {
@@ -762,7 +614,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Developer: Hermawan • v1.1.3',
+                                'Developer: Hermawan • v1.1.4',
                                 style: GoogleFonts.plusJakartaSans(
                                   color: AppTheme.textMuted,
                                   fontSize: 11.5,
@@ -908,7 +760,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 iconGradient: const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF047857)]),
                 title: 'Tentang MaoneArt Keuangan',
                 subtitle: 'Pengembang (Hermawan), fitur lengkap & info rilis',
-                onTap: () => _showAboutModal(context),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AboutScreen()),
+                ),
               ),
               const SizedBox(height: 24),
 
