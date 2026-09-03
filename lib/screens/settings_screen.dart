@@ -37,6 +37,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final url = await PhpMyAdminService.getServerUrl();
     _serverUrlController.text = url;
     _checkServer();
+
+    // Auto-load Gemini API Key dari phpMyAdmin jika di HP masih kosong
+    final localKey = await GeminiService.getApiKey();
+    if (localKey == null || localKey.isEmpty) {
+      final remoteKey = await PhpMyAdminService.fetchGeminiApiKey();
+      if (remoteKey != null && remoteKey.isNotEmpty && mounted) {
+        ref.read(geminiApiKeyProvider.notifier).setKey(remoteKey);
+        _apiKeyController.text = remoteKey;
+      }
+    }
   }
 
   void _checkServer() async {
@@ -116,6 +126,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final key = _apiKeyController.text.trim();
     if (key.isEmpty) {
       await ref.read(geminiApiKeyProvider.notifier).removeKey();
+      PhpMyAdminService.saveGeminiApiKey('').ignore();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Gemini API Key telah dihapus.')),
@@ -125,10 +136,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
 
     await ref.read(geminiApiKeyProvider.notifier).setKey(key);
+    PhpMyAdminService.saveGeminiApiKey(key).ignore();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Gemini API Key berhasil disimpan! ✨'),
+          content: Text('Gemini API Key berhasil disimpan ke HP & phpMyAdmin! ✨'),
           backgroundColor: AppTheme.greenMain,
         ),
       );
@@ -683,7 +695,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const Divider(color: AppTheme.borderLight, height: 16),
                     _buildInfoRow('Platform', 'Android (Flutter + MySQL phpMyAdmin & SQLite)'),
                     const Divider(color: AppTheme.borderLight, height: 16),
-                    _buildInfoRow('Status Rilis', 'v1.0.8 (phpMyAdmin Sync & Anti-Data Loss)'),
+                    _buildInfoRow('Status Rilis', 'v1.0.9 (phpMyAdmin Sync v1.0.8 (phpMyAdmin Sync & Anti-Data Loss) Gemini API Key Storage)'),
                   ],
                 ),
               ),

@@ -5,6 +5,7 @@ import '../models/transaction_model.dart';
 import '../models/debt_model.dart';
 import '../models/saving_model.dart';
 import 'database_helper.dart';
+import 'gemini_service.dart';
 
 class PhpMyAdminService {
   static const String _prefServerUrl = 'phpmyadmin_server_url';
@@ -58,6 +59,45 @@ class PhpMyAdminService {
     }
   }
 
+  // Ambil Gemini API Key dari phpMyAdmin (app_settings)
+  static Future<String?> fetchGeminiApiKey() async {
+    try {
+      final baseUrl = await getServerUrl();
+      final url = Uri.parse('$baseUrl/settings.php?key=gemini_api_key');
+      final res = await http.get(url).timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        final key = data['key_value']?.toString().trim();
+        if (key != null && key.isNotEmpty) {
+          await GeminiService.saveApiKey(key);
+          return key;
+        }
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // Simpan Gemini API Key ke phpMyAdmin (app_settings)
+  static Future<bool> saveGeminiApiKey(String apiKey) async {
+    try {
+      final baseUrl = await getServerUrl();
+      final url = Uri.parse('$baseUrl/settings.php');
+      final res = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'key_name': 'gemini_api_key',
+          'key_value': apiKey.trim(),
+        }),
+      ).timeout(const Duration(seconds: 4));
+      return res.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // Sinkronisasi Penuh 2 Arah (Full Bidirectional Sync)
   // Menyimpan semua data lokal ke MySQL dan memulihkan data MySQL ke SQLite jika baru install ulang APK
   static Future<Map<String, dynamic>> syncFull(DatabaseHelper db) async {
@@ -65,13 +105,15 @@ class PhpMyAdminService {
       final baseUrl = await getServerUrl();
       final url = Uri.parse('$baseUrl/sync.php');
 
-      // 1. Ambil data lokal SQLite
+      // 1. Ambil data lokal SQLite & API Key
       final localTxs = await db.getTransactions(limit: 1000);
       final localDebts = await db.getDebts();
       final localSavings = await db.getSavings();
+      final localApiKey = await GeminiService.getApiKey() ?? '';
 
       // 2. Buat Payload
       final payload = {
+        'gemini_api_key': localApiKey,
         'transactions': localTxs.map((t) => {
           'date': t.date.toIso8601String(),
           'type': t.type,
@@ -189,6 +231,11 @@ class PhpMyAdminService {
               restoredSavings++;
             }
           }
+        }
+        // Pulihkan Gemini API Key jika ada di server
+        final serverApiKey = serverData['gemini_api_key']?.toString().trim();
+        if (serverApiKey != null && serverApiKey.isNotEmpty && localApiKey.isEmpty) {
+          await GeminiService.saveApiKey(serverApiKey);
         }
       }
 
