@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/debt_model.dart';
 import '../models/category_model.dart';
 import '../models/saving_model.dart';
 import '../models/financial_summary.dart';
@@ -164,6 +165,29 @@ class ParsedTransaction {
       }
     }
 
+    // Pola: (bulan) [Nama Bulan] [YYYY / YY]
+    // Contoh: "bulan maret 2025", "maret 2025", "maret 25", "gaji maret 2025"
+    final monthYearMatch = RegExp(
+      r'(?:bulan\s+|gaji\s+)?\b(' + monthPattern + r')\s+(\d{2,4})\b',
+      caseSensitive: false,
+    ).firstMatch(lower);
+
+    if (monthYearMatch != null) {
+      final mName = monthYearMatch.group(1)!.toLowerCase();
+      final m = monthMap[mName];
+      final yStr = monthYearMatch.group(2);
+      int y = now.year;
+      if (yStr != null) {
+        final parsedY = int.tryParse(yStr);
+        if (parsedY != null) {
+          y = parsedY < 100 ? parsedY + 2000 : parsedY;
+        }
+      }
+      if (m != null) {
+        return DateTime(y, m, 1);
+      }
+    }
+
     return null;
   }
 
@@ -173,6 +197,8 @@ class ParsedTransaction {
 
     if (rawType.contains('masuk') || rawType == 'pemasukan' || rawType == 'income') {
       normalizedType = 'pemasukan';
+    } else if (rawType.contains('bayar_hutang') || rawType.contains('cicil') || rawType.contains('pelunasan') || rawType.contains('bayar_cicilan')) {
+      normalizedType = 'bayar_hutang';
     } else if (rawType.contains('piutang') || rawType == 'receivable') {
       normalizedType = 'piutang';
     } else if (rawType.contains('hutang') || rawType == 'utang' || rawType == 'debt') {
@@ -192,12 +218,12 @@ class ParsedTransaction {
     return ParsedTransaction(
       type: normalizedType,
       categoryId: json['id_kategori'] is int ? json['id_kategori'] : int.tryParse(json['id_kategori']?.toString() ?? ''),
-      categoryName: json['nama_kategori']?.toString() ?? json['kategori']?.toString() ?? 'Umum',
-      personName: json['nama_orang']?.toString() ?? json['nama_pihak']?.toString() ?? 'Teman / Rekan',
+      categoryName: json['nama_kategori']?.toString() ?? json['kategori']?.toString() ?? (normalizedType == 'bayar_hutang' ? 'Tagihan & Pembayaran Hutang' : 'Umum'),
+      personName: json['nama_orang']?.toString() ?? json['nama_pihak']?.toString() ?? json['nama_penghutang']?.toString() ?? 'Pemberi Pinjaman',
       targetName: json['nama_target']?.toString() ?? json['target_name']?.toString() ?? 'Tabungan Impian',
       amount: amt,
       targetAmount: tgtAmt > 0 ? tgtAmt : amt,
-      note: json['keterangan']?.toString() ?? json['catatan']?.toString() ?? 'Catatan dari AI',
+      note: json['keterangan']?.toString() ?? json['catatan']?.toString() ?? (normalizedType == 'bayar_hutang' ? 'Bayar cicilan/hutang' : 'Catatan dari AI'),
       date: txDate,
     );
   }
@@ -274,11 +300,14 @@ class GeminiService {
       if (nominal <= 0) continue;
 
       final isIncome = RegExp(r'\b(gaji|gajian|terima|dapat|masuk|pemasukan|transferan)\b', caseSensitive: false).hasMatch(seg);
+      final isPayDebt = RegExp(r'\b(bayar\s+hutang|bayar\s+utang|bayar\s+cicilan|cicil|angsuran|pelunasan)\b', caseSensitive: false).hasMatch(seg);
       final isDebt = RegExp(r'\b(pinjam|ngutang|utang|hutang)\b', caseSensitive: false).hasMatch(seg);
 
       String tType = 'pengeluaran';
       if (isIncome) {
         tType = 'pemasukan';
+      } else if (isPayDebt) {
+        tType = 'bayar_hutang';
       } else if (isDebt) {
         tType = 'hutang';
       }
@@ -290,7 +319,7 @@ class GeminiService {
       if (note.isEmpty) note = seg;
 
       // Cari kategori yang cocok
-      String catName = 'Lain-lain';
+      String catName = tType == 'bayar_hutang' ? 'Pembayaran Hutang & Cicilan' : 'Lain-lain';
       int? catId;
       for (final c in categories) {
         if (seg.toLowerCase().contains(c.name.toLowerCase()) || note.toLowerCase().contains(c.name.toLowerCase())) {
@@ -316,6 +345,7 @@ class GeminiService {
   static Future<AiChatResponse> sendMessage({
     required String userMessage,
     required List<CategoryModel> categories,
+    List<DebtModel> existingDebts = const [],
     List<SavingModel> existingSavings = const [],
     FinancialSummary? summary,
     List<Map<String, String>> history = const [],
@@ -332,6 +362,10 @@ class GeminiService {
       final categoriesDesc = categories
           .map((c) => '- [ID: ${c.id}] ${c.name} (${c.type})')
           .join('\n');
+
+      final debtsDesc = existingDebts.isNotEmpty
+          ? existingDebts.map((d) => '- [ID: ${d.id}] ${d.isDebt ? "Hutang ke" : "Piutang di"} "${d.debtorName}" (Sisa: ${d.remainingAmount}/${d.totalAmount})').join('\n')
+          : '- Belum ada data hutang/piutang aktif';
 
       final savingsDesc = existingSavings.isNotEmpty
           ? existingSavings.map((s) => '- Target: "${s.name}" (Terkumpul: ${s.collectedAmount}/${s.targetAmount})').join('\n')
@@ -361,24 +395,39 @@ $currentBalanceInfo
 Daftar Kategori Transaksi Aplikasi:
 $categoriesDesc
 
+Daftar Hutang & Piutang Pengguna Saat Ini:
+$debtsDesc
+
+Daftar Target Tabungan Pengguna Saat Ini:
+$savingsDesc
+
 3. ATURAN DETEKSI TANGGAL TRANSAKSI (SANGAT PENTING):
-- Jika pengguna menyebutkan tanggal transaksi (contoh: "tanggal 24 agustus 26", "24/08/2026", "kemarin", "24 agustus"), ekstrak dan gunakan tanggal tersebut ke field "tanggal" dengan format "YYYY-MM-DD" (contoh: "2026-08-24").
+- Jika pengguna menyebutkan tanggal transaksi (contoh: "tanggal 24 agustus 26", "24/08/2026", "kemarin", "24 agustus", "bulan maret 2025", "pakai gaji maret 2025"), ekstrak dan gunakan tanggal tersebut ke field "tanggal" dengan format "YYYY-MM-DD" (contoh: "2026-08-24" atau "2025-03-01").
+- Jika bulan & tahun saja yang disebutkan (misal: "maret 2025"), gunakan tanggal 1 bulan tersebut ("2025-03-01").
 - Jika tahun disebutkan 2 digit (misal: "26"), anggap tahun 2026.
 - Jika pengguna tidak menyebutkan tanggal apa pun, gunakan tanggal hari ini ("$nowIso").
 
 4. ATURAN EKSTRAKSI TRANSAKSI (SANGAT KETAT):
-- Ekstrak SEMUA rincian pengeluaran, pemasukan, hutang, atau tabungan yang ada dalam pesan pengguna tanpa terkecuali!
+- Ekstrak SEMUA rincian pengeluaran, pemasukan, hutang, piutang, bayar hutang/cicilan, atau tabungan yang ada dalam pesan pengguna tanpa terkecuali!
+- TIPE TRANSAKSI YANG DIDUKUNG:
+  * "pemasukan": Gaji, bonus, transfer masuk, dll.
+  * "pengeluaran": Belanja, bensin, tagihan, makanan, dll.
+  * "hutang": Tambah catatan hutang baru (misal: "pinjam uang ke Budi 500rb").
+  * "piutang": Catatan orang pinjam uang ke kita (misal: "si Andi pinjam 300rb").
+  * "bayar_hutang": Bayar/cicil/lunas hutang (misal: "bayar hutang ke Budi 200rb pakai gaji maret 2025", "cicil hutang 500rb"). Cantumkan nama orang di "nama_orang".
+  * "target_tabungan": Buat target tabungan baru.
+  * "setoran_tabungan": Setor dana ke target tabungan.
 - Ubah nominal singkatan ke angka bulat murni di field "jumlah" (contoh: 6.3 jt -> 6300000, 1jt -> 1000000, 200rb -> 200000, 30Orb/300rb -> 300000). JANGAN gunakan huruf di field "jumlah".
 - Format JSON harus SELALU valid, ditutup rapi, dan ditempatkan di paling akhir respons:
 ```json
 {
   "transactions": [
     {
-      "tanggal": "2026-08-24",
-      "tipe": "pemasukan",
-      "nama_kategori": "Gaji & Upah",
-      "jumlah": 6300000,
-      "keterangan": "Gajian 24 Agustus"
+      "tanggal": "2025-03-01",
+      "tipe": "bayar_hutang",
+      "nama_orang": "Budi",
+      "jumlah": 200000,
+      "keterangan": "Bayar hutang ke Budi pakai gaji maret 2025"
     },
     {
       "tanggal": "2026-08-24",

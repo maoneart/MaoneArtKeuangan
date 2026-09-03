@@ -578,6 +578,47 @@ class _DepositSavingModalState extends ConsumerState<DepositSavingModal> {
                 ),
                 const SizedBox(height: 14),
 
+                // Tanggal Setoran Tabungan
+                Text(
+                  'TANGGAL SETORAN TABUNGAN',
+                  style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                InkWell(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _depositDate,
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2035),
+                    );
+                    if (picked != null) setState(() => _depositDate = picked);
+                  },
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppTheme.borderLight),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_month_rounded, color: AppTheme.bluePrimary, size: 18),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            AppDateFormatter.formatFull(_depositDate),
+                            style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                        ),
+                        const Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.textMuted, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+
                 TextField(
                   controller: _noteController,
                   style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 13),

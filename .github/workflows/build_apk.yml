@@ -52,15 +52,17 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.1.8
-          name: 'MaoneArt Keuangan v1.1.8 (Release)'
+          tag_name: v1.1.9
+          name: 'MaoneArt Keuangan v1.1.9 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.1.8)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.1.9)
             
-            - **Perhitungan Saldo Kas Berjalan Kumulatif (Running Cumulative Balance)**:
-              * Saldo kas riil otomatis terbawa dan dihitung akumulatif ke bulan-bulan berikutnya secara berkelanjutan.
-              * Pill pemasukan dan pengeluaran tetap menyaring arus kas khusus bulan yang aktif.
-              * Auto-sync latar belakang saat aplikasi dibuka.
+            - **Date Picker di Modal Pembayaran Hutang & Setoran Tabungan**:
+              * Pengguna dapat memilih tanggal pembayaran hutang/cicilan maupun setoran tabungan secara fleksibel (misal: Maret 2025).
+            - **Gemini AI Smart Date & Debt Payment Recognition**:
+              * AI kini mengenali instruksi pembayaran hutang/cicilan (`bayar_hutang`) lengkap dengan pihak/nama orang.
+              * Deteksi format tanggal nama bulan & tahun (misal: "gaji bulan maret 2025" -> `2025-03-01`).
+              * Integrasi 1-klik simpan pembayaran hutang langsung dari hasil analisis chat AI.
           files: build/app/outputs/flutter-apk/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

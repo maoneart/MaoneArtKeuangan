@@ -92,6 +92,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
 
     final categories = ref.read(categoriesProvider).valueOrNull ?? [];
     final savings = ref.read(savingsProvider).valueOrNull ?? [];
+    final debts = ref.read(debtsProvider).valueOrNull ?? [];
     final summary = ref.read(financialSummaryProvider).valueOrNull;
 
     // Riwayat percakapan terakhir
@@ -106,6 +107,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     final response = await GeminiService.sendMessage(
       userMessage: text,
       categories: categories,
+      existingDebts: debts,
       existingSavings: savings,
       summary: summary,
       history: history,
@@ -128,7 +130,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     }
   }
 
-  void _saveTransactions(List<ParsedTransaction> txs, List<CategoryModel> categories, List<SavingModel> savings) async {
+  void _saveTransactions(List<ParsedTransaction> txs, List<CategoryModel> categories, List<SavingModel> savings, List<DebtModel> debts) async {
     int savedCount = 0;
     for (final tx in txs) {
       if (!tx.isSaved) {
@@ -158,8 +160,46 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           await ref.read(financialControllerProvider.notifier).addTransaction(newTx);
           tx.isSaved = true;
           savedCount++;
+        } else if (tx.type == 'bayar_hutang') {
+          // 2. Bayar Cicilan / Pelunasan Hutang
+          DebtModel? targetDebt;
+          if (debts.isNotEmpty) {
+            if (tx.personName != null && tx.personName!.isNotEmpty) {
+              targetDebt = debts.firstWhere(
+                (d) => d.isDebt && (d.debtorName.toLowerCase().contains(tx.personName!.toLowerCase()) ||
+                    tx.personName!.toLowerCase().contains(d.debtorName.toLowerCase())),
+                orElse: () => debts.firstWhere((d) => d.isDebt && !d.isSettled, orElse: () => debts.first),
+              );
+            } else {
+              targetDebt = debts.firstWhere((d) => d.isDebt && !d.isSettled, orElse: () => debts.first);
+            }
+          }
+
+          if (targetDebt != null && targetDebt.id != null) {
+            await ref.read(financialControllerProvider.notifier).payDebt(
+              targetDebt.id!,
+              tx.amount,
+              tx.date,
+              note: tx.note,
+            );
+          } else {
+            final matchedCat = categories.firstWhere(
+              (c) => c.name.toLowerCase().contains('hutang') || c.name.toLowerCase().contains('tagihan'),
+              orElse: () => categories.firstWhere((c) => c.type == 'pengeluaran', orElse: () => categories.first),
+            );
+            final newTx = TransactionModel(
+              date: tx.date,
+              type: 'pengeluaran',
+              categoryId: matchedCat.id ?? 1,
+              amount: tx.amount,
+              note: tx.note,
+            );
+            await ref.read(financialControllerProvider.notifier).addTransaction(newTx);
+          }
+          tx.isSaved = true;
+          savedCount++;
         } else if (tx.type == 'hutang' || tx.type == 'piutang') {
-          // 2. Simpan Hutang atau Piutang
+          // 3. Simpan Hutang atau Piutang Baru
           final newDebt = DebtModel(
             debtorName: tx.personName != null && tx.personName!.isNotEmpty ? tx.personName! : 'Rekan / Pihak Lain',
             type: tx.type,
@@ -173,7 +213,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           tx.isSaved = true;
           savedCount++;
         } else if (tx.type == 'target_tabungan') {
-          // 3. Buat Target Impian Tabungan Baru
+          // 4. Buat Target Impian Tabungan Baru
           final newSaving = SavingModel(
             name: tx.targetName != null && tx.targetName!.isNotEmpty ? tx.targetName! : 'Tabungan Impian',
             targetAmount: (tx.targetAmount != null && tx.targetAmount! > 0) ? tx.targetAmount! : tx.amount,
@@ -185,7 +225,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           tx.isSaved = true;
           savedCount++;
         } else if (tx.type == 'setoran_tabungan') {
-          // 4. Setor ke Tabungan yang Ada
+          // 5. Setor ke Tabungan yang Ada
           SavingModel? targetSaving;
           if (savings.isNotEmpty) {
             targetSaving = savings.firstWhere(
@@ -233,6 +273,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   Widget build(BuildContext context) {
     final categories = ref.watch(categoriesProvider).valueOrNull ?? [];
     final savings = ref.watch(savingsProvider).valueOrNull ?? [];
+    final debts = ref.watch(debtsProvider).valueOrNull ?? [];
     final savedApiKey = ref.watch(geminiApiKeyProvider);
     final hasApiKey = savedApiKey.trim().isNotEmpty;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
@@ -368,7 +409,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 itemBuilder: (ctx, i) {
                   final msg = _messages[i];
                   final isUser = msg.sender == 'user';
-                  return _buildChatBubble(msg, isUser, categories, savings);
+                  return _buildChatBubble(msg, isUser, categories, savings, debts);
                 },
               ),
             ),
@@ -471,7 +512,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     );
   }
 
-  Widget _buildChatBubble(ChatBubbleMessage msg, bool isUser, List<CategoryModel> categories, List<SavingModel> savings) {
+  Widget _buildChatBubble(ChatBubbleMessage msg, bool isUser, List<CategoryModel> categories, List<SavingModel> savings, List<DebtModel> debts) {
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -542,7 +583,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                         child: ElevatedButton.icon(
                           onPressed: msg.detectedTransactions.every((t) => t.isSaved)
                               ? null
-                              : () => _saveTransactions(msg.detectedTransactions, categories, savings),
+                              : () => _saveTransactions(msg.detectedTransactions, categories, savings, debts),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.greenMain,
                             foregroundColor: Colors.white,
@@ -601,6 +642,14 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       badgeLabel = 'Pengeluaran';
       mainTitle = tx.note;
       subTitle = tx.categoryName;
+      amountPrefix = '-';
+    } else if (tx.type == 'bayar_hutang') {
+      iconData = Icons.receipt_long_rounded;
+      iconColor = AppTheme.redMain;
+      iconBg = AppTheme.redSoft;
+      badgeLabel = 'Bayar Hutang';
+      mainTitle = 'Bayar ke ${tx.personName ?? "Pemberi Pinjaman"}';
+      subTitle = tx.note;
       amountPrefix = '-';
     } else if (tx.type == 'hutang') {
       iconData = Icons.handshake_rounded;
