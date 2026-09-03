@@ -74,7 +74,7 @@ class AboutScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        'Versi 1.1.4 (Official Release)',
+                        'Versi 1.1.5 (Official Release)',
                         style: GoogleFonts.plusJakartaSans(
                           color: AppTheme.bluePrimary,
                           fontWeight: FontWeight.bold,

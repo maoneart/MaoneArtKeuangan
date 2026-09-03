@@ -7,6 +7,7 @@ import '../utils/app_theme.dart';
 import '../utils/currency_formatter.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/quick_add_modal.dart';
+import 'add_transaction_screen.dart';
 
 class TransactionScreen extends ConsumerStatefulWidget {
   const TransactionScreen({super.key});
@@ -66,7 +67,9 @@ class _TransactionScreenState extends ConsumerState<TransactionScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => QuickAddModal.show(context),
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+        ),
         backgroundColor: AppTheme.bluePrimary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded, size: 20),

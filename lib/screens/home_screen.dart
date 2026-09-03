@@ -9,6 +9,7 @@ import '../utils/app_theme.dart';
 import '../utils/currency_formatter.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/quick_add_modal.dart';
+import 'add_transaction_screen.dart';
 import 'category_management_screen.dart';
 import 'debts_screen.dart';
 import 'savings_screen.dart';
@@ -228,8 +229,8 @@ class HomeScreen extends ConsumerWidget {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
-                                _buildGlassActionButton(label: 'Top Up', icon: Icons.arrow_downward_rounded, color: const Color(0xFF10B981), onTap: () => QuickAddModal.show(context, type: 'pemasukan')),
-                                _buildGlassActionButton(label: 'Bayar', icon: Icons.arrow_upward_rounded, color: const Color(0xFFF43F5E), onTap: () => QuickAddModal.show(context, type: 'pengeluaran')),
+                                _buildGlassActionButton(label: 'Top Up', icon: Icons.arrow_downward_rounded, color: const Color(0xFF10B981), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddTransactionScreen(initialType: 'pemasukan')))),
+                                _buildGlassActionButton(label: 'Bayar', icon: Icons.arrow_upward_rounded, color: const Color(0xFFF43F5E), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddTransactionScreen(initialType: 'pengeluaran')))),
                                 _buildGlassActionButton(label: 'Hutang', icon: Icons.handshake_rounded, color: const Color(0xFFF59E0B), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DebtsScreen()))),
                                 _buildGlassActionButton(label: 'Tabungan', icon: Icons.savings_rounded, color: const Color(0xFF06B6D4), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SavingsScreen()))),
                               ],
@@ -316,13 +317,17 @@ class HomeScreen extends ConsumerWidget {
                             label: 'Top Up',
                             icon: Icons.arrow_downward_rounded,
                             color: const Color(0xFF10B981),
-                            onTap: () => QuickAddModal.show(context, type: 'pemasukan'),
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const AddTransactionScreen(initialType: 'pemasukan')),
+                            ),
                           ),
                           _buildGlassActionButton(
                             label: 'Bayar',
                             icon: Icons.arrow_upward_rounded,
                             color: const Color(0xFFF43F5E),
-                            onTap: () => QuickAddModal.show(context, type: 'pengeluaran'),
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const AddTransactionScreen(initialType: 'pengeluaran')),
+                            ),
                           ),
                           _buildGlassActionButton(
                             label: 'Hutang',
@@ -402,7 +407,14 @@ class HomeScreen extends ConsumerWidget {
                         final pastel = pastelColors[i % pastelColors.length];
 
                         return InkWell(
-                          onTap: () => QuickAddModal.show(context, preSelectedCategory: cat, type: cat.type),
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => AddTransactionScreen(
+                                preSelectedCategory: cat,
+                                initialType: cat.type,
+                              ),
+                            ),
+                          ),
                           borderRadius: BorderRadius.circular(16),
                           child: Container(
                             decoration: BoxDecoration(

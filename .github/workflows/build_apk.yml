@@ -52,14 +52,15 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.1.4
-          name: 'MaoneArt Keuangan v1.1.4 (Release)'
+          tag_name: v1.1.5
+          name: 'MaoneArt Keuangan v1.1.5 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.1.4)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.1.5)
             
-            - **Halaman Khusus "Tentang MaoneArt Keuangan" (Full Page Screen)**:
-              * Menu Tentang Aplikasi kini membuka halaman penuh tersendiri yang rapi dan elegan (`AboutScreen`), sama seperti Panduan Gemini API Key.
-              * Dilengkapi informasi developer (Hermawan), arsitektur keamanan offline-first, dan daftar fitur unggulan.
+            - **Halaman Penuh (Full Page Screen) untuk Top Up Kas & Bayar Pengeluaran**:
+              * Menu "Top Up" dan "Bayar" serta pencatatan transaksi kini membuka halaman penuh tersendiri (`AddTransactionScreen`), bukan bottom sheet / slide bawah.
+              * Dilengkapi switcher tab Pemasukan vs Pengeluaran, input nominal besar dengan auto format ribuan, pemilih visual kategori lengkap, pemilih tanggal kalender, dan tombol aksi simetris.
+              * Menu "Tentang MaoneArt Keuangan" membuka halaman penuh tersendiri (`AboutScreen`).
               * Bebas tumpang tindih dengan navbar bawaan HP (*Safe Insets*).
               * Dukungan penuh mode Landscape & Portrait.
           files: build/app/outputs/flutter-apk/app-release.apk

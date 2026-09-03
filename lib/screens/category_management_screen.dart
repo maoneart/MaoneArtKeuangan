@@ -6,6 +6,7 @@ import '../providers/financial_provider.dart';
 import '../utils/app_theme.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/quick_add_modal.dart';
+import 'add_transaction_screen.dart';
 
 class CategoryManagementScreen extends ConsumerWidget {
   const CategoryManagementScreen({super.key});
@@ -264,7 +265,14 @@ class CategoryManagementScreen extends ConsumerWidget {
               itemBuilder: (ctx, i) {
                 final cat = cats[i];
                 return GlassCard(
-                  onTap: () => QuickAddModal.show(context, preSelectedCategory: cat, type: cat.type),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => AddTransactionScreen(
+                        preSelectedCategory: cat,
+                        initialType: cat.type,
+                      ),
+                    ),
+                  ),
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   child: Row(
                     children: [
@@ -289,7 +297,14 @@ class CategoryManagementScreen extends ConsumerWidget {
                       IconButton(
                         icon: const Icon(Icons.add_circle_outline_rounded, color: AppTheme.bluePrimary, size: 20),
                         tooltip: 'Catat Transaksi Ini',
-                        onPressed: () => QuickAddModal.show(context, preSelectedCategory: cat, type: cat.type),
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => AddTransactionScreen(
+                              preSelectedCategory: cat,
+                              initialType: cat.type,
+                            ),
+                          ),
+                        ),
                       ),
                       if (cat.id != null && cat.id! > 12)
                         IconButton(
