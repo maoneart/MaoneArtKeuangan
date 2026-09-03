@@ -14,6 +14,10 @@ class ParsedTransaction {
   final String? targetName; // untuk target_tabungan & setoran_tabungan
   final double amount;
   final double? targetAmount; // untuk target_tabungan
+  final int tenorMonths; // durasi tenor cicilan
+  final int dueDay; // hari jatuh tempo (1-31)
+  final double monthlyInstallment; // cicilan per bulan
+  final DateTime? dueDate; // tanggal estimasi lunas
   final String note;
   final DateTime date; // Tanggal transaksi yang terdeteksi
   bool isSaved;
@@ -26,6 +30,10 @@ class ParsedTransaction {
     this.targetName,
     required this.amount,
     this.targetAmount,
+    this.tenorMonths = 0,
+    this.dueDay = 0,
+    this.monthlyInstallment = 0.0,
+    this.dueDate,
     required this.note,
     DateTime? date,
     this.isSaved = false,
@@ -214,6 +222,23 @@ class ParsedTransaction {
     final amt = parseAmount(json['jumlah'] ?? json['amount'] ?? json['saldo_awal'] ?? '0');
     final tgtAmt = parseAmount(json['target_nominal'] ?? json['target_amount'] ?? '0');
     final txDate = parseIndonesianDate(json['tanggal'] ?? json['date'] ?? json['tgl'], parentContext);
+    final tenor = int.tryParse(json['tenor']?.toString() ?? json['tenor_bulan']?.toString() ?? '0') ?? 0;
+    final dueDay = int.tryParse(json['jatuh_tempo_hari']?.toString() ?? json['tgl_jatuh_tempo']?.toString() ?? json['due_day']?.toString() ?? '0') ?? 0;
+    final installment = parseAmount(json['cicilan_per_bulan'] ?? json['angsuran'] ?? '0');
+    DateTime? dDate;
+    if (json['tenggat_waktu'] != null || json['due_date'] != null || json['estimasi_lunas'] != null) {
+      dDate = parseIndonesianDate(json['tenggat_waktu'] ?? json['due_date'] ?? json['estimasi_lunas'], parentContext);
+    } else if (tenor > 0) {
+      var y = txDate.year;
+      var m = txDate.month + tenor;
+      while (m > 12) {
+        y += 1;
+        m -= 12;
+      }
+      final maxDay = DateTime(y, m + 1, 0).day;
+      final d = (dueDay > 0 ? dueDay : txDate.day).clamp(1, maxDay);
+      dDate = DateTime(y, m, d);
+    }
 
     return ParsedTransaction(
       type: normalizedType,
@@ -223,6 +248,10 @@ class ParsedTransaction {
       targetName: json['nama_target']?.toString() ?? json['target_name']?.toString() ?? 'Tabungan Impian',
       amount: amt,
       targetAmount: tgtAmt > 0 ? tgtAmt : amt,
+      tenorMonths: tenor,
+      dueDay: dueDay,
+      monthlyInstallment: installment > 0 ? installment : (tenor > 0 ? (amt / tenor) : 0.0),
+      dueDate: dDate,
       note: json['keterangan']?.toString() ?? json['catatan']?.toString() ?? (normalizedType == 'bayar_hutang' ? 'Bayar cicilan/hutang' : 'Catatan dari AI'),
       date: txDate,
     );
@@ -412,7 +441,7 @@ $savingsDesc
 - TIPE TRANSAKSI YANG DIDUKUNG:
   * "pemasukan": Gaji, bonus, transfer masuk, dll.
   * "pengeluaran": Belanja, bensin, tagihan, makanan, dll.
-  * "hutang": Tambah catatan hutang baru (misal: "pinjam uang ke Budi 500rb").
+  * "hutang": Tambah catatan hutang / cicilan baru (misal: "ambil cicilan motor 49jt selama 33 bulan jatuh tempo per tanggal 15"). Field pendukung jika ada: "tenor_bulan": 33, "jatuh_tempo_hari": 15, "cicilan_per_bulan": 1484848, "nama_orang": "Leasing Motor".
   * "piutang": Catatan orang pinjam uang ke kita (misal: "si Andi pinjam 300rb").
   * "bayar_hutang": Bayar/cicil/lunas hutang (misal: "bayar hutang ke Budi 200rb pakai gaji maret 2025", "cicil hutang 500rb"). Cantumkan nama orang di "nama_orang".
   * "target_tabungan": Buat target tabungan baru.
@@ -424,17 +453,20 @@ $savingsDesc
   "transactions": [
     {
       "tanggal": "2025-03-01",
+      "tipe": "hutang",
+      "nama_orang": "Cicilan Motor",
+      "jumlah": 49000000,
+      "tenor_bulan": 33,
+      "jatuh_tempo_hari": 15,
+      "cicilan_per_bulan": 1484848,
+      "keterangan": "Cicilan motor 49jt 33 bulan (@ Rp 1.484.848/bln • Jatuh tempo tiap tgl 15)"
+    },
+    {
+      "tanggal": "2025-03-01",
       "tipe": "bayar_hutang",
       "nama_orang": "Budi",
       "jumlah": 200000,
       "keterangan": "Bayar hutang ke Budi pakai gaji maret 2025"
-    },
-    {
-      "tanggal": "2026-08-24",
-      "tipe": "pengeluaran",
-      "nama_kategori": "Tagihan",
-      "jumlah": 1000000,
-      "keterangan": "Bayar cicilan kartu kredit"
     }
   ]
 }

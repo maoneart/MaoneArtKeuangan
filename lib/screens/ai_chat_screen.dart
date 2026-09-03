@@ -206,6 +206,10 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
             totalAmount: tx.amount,
             remainingAmount: tx.amount,
             borrowDate: tx.date,
+            dueDate: tx.dueDate,
+            tenorMonths: tx.tenorMonths,
+            dueDay: tx.dueDay,
+            monthlyInstallment: tx.monthlyInstallment,
             note: tx.note,
           );
 

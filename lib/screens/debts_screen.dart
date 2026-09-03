@@ -504,12 +504,88 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
           ),
           const SizedBox(height: 2),
 
-          // Dates
-          Text(
-            'Tgl Pinjam: ${AppDateFormatter.formatShort(item.borrowDate)}${item.dueDate != null ? " • Jatuh Tempo: ${AppDateFormatter.formatShort(item.dueDate!)}" : ""}',
-            style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11),
+          // Dates & Recurring Due Date Badge
+          Row(
+            children: [
+              const Icon(Icons.calendar_today_rounded, size: 12, color: AppTheme.textMuted),
+              const SizedBox(width: 4),
+              Text(
+                'Tgl Pinjam: ${AppDateFormatter.formatShort(item.borrowDate)}',
+                style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11),
+              ),
+              if (item.dueDay > 0) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                  decoration: BoxDecoration(
+                    color: isDebt ? const Color(0xFFFEF2F2) : const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: isDebt ? const Color(0xFFFECACA) : const Color(0xFFBFDBFE)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.event_repeat_rounded, size: 10.5, color: isDebt ? AppTheme.redMain : AppTheme.bluePrimary),
+                      const SizedBox(width: 3),
+                      Text(
+                        'Tiap tgl ${item.dueDay}',
+                        style: GoogleFonts.plusJakartaSans(
+                          color: isDebt ? AppTheme.redMain : AppTheme.bluePrimary,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ] else if (item.dueDate != null) ...[
+                const SizedBox(width: 4),
+                Text(
+                  '• Jatuh Tempo: ${AppDateFormatter.formatShort(item.dueDate!)}',
+                  style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11),
+                ),
+              ],
+            ],
           ),
-          const SizedBox(height: 12),
+
+          // Monthly Installment Banner (if installment mode)
+          if (item.calculatedMonthlyInstallment > 0 || item.tenorMonths > 0) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.borderLight),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.speed_rounded, size: 13, color: Color(0xFF059669)),
+                      const SizedBox(width: 4),
+                      Text(
+                        item.tenorMonths > 0 ? 'Cicilan (${item.tenorMonths}x):' : 'Cicilan:',
+                        style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${item.formattedMonthlyInstallment} / bln',
+                        style: GoogleFonts.plusJakartaSans(color: const Color(0xFF065F46), fontWeight: FontWeight.bold, fontSize: 11.5),
+                      ),
+                    ],
+                  ),
+                  if (item.dueDate != null)
+                    Text(
+                      'Lunas: ${AppDateFormatter.formatMonthYear(item.dueDate!)}',
+                      style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10.5, fontWeight: FontWeight.w600),
+                    ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
 
           // Total vs Sisa
           Row(

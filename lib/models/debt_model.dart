@@ -49,6 +49,9 @@ class DebtModel {
   final String status; // 'belum_lunas' atau 'lunas'
   final DateTime borrowDate;
   final DateTime? dueDate;
+  final int tenorMonths; // Durasi tenor cicilan dalam bulan (misal: 33 bulan)
+  final int dueDay; // Tanggal jatuh tempo rutin bulanan (1 - 31, misal: 15)
+  final double monthlyInstallment; // Estimasi nominal cicilan per bulan
   final String? note;
   final List<DebtPaymentModel> payments;
 
@@ -62,6 +65,9 @@ class DebtModel {
     this.status = 'belum_lunas',
     required this.borrowDate,
     this.dueDate,
+    this.tenorMonths = 0,
+    this.dueDay = 0,
+    this.monthlyInstallment = 0.0,
     this.note,
     this.payments = const [],
   });
@@ -69,15 +75,28 @@ class DebtModel {
   bool get isDebt => type.toLowerCase() == 'hutang';
   bool get isReceivable => type.toLowerCase() == 'piutang';
   bool get isSettled => status.toLowerCase() == 'lunas' || remainingAmount <= 0;
+  bool get isInstallment => tenorMonths > 0 || dueDay > 0 || monthlyInstallment > 0;
 
   double get paidAmount => totalAmount - remainingAmount;
   double get progressPercentage => totalAmount > 0 ? (paidAmount / totalAmount).clamp(0.0, 1.0) : 0.0;
+  double get calculatedMonthlyInstallment => monthlyInstallment > 0 ? monthlyInstallment : (tenorMonths > 0 ? (totalAmount / tenorMonths) : 0.0);
 
   String get formattedTotal => CurrencyFormatter.formatRupiah(totalAmount);
   String get formattedRemaining => CurrencyFormatter.formatRupiah(remainingAmount);
   String get formattedPaid => CurrencyFormatter.formatRupiah(paidAmount);
+  String get formattedMonthlyInstallment => CurrencyFormatter.formatRupiah(calculatedMonthlyInstallment);
   String get formattedBorrowDate => AppDateFormatter.formatFull(borrowDate);
   String get formattedDueDate => dueDate != null ? AppDateFormatter.formatFull(dueDate!) : 'Tidak ada tenggat';
+  
+  String get formattedDueDayInfo {
+    if (dueDay > 0) {
+      if (dueDate != null && tenorMonths > 0) {
+        return 'Tiap tgl $dueDay (Lunas: ${AppDateFormatter.formatMonthYear(dueDate!)})';
+      }
+      return 'Tiap tgl $dueDay setiap bulan';
+    }
+    return dueDate != null ? AppDateFormatter.formatShort(dueDate!) : 'Tanpa batas waktu';
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -90,6 +109,9 @@ class DebtModel {
       'status': status,
       'tanggal_pinjam': AppDateFormatter.toDbDate(borrowDate),
       'tenggat_waktu': dueDate != null ? AppDateFormatter.toDbDate(dueDate!) : null,
+      'tenor_bulan': tenorMonths,
+      'jatuh_tempo_hari': dueDay,
+      'cicilan_per_bulan': monthlyInstallment,
       'keterangan': note,
     };
   }
@@ -105,6 +127,9 @@ class DebtModel {
       status: map['status'] as String? ?? 'belum_lunas',
       borrowDate: AppDateFormatter.fromDbDate(map['tanggal_pinjam']?.toString() ?? ''),
       dueDate: map['tenggat_waktu'] != null ? AppDateFormatter.fromDbDate(map['tenggat_waktu'].toString()) : null,
+      tenorMonths: int.tryParse(map['tenor_bulan']?.toString() ?? '0') ?? 0,
+      dueDay: int.tryParse(map['jatuh_tempo_hari']?.toString() ?? '0') ?? 0,
+      monthlyInstallment: double.tryParse(map['cicilan_per_bulan']?.toString() ?? '0') ?? 0.0,
       note: map['keterangan'] as String?,
       payments: payments,
     );

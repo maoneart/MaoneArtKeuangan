@@ -24,9 +24,26 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onOpen: _checkAndMigrateTables,
     );
+  }
+
+  Future<void> _checkAndMigrateTables(Database db) async {
+    try {
+      final hutangInfo = await db.rawQuery("PRAGMA table_info(hutang)");
+      final cols = hutangInfo.map((row) => row['name'].toString()).toSet();
+      if (!cols.contains('tenor_bulan')) {
+        await db.execute("ALTER TABLE hutang ADD COLUMN tenor_bulan INTEGER DEFAULT 0");
+      }
+      if (!cols.contains('jatuh_tempo_hari')) {
+        await db.execute("ALTER TABLE hutang ADD COLUMN jatuh_tempo_hari INTEGER DEFAULT 0");
+      }
+      if (!cols.contains('cicilan_per_bulan')) {
+        await db.execute("ALTER TABLE hutang ADD COLUMN cicilan_per_bulan REAL DEFAULT 0.0");
+      }
+    } catch (_) {}
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -68,6 +85,9 @@ class DatabaseHelper {
         status TEXT DEFAULT 'belum_lunas',
         tanggal_pinjam TEXT NOT NULL,
         tenggat_waktu TEXT,
+        tenor_bulan INTEGER DEFAULT 0,
+        jatuh_tempo_hari INTEGER DEFAULT 0,
+        cicilan_per_bulan REAL DEFAULT 0.0,
         keterangan TEXT,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP
       )
