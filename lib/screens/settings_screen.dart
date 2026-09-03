@@ -153,27 +153,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (modalCtx) {
         return StatefulBuilder(
           builder: (context, setModalState) {
             final currentSavedKey = ref.watch(geminiApiKeyProvider);
             final isKeyActive = currentSavedKey.trim().isNotEmpty;
+            final bottomInsets = MediaQuery.of(context).viewInsets.bottom;
+            final bottomPadding = MediaQuery.of(context).padding.bottom;
 
             return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
+              padding: EdgeInsets.only(bottom: bottomInsets),
               child: Container(
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                 ),
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + bottomPadding),
+                child: SafeArea(
+                  top: false,
+                  bottom: true,
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                     Center(
                       child: Container(
                         width: 40,
@@ -310,7 +316,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                       ),
                     ],
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             );
@@ -325,166 +333,175 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (modalCtx) {
         return StatefulBuilder(
           builder: (context, setModalState) {
+            final bottomInsets = MediaQuery.of(context).viewInsets.bottom;
+            final bottomPadding = MediaQuery.of(context).padding.bottom;
+
             return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
+              padding: EdgeInsets.only(bottom: bottomInsets),
               child: Container(
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                 ),
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE2E8F0),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
+                padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + bottomPadding),
+                child: SafeArea(
+                  top: false,
+                  bottom: true,
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(colors: [Color(0xFFF59E0B), Color(0xFFD97706)]),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.storage_rounded, color: Colors.white, size: 20),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Database phpMyAdmin (Termux)',
-                                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textDark),
-                              ),
-                              Text(
-                                _serverStatus == 'connected' ? 'Status: Terhubung 🟢' : 'Status: Offline 🔴',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 11.5,
-                                  color: _serverStatus == 'connected' ? AppTheme.greenMain : AppTheme.redMain,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE2E8F0),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    if (_serverCounts != null) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF0FDF4),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFBBF7D0)),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        const SizedBox(height: 16),
+                        Row(
                           children: [
-                            _buildCountPill('Transaksi', _serverCounts!['transaksi'] ?? 0),
-                            _buildCountPill('Kategori', _serverCounts!['kategori'] ?? 0),
-                            _buildCountPill('Hutang', _serverCounts!['hutang'] ?? 0),
-                            _buildCountPill('Tabungan', _serverCounts!['tabungan'] ?? 0),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(colors: [Color(0xFFF59E0B), Color(0xFFD97706)]),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.storage_rounded, color: Colors.white, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Database phpMyAdmin (Termux)',
+                                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textDark),
+                                  ),
+                                  Text(
+                                    _serverStatus == 'connected' ? 'Status: Terhubung 🟢' : 'Status: Offline 🔴',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 11.5,
+                                      color: _serverStatus == 'connected' ? AppTheme.greenMain : AppTheme.redMain,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
+                        const SizedBox(height: 12),
 
-                    Text(
-                      'Alamat Endpoint REST API phpMyAdmin lokal:',
-                      style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11.5),
-                    ),
-                    const SizedBox(height: 6),
+                        if (_serverCounts != null) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF0FDF4),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFBBF7D0)),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                _buildCountPill('Transaksi', _serverCounts!['transaksi'] ?? 0),
+                                _buildCountPill('Kategori', _serverCounts!['kategori'] ?? 0),
+                                _buildCountPill('Hutang', _serverCounts!['hutang'] ?? 0),
+                                _buildCountPill('Tabungan', _serverCounts!['tabungan'] ?? 0),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
 
-                    TextField(
-                      controller: _serverUrlController,
-                      style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 12.5),
-                      decoration: InputDecoration(
-                        hintText: 'http://127.0.0.1:8085/Keuangan/api',
-                        filled: true,
-                        fillColor: const Color(0xFFF8FAFC),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.borderLight)),
-                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.borderLight)),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.check_rounded, color: AppTheme.bluePrimary, size: 20),
-                          tooltip: 'Simpan URL',
-                          onPressed: _saveServerUrl,
+                        Text(
+                          'Alamat Endpoint REST API phpMyAdmin lokal:',
+                          style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11.5),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                        const SizedBox(height: 6),
 
-                    // Symmetrical 2-Column Action Buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: SizedBox(
-                            height: 44,
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                _checkServer();
-                                setModalState(() {});
-                              },
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: AppTheme.bluePrimary,
-                                side: const BorderSide(color: AppTheme.bluePrimary),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              icon: const Icon(Icons.refresh_rounded, size: 16),
-                              label: Text('Uji Koneksi', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12)),
+                        TextField(
+                          controller: _serverUrlController,
+                          style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 12.5),
+                          decoration: InputDecoration(
+                            hintText: 'http://127.0.0.1:8085/Keuangan/api',
+                            filled: true,
+                            fillColor: const Color(0xFFF8FAFC),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.check_rounded, color: AppTheme.bluePrimary, size: 20),
+                              tooltip: 'Simpan URL',
+                              onPressed: _saveServerUrl,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: SizedBox(
-                            height: 44,
-                            child: ElevatedButton.icon(
-                              onPressed: _isSyncing
-                                  ? null
-                                  : () {
-                                      Navigator.pop(modalCtx);
-                                      _syncData();
-                                    },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.greenMain,
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              icon: _isSyncing
-                                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                  : const Icon(Icons.sync_rounded, size: 16),
-                              label: Text(
-                                _isSyncing ? 'Proses...' : 'Sinkronkan Data',
-                                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12),
+                        const SizedBox(height: 16),
+
+                        // Symmetrical 2-Column Action Buttons
+                        Row(
+                          children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: 44,
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    _checkServer();
+                                    setModalState(() {});
+                                  },
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppTheme.bluePrimary,
+                                    side: const BorderSide(color: AppTheme.bluePrimary),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                  icon: const Icon(Icons.refresh_rounded, size: 16),
+                                  label: Text('Uji Koneksi', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12)),
+                                ),
                               ),
                             ),
-                          ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: SizedBox(
+                                height: 44,
+                                child: ElevatedButton.icon(
+                                  onPressed: _isSyncing
+                                      ? null
+                                      : () {
+                                          Navigator.pop(modalCtx);
+                                          _syncData();
+                                        },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.greenMain,
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                  icon: _isSyncing
+                                      ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                      : const Icon(Icons.sync_rounded, size: 16),
+                                  label: Text(
+                                    _isSyncing ? 'Proses...' : 'Sinkronkan Data',
+                                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             );
@@ -525,111 +542,119 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (modalCtx) {
+        final bottomPadding = MediaQuery.of(context).padding.bottom;
+
         return Container(
           decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE2E8F0),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
+          padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + bottomPadding),
+          child: SafeArea(
+            top: false,
+            bottom: true,
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF047857)]),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 20),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Tentang MaoneArt Keuangan',
-                            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textDark),
-                          ),
-                          Text(
-                            'Informasi Pengembang & Spesifikasi',
-                            style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: AppTheme.textMuted, fontWeight: FontWeight.w600),
-                          ),
-                        ],
+                        color: const Color(0xFFE2E8F0),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppTheme.borderLight),
                   ),
-                  child: Column(
+                  const SizedBox(height: 16),
+                  Row(
                     children: [
-                      _buildInfoRow('Nama Aplikasi', 'MaoneArt Keuangan'),
-                      const Divider(color: AppTheme.borderLight, height: 16),
-                      _buildInfoRow('Pengembang / Developer', 'Hermawan'),
-                      const Divider(color: AppTheme.borderLight, height: 16),
-                      _buildInfoRow('Tahun Rilis', '2026'),
-                      const Divider(color: AppTheme.borderLight, height: 16),
-                      _buildInfoRow('Platform', 'Android (Flutter + MySQL & SQLite)'),
-                      const Divider(color: AppTheme.borderLight, height: 16),
-                      _buildInfoRow('Versi Rilis', 'v1.1.2 (Responsive Landscape & Modular Settings)'),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF047857)]),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Tentang MaoneArt Keuangan',
+                              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textDark),
+                            ),
+                            Text(
+                              'Informasi Pengembang & Spesifikasi',
+                              style: GoogleFonts.plusJakartaSans(fontSize: 11.5, color: AppTheme.textMuted, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                Text(
-                  'Fitur Utama & Keunggulan:',
-                  style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textDark),
-                ),
-                const SizedBox(height: 8),
-
-                _buildFeatureBullet('🤖 Asisten Gemini AI', 'Curhat transaksi dengan deteksi tanggal alami otomatis.'),
-                _buildFeatureBullet('💾 Database Anti-Hilang', 'Sinkronisasi instan ke phpMyAdmin MariaDB lokal Termux.'),
-                _buildFeatureBullet('🤝 Hutang & Piutang', 'Manajemen pelunasan dan cicilan memotong kas riil.'),
-                _buildFeatureBullet('🎯 Tabungan Impian', 'Target tabungan dan setoran berkala otomatis.'),
-                _buildFeatureBullet('📊 Laporan Lengkap', 'Grafik arus kas mingguan & diagram lingkaran kategori.'),
-                const SizedBox(height: 18),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 44,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(modalCtx),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.bluePrimary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppTheme.borderLight),
                     ),
-                    child: Text('Tutup', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13)),
+                    child: Column(
+                      children: [
+                        _buildInfoRow('Nama Aplikasi', 'MaoneArt Keuangan'),
+                        const Divider(color: AppTheme.borderLight, height: 16),
+                        _buildInfoRow('Pengembang / Developer', 'Hermawan'),
+                        const Divider(color: AppTheme.borderLight, height: 16),
+                        _buildInfoRow('Tahun Rilis', '2026'),
+                        const Divider(color: AppTheme.borderLight, height: 16),
+                        _buildInfoRow('Platform', 'Android (Flutter + MySQL & SQLite)'),
+                        const Divider(color: AppTheme.borderLight, height: 16),
+                        _buildInfoRow('Versi Rilis', 'v1.1.3 (Fix Navbar & Safe Insets)'),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+
+                  Text(
+                    'Fitur Utama & Keunggulan:',
+                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textDark),
+                  ),
+                  const SizedBox(height: 8),
+
+                  _buildFeatureBullet('🤖 Asisten Gemini AI', 'Curhat transaksi dengan deteksi tanggal alami otomatis.'),
+                  _buildFeatureBullet('💾 Database Anti-Hilang', 'Sinkronisasi instan ke phpMyAdmin MariaDB lokal Termux.'),
+                  _buildFeatureBullet('🤝 Hutang & Piutang', 'Manajemen pelunasan dan cicilan memotong kas riil.'),
+                  _buildFeatureBullet('🎯 Tabungan Impian', 'Target tabungan dan setoran berkala otomatis.'),
+                  _buildFeatureBullet('📊 Laporan Lengkap', 'Grafik arus kas mingguan & diagram lingkaran kategori.'),
+                  const SizedBox(height: 18),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(modalCtx),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.bluePrimary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text('Tutup', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13)),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -666,7 +691,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final savedKey = ref.watch(geminiApiKeyProvider);
     final hasSavedKey = savedKey.trim().isNotEmpty;
-    final bottomPadding = MediaQuery.of(context).padding.bottom + 30;
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    final bottomPadding = MediaQuery.of(context).padding.bottom + (isLandscape ? 50 : 160);
 
     if (!_isInitialized && savedKey.isNotEmpty) {
       _apiKeyController.text = savedKey;
@@ -736,7 +762,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Developer: Hermawan • v1.1.2',
+                                'Developer: Hermawan • v1.1.3',
                                 style: GoogleFonts.plusJakartaSans(
                                   color: AppTheme.textMuted,
                                   fontSize: 11.5,
