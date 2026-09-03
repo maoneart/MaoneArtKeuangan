@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../providers/financial_provider.dart';
 import '../utils/app_theme.dart';
 import 'home_screen.dart';
 import 'transaction_screen.dart';
@@ -7,15 +9,26 @@ import 'ai_chat_screen.dart';
 import 'reports_screen.dart';
 import 'settings_screen.dart';
 
-class MainNavigationScreen extends StatefulWidget {
+class MainNavigationScreen extends ConsumerStatefulWidget {
   const MainNavigationScreen({super.key});
 
   @override
-  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
+  ConsumerState<MainNavigationScreen> createState() => _MainNavigationScreenState();
 }
 
-class _MainNavigationScreenState extends State<MainNavigationScreen> {
+class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Otomatis sinkronisasi latar belakang dengan database phpMyAdmin saat aplikasi dibuka
+    Future.microtask(() {
+      if (mounted) {
+        ref.read(financialControllerProvider.notifier).syncWithPhpMyAdmin().ignore();
+      }
+    });
+  }
 
   void _onTabChanged(int index) {
     setState(() => _currentIndex = index);

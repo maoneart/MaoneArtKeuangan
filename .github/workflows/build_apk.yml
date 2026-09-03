@@ -52,17 +52,15 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.1.6
-          name: 'MaoneArt Keuangan v1.1.6 (Release)'
+          tag_name: v1.1.7
+          name: 'MaoneArt Keuangan v1.1.7 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.1.6)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.1.7)
             
-            - **Perbaikan Mode Landscape & Sidebar Navigasi**:
-              * Sidebar kiri kini tampil dengan tema *High-Contrast Deep Navy Glassmorphism* yang jelas, tajam, dan elegan.
-              * Perhitungan lebar sidebar dinamis (`railContentWidth + safePadding.left`), mencegah sidebar terpotong / hilang akibat *notch* atau kamera *punch-hole* samping HP.
-              * Pill navigasi aktif dengan gradasi Royal Blue bercahaya (*glow shadow*) dan ikon/teks kontras tinggi.
-              * Area konten kanan aman dari *camera notch / gesture insets* kanan.
-              * Dukungan penuh mode Landscape & Portrait di semua halaman.
+            - **Sinkronisasi Otomatis Latar Belakang (Background Auto-Sync)**:
+              * Aplikasi otomatis menyinkronkan data terbaru dari MySQL phpMyAdmin saat dibuka.
+              * Perbaikan asosiasi user aktif sehingga seluruh transaksi tampil konsisten di Web dan APK.
+              * Peningkatan filter periode bulan dan stabilitas SQLite lokal.
           files: build/app/outputs/flutter-apk/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
