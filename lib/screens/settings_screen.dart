@@ -7,6 +7,7 @@ import '../widgets/glass_card.dart';
 import 'api_key_tutorial_screen.dart';
 import 'onboarding_screen.dart';
 import '../services/phpmyadmin_service.dart';
+import '../services/gemini_service.dart';
 import '../widgets/maoneart_modal.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
