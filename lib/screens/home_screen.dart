@@ -30,7 +30,8 @@ class HomeScreen extends ConsumerWidget {
     final monthDate = DateTime(int.parse(parts[0]), int.parse(parts[1]));
     final periodLabel = AppDateFormatter.formatMonthYear(monthDate);
 
-    final bottomPadding = MediaQuery.of(context).padding.bottom + 160;
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    final bottomPadding = MediaQuery.of(context).padding.bottom + (isLandscape ? 50 : 160);
 
     return Scaffold(
       backgroundColor: AppTheme.bgApp,
@@ -62,9 +63,9 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 padding: EdgeInsets.fromLTRB(
                   20,
-                  MediaQuery.of(context).padding.top + 16,
+                  MediaQuery.of(context).padding.top + (isLandscape ? 10 : 16),
                   20,
-                  24,
+                  isLandscape ? 16 : 24,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,108 +155,190 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: isLandscape ? 12 : 20),
 
-                    // Row 2: Total Balance Big Display
-                    summaryAsync.when(
-                      data: (summary) => Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    if (isLandscape) ...[
+                      // Landscape Responsive Row: Balance on Left, Action Buttons on Right
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Text(
-                            'Total Balance • Saldo Kas',
-                            style: GoogleFonts.plusJakartaSans(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            summary.formattedBalance,
-                            style: GoogleFonts.plusJakartaSans(
-                              color: Colors.white,
-                              fontSize: 32,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.5,
+                          Expanded(
+                            flex: 5,
+                            child: summaryAsync.when(
+                              data: (summary) => Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Total Balance • Saldo Kas',
+                                    style: GoogleFonts.plusJakartaSans(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    summary.formattedBalance,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      color: Colors.white,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: -0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.18),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.arrow_downward_rounded, color: Color(0xFF6EE7B7), size: 12),
+                                            const SizedBox(width: 4),
+                                            Text(summary.formattedIncome, style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.18),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.arrow_upward_rounded, color: Color(0xFFFCA5A5), size: 12),
+                                            const SizedBox(width: 4),
+                                            Text(summary.formattedExpense, style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              loading: () => const SizedBox(height: 50, child: Center(child: CircularProgressIndicator(color: Colors.white))),
+                              error: (_, __) => const Text('Gagal memuat saldo', style: TextStyle(color: Colors.white)),
                             ),
                           ),
-                          const SizedBox(height: 14),
-
-                          // Quick Income & Expense Pills
-                          Row(
-                            children: [
-                              // Pemasukan Pill
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.18),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.arrow_downward_rounded, color: Color(0xFF6EE7B7), size: 14),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      summary.formattedIncome,
-                                      style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              // Pengeluaran Pill
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.18),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.arrow_upward_rounded, color: Color(0xFFFCA5A5), size: 14),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      summary.formattedExpense,
-                                      style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                          const SizedBox(width: 16),
+                          Expanded(
+                            flex: 6,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                _buildGlassActionButton(label: 'Top Up', icon: Icons.arrow_downward_rounded, color: const Color(0xFF10B981), onTap: () => QuickAddModal.show(context, type: 'pemasukan')),
+                                _buildGlassActionButton(label: 'Bayar', icon: Icons.arrow_upward_rounded, color: const Color(0xFFF43F5E), onTap: () => QuickAddModal.show(context, type: 'pengeluaran')),
+                                _buildGlassActionButton(label: 'Hutang', icon: Icons.handshake_rounded, color: const Color(0xFFF59E0B), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DebtsScreen()))),
+                                _buildGlassActionButton(label: 'Tabungan', icon: Icons.savings_rounded, color: const Color(0xFF06B6D4), onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SavingsScreen()))),
+                              ],
+                            ),
                           ),
                         ],
                       ),
-                      loading: () => const SizedBox(height: 80, child: Center(child: CircularProgressIndicator(color: Colors.white))),
-                      error: (_, __) => const Text('Gagal memuat saldo', style: TextStyle(color: Colors.white)),
-                    ),
-                    const SizedBox(height: 22),
+                    ] else ...[
+                      // Portrait Standard Layout
+                      summaryAsync.when(
+                        data: (summary) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Total Balance • Saldo Kas',
+                              style: GoogleFonts.plusJakartaSans(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              summary.formattedBalance,
+                              style: GoogleFonts.plusJakartaSans(
+                                color: Colors.white,
+                                fontSize: 32,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
 
-                    // Row 3: 4 Glassmorphic Action Buttons (Top Up, Bayar, Hutang, Tabungan)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildGlassActionButton(
-                          label: 'Top Up',
-                          icon: Icons.arrow_downward_rounded,
-                          color: const Color(0xFF10B981),
-                          onTap: () => QuickAddModal.show(context, type: 'pemasukan'),
+                            // Quick Income & Expense Pills
+                            Row(
+                              children: [
+                                // Pemasukan Pill
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.18),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.arrow_downward_rounded, color: Color(0xFF6EE7B7), size: 14),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        summary.formattedIncome,
+                                        style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                // Pengeluaran Pill
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.18),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.arrow_upward_rounded, color: Color(0xFFFCA5A5), size: 14),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        summary.formattedExpense,
+                                        style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                        _buildGlassActionButton(
-                          label: 'Bayar',
-                          icon: Icons.arrow_upward_rounded,
-                          color: const Color(0xFFF43F5E),
-                          onTap: () => QuickAddModal.show(context, type: 'pengeluaran'),
-                        ),
-                        _buildGlassActionButton(
-                          label: 'Hutang',
-                          icon: Icons.handshake_rounded,
-                          color: const Color(0xFFF59E0B),
-                          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DebtsScreen())),
-                        ),
-                        _buildGlassActionButton(
-                          label: 'Tabungan',
-                          icon: Icons.savings_rounded,
-                          color: const Color(0xFF06B6D4),
-                          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SavingsScreen())),
-                        ),
-                      ],
-                    ),
+                        loading: () => const SizedBox(height: 80, child: Center(child: CircularProgressIndicator(color: Colors.white))),
+                        error: (_, __) => const Text('Gagal memuat saldo', style: TextStyle(color: Colors.white)),
+                      ),
+                      const SizedBox(height: 22),
+
+                      // Row 3: 4 Glassmorphic Action Buttons
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildGlassActionButton(
+                            label: 'Top Up',
+                            icon: Icons.arrow_downward_rounded,
+                            color: const Color(0xFF10B981),
+                            onTap: () => QuickAddModal.show(context, type: 'pemasukan'),
+                          ),
+                          _buildGlassActionButton(
+                            label: 'Bayar',
+                            icon: Icons.arrow_upward_rounded,
+                            color: const Color(0xFFF43F5E),
+                            onTap: () => QuickAddModal.show(context, type: 'pengeluaran'),
+                          ),
+                          _buildGlassActionButton(
+                            label: 'Hutang',
+                            icon: Icons.handshake_rounded,
+                            color: const Color(0xFFF59E0B),
+                            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DebtsScreen())),
+                          ),
+                          _buildGlassActionButton(
+                            label: 'Tabungan',
+                            icon: Icons.savings_rounded,
+                            color: const Color(0xFF06B6D4),
+                            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SavingsScreen())),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -308,11 +391,11 @@ class HomeScreen extends ConsumerWidget {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: featured.length,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: isLandscape ? 8 : 4,
                         crossAxisSpacing: 10,
                         mainAxisSpacing: 10,
-                        childAspectRatio: 0.82,
+                        childAspectRatio: isLandscape ? 0.95 : 0.82,
                       ),
                       itemBuilder: (ctx, i) {
                         final cat = featured[i];

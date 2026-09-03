@@ -52,15 +52,17 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.1.1
-          name: 'MaoneArt Keuangan v1.1.1 (Release)'
+          tag_name: v1.1.2
+          name: 'MaoneArt Keuangan v1.1.2 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.1.1)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.1.2)
             
-            - **Pembaruan Desain Modular Pengaturan & UI Glassmorphic**:
+            - **Dukungan Penuh Mode Landscape & Tampilan Modular Pengaturan**:
+              * Mode Landscape kini memiliki Navigation Rail samping elegan & tata letak responsif.
+              * Beranda menyesuaikan saldo kas & tombol aksi secara proporsional di layar lebar / landscape.
               * Tampilan Pengaturan dirancang ulang menjadi menu tile modular yang rapi dan elegan.
               * Menu terpisah: Google Gemini AI, phpMyAdmin MySQL Sync, Panduan Aplikasi, Reset Data, dan Tentang Pengembang.
-              * Setiap menu membuka dialog modal Glassmorphic modern dengan tombol aksi simetris.
+              * Dialog modal Glassmorphic modern dengan tombol aksi simetris.
               * Deteksi tanggal alami otomatis AI dan badge tanggal transaksi.
           files: build/app/outputs/flutter-apk/app-release.apk
         env:

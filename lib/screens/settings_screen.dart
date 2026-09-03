@@ -594,7 +594,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       const Divider(color: AppTheme.borderLight, height: 16),
                       _buildInfoRow('Platform', 'Android (Flutter + MySQL & SQLite)'),
                       const Divider(color: AppTheme.borderLight, height: 16),
-                      _buildInfoRow('Versi Rilis', 'v1.1.0 (AI Date Extraction & Sync)'),
+                      _buildInfoRow('Versi Rilis', 'v1.1.2 (Responsive Landscape & Modular Settings)'),
                     ],
                   ),
                 ),
@@ -734,7 +734,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Developer: Hermawan • v1.1.0',
+                                'Developer: Hermawan • v1.1.2',
                                 style: GoogleFonts.plusJakartaSans(
                                   color: AppTheme.textMuted,
                                   fontSize: 11.5,
