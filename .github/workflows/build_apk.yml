@@ -52,10 +52,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.0.7
-          name: 'MaoneArt Keuangan v1.0.7 (Release)'
+          tag_name: v1.0.8
+          name: 'MaoneArt Keuangan v1.0.8 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.7)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.0.8)
             
             - **Pembaruan Stabilitas & Audit Lengkap**:
               * Perbaikan sinkronisasi dan alur pencatatan keuangan, hutang piutang, dan tabungan.

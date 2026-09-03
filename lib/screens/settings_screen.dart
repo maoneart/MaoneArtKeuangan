@@ -6,6 +6,8 @@ import '../utils/app_theme.dart';
 import '../widgets/glass_card.dart';
 import 'api_key_tutorial_screen.dart';
 import 'onboarding_screen.dart';
+import '../services/phpmyadmin_service.dart';
+import '../widgets/maoneart_modal.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -16,17 +18,97 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final TextEditingController _apiKeyController = TextEditingController();
+  final TextEditingController _serverUrlController = TextEditingController();
   bool _obscureKey = true;
   bool _isInitialized = false;
+
+  String _serverStatus = 'idle'; // 'idle', 'checking', 'connected', 'error'
+  String _serverStatusMessage = '';
+  Map<String, dynamic>? _serverCounts;
+  bool _isSyncing = false;
 
   @override
   void initState() {
     super.initState();
+    _initServerUrl();
+  }
+
+  void _initServerUrl() async {
+    final url = await PhpMyAdminService.getServerUrl();
+    _serverUrlController.text = url;
+    _checkServer();
+  }
+
+  void _checkServer() async {
+    setState(() {
+      _serverStatus = 'checking';
+      _serverStatusMessage = 'Menghubungi server phpMyAdmin...';
+    });
+    final res = await PhpMyAdminService.checkStatus();
+    if (!mounted) return;
+    setState(() {
+      if (res['status'] == 'connected') {
+        _serverStatus = 'connected';
+        _serverStatusMessage = 'Terhubung ke database ${res['database'] ?? 'db_keuangan'}';
+        _serverCounts = res['counts'] as Map<String, dynamic>?;
+      } else {
+        _serverStatus = 'error';
+        _serverStatusMessage = res['message'] ?? 'Server Termux offline';
+        _serverCounts = null;
+      }
+    });
+  }
+
+  void _saveServerUrl() async {
+    final url = _serverUrlController.text.trim();
+    if (url.isNotEmpty) {
+      await PhpMyAdminService.saveServerUrl(url);
+      _checkServer();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Alamat server berhasil disimpan!')),
+        );
+      }
+    }
+  }
+
+  void _syncData() async {
+    setState(() => _isSyncing = true);
+    final res = await ref.read(financialControllerProvider.notifier).syncWithPhpMyAdmin();
+    if (!mounted) return;
+    setState(() => _isSyncing = false);
+
+    if (res['status'] == 'success') {
+      final restored = res['restored_to_local'] as Map<String, dynamic>? ?? {};
+      final pushed = res['pushed_new'] as Map<String, dynamic>? ?? {};
+      MaoneArtModal.showAlertModal(
+        context: context,
+        title: 'Sinkronisasi Berhasil! 🎉',
+        message: 'Data tersinkronisasi dengan database phpMyAdmin (db_keuangan):\n\n'
+            '• Data Baru ke Server: ${pushed['transactions'] ?? 0} transaksi, ${pushed['debts'] ?? 0} hutang, ${pushed['savings'] ?? 0} tabungan\n'
+            '• Data Dipulihkan ke HP: ${restored['transactions'] ?? 0} transaksi, ${restored['debts'] ?? 0} hutang, ${restored['savings'] ?? 0} tabungan\n\n'
+            'Data Anda 100% aman dan tidak akan hilang meski aplikasi di-update atau di-install ulang!',
+        accentColor: AppTheme.greenMain,
+        icon: Icons.cloud_done_rounded,
+        buttonText: 'Mantap',
+      );
+      _checkServer();
+    } else {
+      MaoneArtModal.showAlertModal(
+        context: context,
+        title: 'Gagal Sinkronisasi',
+        message: 'Keterangan: ${res['message']}\n\nPastikan web server Apache & MySQL Termux sedang aktif di port 8085.',
+        accentColor: AppTheme.redMain,
+        icon: Icons.error_outline_rounded,
+        buttonText: 'Tutup',
+      );
+    }
   }
 
   @override
   void dispose() {
     _apiKeyController.dispose();
+    _serverUrlController.dispose();
     super.dispose();
   }
 
@@ -346,7 +428,178 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               const SizedBox(height: 18),
 
-              // ==================== 4. FITUR UNGGULAN ====================
+              // ==================== 4. PHPMYADMIN & DATABASE LOKAL ====================
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'DATABASE LOKAL PHPMYADMIN (ANTI-HILANG)',
+                    style: GoogleFonts.plusJakartaSans(
+                      color: AppTheme.textMuted,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: _serverStatus == 'connected'
+                          ? AppTheme.greenSoft
+                          : (_serverStatus == 'checking' ? const Color(0xFFFEF3C7) : const Color(0xFFFEE2E2)),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      _serverStatus == 'connected'
+                          ? 'Terhubung 🟢'
+                          : (_serverStatus == 'checking' ? 'Memeriksa... 🟡' : 'Offline 🔴'),
+                      style: GoogleFonts.plusJakartaSans(
+                        color: _serverStatus == 'connected'
+                            ? const Color(0xFF047857)
+                            : (_serverStatus == 'checking' ? const Color(0xFFD97706) : const Color(0xFFDC2626)),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              GlassCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(colors: [Color(0xFFF59E0B), Color(0xFFD97706)]),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.storage_rounded, color: Colors.white, size: 16),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'phpMyAdmin MySQL (db_keuangan)',
+                                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textDark),
+                              ),
+                              Text(
+                                _serverStatusMessage.isNotEmpty ? _serverStatusMessage : 'http://127.0.0.1:8085/Keuangan',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: _serverStatus == 'connected' ? AppTheme.greenMain : AppTheme.textMuted,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Data tersimpan permanen di database MariaDB Termux di HP ini. Saat update APK atau install ulang, data Anda tidak akan pernah hilang!',
+                      style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11.5, height: 1.4),
+                    ),
+                    if (_serverCounts != null) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FDF4),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFBBF7D0)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildCountPill('Transaksi', _serverCounts!['transaksi'] ?? 0),
+                            _buildCountPill('Kategori', _serverCounts!['kategori'] ?? 0),
+                            _buildCountPill('Hutang', _serverCounts!['hutang'] ?? 0),
+                            _buildCountPill('Tabungan', _serverCounts!['tabungan'] ?? 0),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+
+                    TextField(
+                      controller: _serverUrlController,
+                      style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 12.5),
+                      decoration: InputDecoration(
+                        labelText: 'Alamat Server API phpMyAdmin',
+                        labelStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                        hintText: 'http://127.0.0.1:8085/Keuangan/api',
+                        hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                        filled: true,
+                        fillColor: const Color(0xFFF8FAFC),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.check_rounded, color: AppTheme.bluePrimary, size: 20),
+                          tooltip: 'Simpan URL',
+                          onPressed: _saveServerUrl,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // 2-Column Symmetrical Grid Buttons (Standar MaoneArt)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            height: 44,
+                            child: OutlinedButton.icon(
+                              onPressed: _checkServer,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppTheme.bluePrimary,
+                                side: const BorderSide(color: AppTheme.bluePrimary, width: 1.2),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              icon: const Icon(Icons.refresh_rounded, size: 16),
+                              label: Text('Cek Server', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: SizedBox(
+                            height: 44,
+                            child: ElevatedButton.icon(
+                              onPressed: _isSyncing ? null : _syncData,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.greenMain,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              icon: _isSyncing
+                                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                  : const Icon(Icons.sync_rounded, size: 16),
+                              label: Text(
+                                _isSyncing ? 'Proses...' : 'Sinkronkan Data',
+                                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+
+              // ==================== 5. FITUR UNGGULAN ====================
               Text(
                 'FITUR UNGGULAN APLIKASI',
                 style: GoogleFonts.plusJakartaSans(
@@ -428,9 +681,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const Divider(color: AppTheme.borderLight, height: 16),
                     _buildInfoRow('Tahun Rilis', '2026'),
                     const Divider(color: AppTheme.borderLight, height: 16),
-                    _buildInfoRow('Platform', 'Android (Flutter + SQLite)'),
+                    _buildInfoRow('Platform', 'Android (Flutter + MySQL phpMyAdmin & SQLite)'),
                     const Divider(color: AppTheme.borderLight, height: 16),
-                    _buildInfoRow('Status Rilis', 'v1.0.6 (Official Release)'),
+                    _buildInfoRow('Status Rilis', 'v1.0.8 (phpMyAdmin Sync & Anti-Data Loss)'),
                   ],
                 ),
               ),
@@ -500,6 +753,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCountPill(String label, dynamic count) {
+    return Column(
+      children: [
+        Text(
+          '$count',
+          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 13, color: const Color(0xFF15803D)),
+        ),
+        Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(color: const Color(0xFF166534), fontSize: 9.5, fontWeight: FontWeight.w500),
+        ),
+      ],
     );
   }
 

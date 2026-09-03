@@ -6,6 +6,7 @@ import '../models/saving_model.dart';
 import '../models/financial_summary.dart';
 import '../services/database_helper.dart';
 import '../services/gemini_service.dart';
+import '../services/phpmyadmin_service.dart';
 
 // Database Instance Provider
 final databaseProvider = Provider<DatabaseHelper>((ref) => DatabaseHelper.instance);
@@ -72,11 +73,19 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
     try {
       final db = ref.read(databaseProvider);
       await db.insertTransaction(tx);
+      PhpMyAdminService.pushTransaction(tx).ignore();
       _refreshAll();
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
+  }
+
+  Future<Map<String, dynamic>> syncWithPhpMyAdmin() async {
+    final db = ref.read(databaseProvider);
+    final result = await PhpMyAdminService.syncFull(db);
+    _refreshAll();
+    return result;
   }
 
   Future<void> deleteTransaction(int id) async {
