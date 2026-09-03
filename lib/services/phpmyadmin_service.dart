@@ -11,20 +11,40 @@ class PhpMyAdminService {
   static const String _prefServerUrl = 'phpmyadmin_server_url';
   static const String defaultServerUrl = 'http://127.0.0.1:8085/Keuangan/api';
 
+  static String normalizeUrl(String raw) {
+    var url = raw.trim();
+    if (url.isEmpty) return defaultServerUrl;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'http://$url';
+    }
+    while (url.endsWith('/')) {
+      url = url.substring(0, url.length - 1);
+    }
+    if (!url.endsWith('/api') && !url.contains('/api/')) {
+      url = '$url/api';
+    }
+    return url;
+  }
+
   static Future<String> getServerUrl() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_prefServerUrl) ?? defaultServerUrl;
+    final raw = prefs.getString(_prefServerUrl);
+    return raw != null ? normalizeUrl(raw) : defaultServerUrl;
   }
 
   static Future<void> saveServerUrl(String url) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_prefServerUrl, url.trim());
+    final normalized = normalizeUrl(url);
+    await prefs.setString(_prefServerUrl, normalized);
   }
 
   // Cek Status Server phpMyAdmin & Database db_keuangan
-  static Future<Map<String, dynamic>> checkStatus() async {
+  static Future<Map<String, dynamic>> checkStatus([String? customUrl]) async {
     try {
-      final baseUrl = await getServerUrl();
+      var baseUrl = customUrl != null && customUrl.trim().isNotEmpty
+          ? normalizeUrl(customUrl)
+          : await getServerUrl();
+
       final url = Uri.parse('$baseUrl/status.php');
       final res = await http.get(url).timeout(const Duration(seconds: 4));
       if (res.statusCode == 200) {
@@ -32,6 +52,23 @@ class PhpMyAdminService {
       }
       return {'status': 'error', 'message': 'HTTP ${res.statusCode}'};
     } catch (e) {
+      // Coba fallback ganti 127.0.0.1 <-> localhost jika gagal
+      try {
+        var baseUrl = customUrl != null && customUrl.trim().isNotEmpty
+            ? normalizeUrl(customUrl)
+            : await getServerUrl();
+        if (baseUrl.contains('127.0.0.1')) {
+          baseUrl = baseUrl.replaceAll('127.0.0.1', 'localhost');
+        } else if (baseUrl.contains('localhost')) {
+          baseUrl = baseUrl.replaceAll('localhost', '127.0.0.1');
+        }
+        final url = Uri.parse('$baseUrl/status.php');
+        final res = await http.get(url).timeout(const Duration(seconds: 3));
+        if (res.statusCode == 200) {
+          return jsonDecode(res.body);
+        }
+      } catch (_) {}
+
       return {'status': 'error', 'message': 'Tidak dapat terhubung ke server ($e)'};
     }
   }

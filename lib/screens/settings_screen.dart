@@ -51,13 +51,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  void _checkServer() async {
+  void _checkServer([void Function(void Function())? setModalState]) async {
+    final url = _serverUrlController.text.trim();
+    if (url.isNotEmpty) {
+      await PhpMyAdminService.saveServerUrl(url);
+    }
+
     setState(() {
       _serverStatus = 'checking';
       _serverStatusMessage = 'Menghubungi server phpMyAdmin...';
     });
-    final res = await PhpMyAdminService.checkStatus();
+    setModalState?.call(() {});
+
+    final res = await PhpMyAdminService.checkStatus(url.isNotEmpty ? url : null);
     if (!mounted) return;
+
     setState(() {
       if (res['status'] == 'connected') {
         _serverStatus = 'connected';
@@ -69,13 +77,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         _serverCounts = null;
       }
     });
+    setModalState?.call(() {});
   }
 
-  void _saveServerUrl() async {
+  void _saveServerUrl([void Function(void Function())? setModalState]) async {
     final url = _serverUrlController.text.trim();
     if (url.isNotEmpty) {
       await PhpMyAdminService.saveServerUrl(url);
-      _checkServer();
+      _checkServer(setModalState);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Alamat server berhasil disimpan!')),
@@ -444,7 +453,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             suffixIcon: IconButton(
                               icon: const Icon(Icons.check_rounded, color: AppTheme.bluePrimary, size: 20),
                               tooltip: 'Simpan URL',
-                              onPressed: _saveServerUrl,
+                              onPressed: () => _saveServerUrl(setModalState),
                             ),
                           ),
                         ),
@@ -457,10 +466,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               child: SizedBox(
                                 height: 44,
                                 child: OutlinedButton.icon(
-                                  onPressed: () {
-                                    _checkServer();
-                                    setModalState(() {});
-                                  },
+                                  onPressed: () => _checkServer(setModalState),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: AppTheme.bluePrimary,
                                     side: const BorderSide(color: AppTheme.bluePrimary),
