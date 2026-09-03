@@ -52,15 +52,15 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.1.7
-          name: 'MaoneArt Keuangan v1.1.7 (Release)'
+          tag_name: v1.1.8
+          name: 'MaoneArt Keuangan v1.1.8 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.1.7)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.1.8)
             
-            - **Sinkronisasi Otomatis Latar Belakang (Background Auto-Sync)**:
-              * Aplikasi otomatis menyinkronkan data terbaru dari MySQL phpMyAdmin saat dibuka.
-              * Perbaikan asosiasi user aktif sehingga seluruh transaksi tampil konsisten di Web dan APK.
-              * Peningkatan filter periode bulan dan stabilitas SQLite lokal.
+            - **Perhitungan Saldo Kas Berjalan Kumulatif (Running Cumulative Balance)**:
+              * Saldo kas riil otomatis terbawa dan dihitung akumulatif ke bulan-bulan berikutnya secara berkelanjutan.
+              * Pill pemasukan dan pengeluaran tetap menyaring arus kas khusus bulan yang aktif.
+              * Auto-sync latar belakang saat aplikasi dibuka.
           files: build/app/outputs/flutter-apk/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

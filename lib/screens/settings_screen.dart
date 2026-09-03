@@ -614,7 +614,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Developer: Hermawan • v1.1.7',
+                                'Developer: Hermawan • v1.1.8',
                                 style: GoogleFonts.plusJakartaSans(
                                   color: AppTheme.textMuted,
                                   fontSize: 11.5,
