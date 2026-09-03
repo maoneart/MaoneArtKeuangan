@@ -239,7 +239,7 @@ class DatabaseHelper {
   Future<FinancialSummary> getFinancialSummary({String? month}) async {
     final db = await database;
     
-    // 1. Total Pemasukan & Pengeluaran
+    // 1. Total Pemasukan & Pengeluaran pada Bulan yang Dipilih
     String query = '''
       SELECT 
         SUM(CASE WHEN tipe = 'pemasukan' THEN jumlah ELSE 0 END) as total_pemasukan,
@@ -260,21 +260,39 @@ class DatabaseHelper {
       expense = double.tryParse(txResult.first['total_pengeluaran']?.toString() ?? '0') ?? 0.0;
     }
 
-    // 2. Total Hutang (Belum Lunas)
+    // 2. Total Saldo Kas Kumulatif (Saldo Berjalan / Uang Kas Kumulatif hingga bulan ini)
+    String cumulativeQuery = '''
+      SELECT 
+        SUM(CASE WHEN tipe = 'pemasukan' THEN jumlah ELSE -jumlah END) as total_saldo_kas
+      FROM transaksi
+    ''';
+    List<dynamic> cumulativeArgs = [];
+    if (month != null && month.isNotEmpty) {
+      cumulativeQuery += " WHERE strftime('%Y-%m', tanggal) <= ?";
+      cumulativeArgs.add(month);
+    }
+
+    final cumulativeResult = await db.rawQuery(cumulativeQuery, cumulativeArgs);
+    double cumulativeBalance = 0.0;
+    if (cumulativeResult.isNotEmpty && cumulativeResult.first['total_saldo_kas'] != null) {
+      cumulativeBalance = double.tryParse(cumulativeResult.first['total_saldo_kas']?.toString() ?? '0') ?? 0.0;
+    }
+
+    // 3. Total Hutang (Belum Lunas)
     final debtResult = await db.rawQuery("SELECT SUM(sisa_hutang) as total FROM hutang WHERE tipe = 'hutang' AND status = 'belum_lunas'");
     double debt = 0.0;
     if (debtResult.isNotEmpty) {
       debt = double.tryParse(debtResult.first['total']?.toString() ?? '0') ?? 0.0;
     }
 
-    // 3. Total Piutang (Belum Lunas)
+    // 4. Total Piutang (Belum Lunas)
     final recResult = await db.rawQuery("SELECT SUM(sisa_hutang) as total FROM hutang WHERE tipe = 'piutang' AND status = 'belum_lunas'");
     double receivable = 0.0;
     if (recResult.isNotEmpty) {
       receivable = double.tryParse(recResult.first['total']?.toString() ?? '0') ?? 0.0;
     }
 
-    // 4. Total Tabungan Terkumpul
+    // 5. Total Tabungan Terkumpul
     final saveResult = await db.rawQuery("SELECT SUM(saldo_terkumpul) as total FROM tabungan");
     double savings = 0.0;
     if (saveResult.isNotEmpty) {
@@ -284,7 +302,7 @@ class DatabaseHelper {
     return FinancialSummary(
       totalIncome: income,
       totalExpense: expense,
-      netBalance: income - expense,
+      netBalance: cumulativeBalance,
       totalDebt: debt,
       totalReceivable: receivable,
       totalSavings: savings,
