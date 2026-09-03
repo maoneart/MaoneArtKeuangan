@@ -495,8 +495,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   // ==================== MODAL 3: RESET / KOSONGKAN DATA ====================
-  void _showResetDataModal(BuildContext context) {
-    MaoneArtModal.showConfirmModal(
+  void _showResetDataModal(BuildContext context) async {
+    final confirmed = await MaoneArtModal.showConfirmModal(
       context: context,
       title: 'Kosongkan Seluruh Data?',
       message: 'Seluruh data catatan transaksi, hutang piutang, dan tabungan akan di-reset dari nol (0).\n\nKategori dan pengaturan API Key akan tetap tersimpan.',
@@ -504,18 +504,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       cancelText: 'Batal',
       accentColor: AppTheme.redMain,
       icon: Icons.delete_sweep_rounded,
-      onConfirm: () async {
-        await ref.read(financialControllerProvider.notifier).resetAllData();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Buku kas dan data transaksi telah direset ke 0! 🧹'),
-              backgroundColor: AppTheme.redMain,
-            ),
-          );
-        }
-      },
+      isDanger: true,
     );
+
+    if (confirmed == true) {
+      await ref.read(financialControllerProvider.notifier).resetAllData();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Buku kas dan data transaksi telah direset ke 0! 🧹'),
+            backgroundColor: AppTheme.redMain,
+          ),
+        );
+      }
+    }
   }
 
   // ==================== MODAL 4: TENTANG & DEVELOPER ====================
