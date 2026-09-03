@@ -52,17 +52,17 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.1.5
-          name: 'MaoneArt Keuangan v1.1.5 (Release)'
+          tag_name: v1.1.6
+          name: 'MaoneArt Keuangan v1.1.6 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.1.5)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.1.6)
             
-            - **Halaman Penuh (Full Page Screen) untuk Top Up Kas & Bayar Pengeluaran**:
-              * Menu "Top Up" dan "Bayar" serta pencatatan transaksi kini membuka halaman penuh tersendiri (`AddTransactionScreen`), bukan bottom sheet / slide bawah.
-              * Dilengkapi switcher tab Pemasukan vs Pengeluaran, input nominal besar dengan auto format ribuan, pemilih visual kategori lengkap, pemilih tanggal kalender, dan tombol aksi simetris.
-              * Menu "Tentang MaoneArt Keuangan" membuka halaman penuh tersendiri (`AboutScreen`).
-              * Bebas tumpang tindih dengan navbar bawaan HP (*Safe Insets*).
-              * Dukungan penuh mode Landscape & Portrait.
+            - **Perbaikan Mode Landscape & Sidebar Navigasi**:
+              * Sidebar kiri kini tampil dengan tema *High-Contrast Deep Navy Glassmorphism* yang jelas, tajam, dan elegan.
+              * Perhitungan lebar sidebar dinamis (`railContentWidth + safePadding.left`), mencegah sidebar terpotong / hilang akibat *notch* atau kamera *punch-hole* samping HP.
+              * Pill navigasi aktif dengan gradasi Royal Blue bercahaya (*glow shadow*) dan ikon/teks kontras tinggi.
+              * Area konten kanan aman dari *camera notch / gesture insets* kanan.
+              * Dukungan penuh mode Landscape & Portrait di semua halaman.
           files: build/app/outputs/flutter-apk/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
