@@ -14,6 +14,7 @@ class ParsedTransaction {
   final double amount;
   final double? targetAmount; // untuk target_tabungan
   final String note;
+  final DateTime date; // Tanggal transaksi yang terdeteksi
   bool isSaved;
 
   ParsedTransaction({
@@ -25,8 +26,9 @@ class ParsedTransaction {
     required this.amount,
     this.targetAmount,
     required this.note,
+    DateTime? date,
     this.isSaved = false,
-  });
+  }) : date = date ?? DateTime.now();
 
   static double parseAmount(dynamic raw) {
     if (raw == null) return 0.0;
@@ -55,7 +57,117 @@ class ParsedTransaction {
     return double.tryParse(s) ?? 0.0;
   }
 
-  factory ParsedTransaction.fromJson(Map<String, dynamic> json) {
+  // Parser tanggal multi-format (Bahasa Indonesia, ISO, singkatan)
+  static DateTime parseIndonesianDate(dynamic raw, [String? fallbackText]) {
+    if (raw is DateTime) return raw;
+
+    // 1. Coba parse dari raw input jika ada string (misal dari JSON AI "2026-08-24")
+    if (raw != null && raw.toString().trim().isNotEmpty) {
+      final str = raw.toString().trim();
+      final iso = DateTime.tryParse(str);
+      if (iso != null) return iso;
+
+      final parsedFromRaw = _extractDateFromString(str);
+      if (parsedFromRaw != null) return parsedFromRaw;
+    }
+
+    // 2. Jika di raw tidak ada tanggal, coba ekstrak dari fallbackText (misal kalimat pesan pengguna)
+    if (fallbackText != null && fallbackText.trim().isNotEmpty) {
+      final extracted = _extractDateFromString(fallbackText);
+      if (extracted != null) return extracted;
+    }
+
+    return DateTime.now();
+  }
+
+  static DateTime? _extractDateFromString(String text) {
+    final lower = text.toLowerCase();
+    final now = DateTime.now();
+
+    // Kata kunci relatif
+    if (RegExp(r'\b(kemarin\s+lusa|2\s+hari\s+lalu)\b').hasMatch(lower)) {
+      return now.subtract(const Duration(days: 2));
+    }
+    if (RegExp(r'\bkemarin\b').hasMatch(lower)) {
+      return now.subtract(const Duration(days: 1));
+    }
+    if (RegExp(r'\b(hari\s+ini|tadi\s+pagi|tadi\s+siang|tadi\s+malam|barusan|tadi)\b').hasMatch(lower)) {
+      return now;
+    }
+    if (RegExp(r'\bbesok\b').hasMatch(lower)) {
+      return now.add(const Duration(days: 1));
+    }
+
+    // Pola YYYY-MM-DD atau YYYY/MM/DD
+    final isoMatch = RegExp(r'\b(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})\b').firstMatch(lower);
+    if (isoMatch != null) {
+      final y = int.tryParse(isoMatch.group(1)!);
+      final m = int.tryParse(isoMatch.group(2)!);
+      final d = int.tryParse(isoMatch.group(3)!);
+      if (y != null && m != null && d != null && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+        return DateTime(y, m, d);
+      }
+    }
+
+    // Pola DD-MM-YYYY atau DD/MM/YYYY atau DD-MM-YY atau DD/MM/YY
+    final numDateMatch = RegExp(r'\b(\d{1,2})[-\/](\d{1,2})[-\/](\d{2,4})\b').firstMatch(lower);
+    if (numDateMatch != null) {
+      final d = int.tryParse(numDateMatch.group(1)!);
+      final m = int.tryParse(numDateMatch.group(2)!);
+      var y = int.tryParse(numDateMatch.group(3)!);
+      if (y != null && y < 100) {
+        y += 2000;
+      }
+      if (y != null && m != null && d != null && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+        return DateTime(y, m, d);
+      }
+    }
+
+    // Kamus bulan Bahasa Indonesia & Inggris
+    final monthMap = <String, int>{
+      'januari': 1, 'jan': 1, 'january': 1,
+      'februari': 2, 'feb': 2, 'pebruari': 2, 'february': 2,
+      'maret': 3, 'mar': 3, 'march': 3,
+      'april': 4, 'apr': 4,
+      'mei': 5, 'may': 5,
+      'juni': 6, 'jun': 6, 'june': 6,
+      'juli': 7, 'jul': 7, 'july': 7,
+      'agustus': 8, 'agt': 8, 'ags': 8, 'august': 8, 'aug': 8,
+      'september': 9, 'sep': 9, 'sept': 9,
+      'oktober': 10, 'okt': 10, 'october': 10, 'oct': 10,
+      'november': 11, 'nov': 11, 'nopember': 11,
+      'desember': 12, 'des': 12, 'december': 12, 'dec': 12,
+    };
+
+    final monthPattern = monthMap.keys.join('|');
+    // Pola: (tanggal / tgl) [DD] [Nama Bulan] [YYYY / YY]
+    // Contoh: "tanggal 24 agustus 26", "24 agustus 2026", "tgl 5 mei", "24 agustus"
+    final textDateMatch = RegExp(
+      r'(?:tanggal|tgl\s+)?\b(\d{1,2})\s+(' + monthPattern + r')(?:\s+(\d{2,4}))?\b',
+      caseSensitive: false,
+    ).firstMatch(lower);
+
+    if (textDateMatch != null) {
+      final d = int.tryParse(textDateMatch.group(1)!);
+      final mName = textDateMatch.group(2)!.toLowerCase();
+      final m = monthMap[mName];
+      final yStr = textDateMatch.group(3);
+      int y = now.year;
+      if (yStr != null) {
+        final parsedY = int.tryParse(yStr);
+        if (parsedY != null) {
+          y = parsedY < 100 ? parsedY + 2000 : parsedY;
+        }
+      }
+      if (d != null && m != null && d >= 1 && d <= 31) {
+        return DateTime(y, m, d);
+      }
+    }
+
+    return null;
+  }
+
+  factory ParsedTransaction.fromJson(Map<String, dynamic> json, [String? parentContext]) {
     final rawType = (json['tipe'] ?? json['type'] ?? 'pengeluaran').toString().toLowerCase();
     String normalizedType = 'pengeluaran';
 
@@ -75,6 +187,7 @@ class ParsedTransaction {
 
     final amt = parseAmount(json['jumlah'] ?? json['amount'] ?? json['saldo_awal'] ?? '0');
     final tgtAmt = parseAmount(json['target_nominal'] ?? json['target_amount'] ?? '0');
+    final txDate = parseIndonesianDate(json['tanggal'] ?? json['date'] ?? json['tgl'], parentContext);
 
     return ParsedTransaction(
       type: normalizedType,
@@ -85,6 +198,7 @@ class ParsedTransaction {
       amount: amt,
       targetAmount: tgtAmt > 0 ? tgtAmt : amt,
       note: json['keterangan']?.toString() ?? json['catatan']?.toString() ?? 'Catatan dari AI',
+      date: txDate,
     );
   }
 }
@@ -119,9 +233,11 @@ class GeminiService {
     await prefs.remove(_prefApiKey);
   }
 
-  // --- NLP FALLBACK PARSER: JAMINAN 100% SEMUA TRANSAKSI TERDETEKSI ---
+  // --- NLP FALLBACK PARSER: JAMINAN 100% SEMUA TRANSAKSI & TANGGAL TERDETEKSI ---
   static List<ParsedTransaction> extractTransactionsFromRawText(String text, List<CategoryModel> categories) {
     final results = <ParsedTransaction>[];
+    final globalDate = ParsedTransaction.parseIndonesianDate(null, text);
+
     // Perbaiki typo huruf O sebelum rb/k/ribu
     String cleaned = text.replaceAll(RegExp(r'(\d+)[oO](rb|k|ribu)', caseSensitive: false), '\$1 0\$2');
     cleaned = cleaned.replaceAll(RegExp(r'30[oO]rb', caseSensitive: false), '300rb');
@@ -132,9 +248,12 @@ class GeminiService {
       final seg = rawSeg.trim();
       if (seg.isEmpty) continue;
 
+      // Cek apakah segmen ini menyebutkan tanggal spesifik tersendiri
+      final segDate = ParsedTransaction._extractDateFromString(seg) ?? globalDate;
+
       // Bersihkan indikator tanggal agar tidak tertukar dengan nominal
-      var segClean = seg.replaceAll(RegExp(r'\btanggal\s+\d+', caseSensitive: false), '');
-      segClean = segClean.replaceAll(RegExp(r'\btgl\s+\d+', caseSensitive: false), '');
+      var segClean = seg.replaceAll(RegExp(r'\btanggal\s+\d+(\s+[a-zA-Z]+)?(\s+\d+)?', caseSensitive: false), '');
+      segClean = segClean.replaceAll(RegExp(r'\btgl\s+\d+(\s+[a-zA-Z]+)?(\s+\d+)?', caseSensitive: false), '');
       segClean = segClean.replaceAll(RegExp(r'\btahun\s+\d+', caseSensitive: false), '');
 
       // Cari pola nominal uang (misal: 6.3 jt, 1jt, 200rb, 300rb, 1000000)
@@ -187,6 +306,7 @@ class GeminiService {
         categoryName: catName,
         amount: nominal,
         note: note.isNotEmpty ? note : seg,
+        date: segDate,
       ));
     }
 
@@ -221,8 +341,13 @@ class GeminiService {
           ? 'Saldo Kas Saat Ini: ${summary.formattedBalance}, Total Pemasukan: ${summary.formattedIncome}, Total Pengeluaran: ${summary.formattedExpense}'
           : 'Status Saldo: Normal';
 
+      final now = DateTime.now();
+      final nowIso = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
       final systemInstruction = '''
 Anda adalah "MaoneArt Financial Assistant", asisten AI keuangan pribadi cerdas, ramah, dan solutif dalam aplikasi MaoneArt Keuangan.
+Tanggal Hari Ini: ${now.day}/${now.month}/${now.year} ($nowIso).
+
 Tugas Anda:
 1. JIKA PENGGUNA BERTANYA ("apakah terlalu banyak", "apakah boros", "bagaimana sarannya"):
    - Hitung total pemasukan dan total pengeluaran yang disebutkan pengguna.
@@ -236,7 +361,12 @@ $currentBalanceInfo
 Daftar Kategori Transaksi Aplikasi:
 $categoriesDesc
 
-3. ATURAN EKSTRAKSI TRANSAKSI (SANGAT KETAT):
+3. ATURAN DETEKSI TANGGAL TRANSAKSI (SANGAT PENTING):
+- Jika pengguna menyebutkan tanggal transaksi (contoh: "tanggal 24 agustus 26", "24/08/2026", "kemarin", "24 agustus"), ekstrak dan gunakan tanggal tersebut ke field "tanggal" dengan format "YYYY-MM-DD" (contoh: "2026-08-24").
+- Jika tahun disebutkan 2 digit (misal: "26"), anggap tahun 2026.
+- Jika pengguna tidak menyebutkan tanggal apa pun, gunakan tanggal hari ini ("$nowIso").
+
+4. ATURAN EKSTRAKSI TRANSAKSI (SANGAT KETAT):
 - Ekstrak SEMUA rincian pengeluaran, pemasukan, hutang, atau tabungan yang ada dalam pesan pengguna tanpa terkecuali!
 - Ubah nominal singkatan ke angka bulat murni di field "jumlah" (contoh: 6.3 jt -> 6300000, 1jt -> 1000000, 200rb -> 200000, 30Orb/300rb -> 300000). JANGAN gunakan huruf di field "jumlah".
 - Format JSON harus SELALU valid, ditutup rapi, dan ditempatkan di paling akhir respons:
@@ -244,12 +374,14 @@ $categoriesDesc
 {
   "transactions": [
     {
+      "tanggal": "2026-08-24",
       "tipe": "pemasukan",
       "nama_kategori": "Gaji & Upah",
       "jumlah": 6300000,
       "keterangan": "Gajian 24 Agustus"
     },
     {
+      "tanggal": "2026-08-24",
       "tipe": "pengeluaran",
       "nama_kategori": "Tagihan",
       "jumlah": 1000000,
@@ -340,7 +472,7 @@ $categoriesDesc
             if (parsedJson is Map && parsedJson['transactions'] is List) {
               for (final item in parsedJson['transactions']) {
                 if (item is Map<String, dynamic>) {
-                  transactions.add(ParsedTransaction.fromJson(item));
+                  transactions.add(ParsedTransaction.fromJson(item, userMessage));
                 }
               }
             }
@@ -355,6 +487,7 @@ $categoriesDesc
           r'"tipe"\s*:\s*"([^"]+)".*?"jumlah"\s*:\s*([0-9\.]+).*?"keterangan"\s*:\s*"([^"]+)"',
           dotAll: true,
         );
+        final defaultDate = ParsedTransaction.parseIndonesianDate(null, userMessage);
         for (final m in fuzzyRegex.allMatches(rawText)) {
           final tType = m.group(1) ?? 'pengeluaran';
           final amt = double.tryParse(m.group(2) ?? '0') ?? 0.0;
@@ -365,6 +498,7 @@ $categoriesDesc
               categoryName: 'Umum',
               amount: amt,
               note: note,
+              date: defaultDate,
             ));
           }
         }

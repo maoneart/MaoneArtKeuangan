@@ -148,7 +148,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           }
 
           final newTx = TransactionModel(
-            date: DateTime.now(),
+            date: tx.date,
             type: tx.type,
             categoryId: catId,
             amount: tx.amount,
@@ -165,7 +165,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
             type: tx.type,
             totalAmount: tx.amount,
             remainingAmount: tx.amount,
-            borrowDate: DateTime.now(),
+            borrowDate: tx.date,
             note: tx.note,
           );
 
@@ -199,7 +199,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
             await ref.read(financialControllerProvider.notifier).depositSaving(
               targetSaving.id!,
               tx.amount,
-              DateTime.now(),
+              tx.date,
               note: tx.note,
             );
           } else {
@@ -672,6 +672,25 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                       child: Text(
                         badgeLabel,
                         style: GoogleFonts.plusJakartaSans(color: iconColor, fontSize: 9, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE2E8F0),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.calendar_today_rounded, size: 8.5, color: Color(0xFF64748B)),
+                          const SizedBox(width: 2.5),
+                          Text(
+                            AppDateFormatter.formatShort(tx.date),
+                            style: GoogleFonts.plusJakartaSans(color: const Color(0xFF475569), fontSize: 8.5, fontWeight: FontWeight.w600),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 6),

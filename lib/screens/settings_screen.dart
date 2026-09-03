@@ -696,7 +696,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const Divider(color: AppTheme.borderLight, height: 16),
                     _buildInfoRow('Platform', 'Android (Flutter + MySQL phpMyAdmin & SQLite)'),
                     const Divider(color: AppTheme.borderLight, height: 16),
-                    _buildInfoRow('Status Rilis', 'v1.0.9 (phpMyAdmin Sync v1.0.8 (phpMyAdmin Sync & Anti-Data Loss) Gemini API Key Storage)'),
+                    _buildInfoRow('Status Rilis', 'v1.1.0 (AI Date Extraction & phpMyAdmin Sync)'),
                   ],
                 ),
               ),
