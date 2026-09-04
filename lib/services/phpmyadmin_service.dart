@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/transaction_model.dart';
@@ -38,25 +39,39 @@ class PhpMyAdminService {
     await prefs.setString(_prefServerUrl, normalized);
   }
 
-  static List<String> getCandidateUrls(String currentBase) {
-    final list = <String>[currentBase];
-    if (currentBase.contains('127.0.0.1')) {
-      list.add(currentBase.replaceAll('127.0.0.1', 'localhost'));
-    } else if (currentBase.contains('localhost')) {
-      list.add(currentBase.replaceAll('localhost', '127.0.0.1'));
+  static Future<List<String>> getCandidateUrls([String? currentBase]) async {
+    final list = <String>[];
+    if (currentBase != null && currentBase.trim().isNotEmpty) {
+      list.add(normalizeUrl(currentBase));
+    } else {
+      final saved = await getServerUrl();
+      list.add(saved);
     }
-    final currentCopy = List<String>.from(list);
-    for (final u in currentCopy) {
-      if (u.contains(':8085')) {
-        list.add(u.replaceAll(':8085', ':8081'));
-      } else if (u.contains(':8081')) {
-        list.add(u.replaceAll(':8081', ':8085'));
-      }
-    }
+
+    // 1. Tambahkan loopback & host emulator
     list.add('http://127.0.0.1:8085/Keuangan/api');
     list.add('http://localhost:8085/Keuangan/api');
+    list.add('http://10.0.2.2:8085/Keuangan/api');
     list.add('http://127.0.0.1:8081/Keuangan/api');
     list.add('http://localhost:8081/Keuangan/api');
+
+    // 2. Deteksi semua IP jaringan perangkat (Wi-Fi, hotspot, LAN)
+    try {
+      final interfaces = await NetworkInterface.list(
+        type: InternetAddressType.IPv4,
+        includeLoopback: false,
+      );
+      for (final iface in interfaces) {
+        for (final addr in iface.addresses) {
+          final ip = addr.address.trim();
+          if (ip.isNotEmpty && ip != '127.0.0.1') {
+            list.add('http://$ip:8085/Keuangan/api');
+            list.add('http://$ip:8081/Keuangan/api');
+          }
+        }
+      }
+    } catch (_) {}
+
     return list.toSet().toList();
   }
 
@@ -66,7 +81,7 @@ class PhpMyAdminService {
         ? normalizeUrl(customUrl)
         : await getServerUrl();
 
-    final candidates = getCandidateUrls(base);
+    final candidates = await getCandidateUrls(base);
     String lastErr = 'Tidak dapat terhubung';
 
     for (final cand in candidates) {
@@ -93,7 +108,7 @@ class PhpMyAdminService {
   // Kirim transaksi baru ke phpMyAdmin secara real-time
   static Future<bool> pushTransaction(TransactionModel tx) async {
     final base = await getServerUrl();
-    final candidates = getCandidateUrls(base);
+    final candidates = await getCandidateUrls(base);
     final body = jsonEncode({
       'date': tx.date.toIso8601String(),
       'type': tx.type,
@@ -121,7 +136,7 @@ class PhpMyAdminService {
   // Ambil Gemini API Key dari phpMyAdmin (app_settings)
   static Future<String?> fetchGeminiApiKey() async {
     final base = await getServerUrl();
-    final candidates = getCandidateUrls(base);
+    final candidates = await getCandidateUrls(base);
     for (final cand in candidates) {
       try {
         final url = Uri.parse('$cand/settings.php?key=gemini_api_key');
@@ -142,7 +157,7 @@ class PhpMyAdminService {
   // Simpan Gemini API Key ke phpMyAdmin (app_settings)
   static Future<bool> saveGeminiApiKey(String apiKey) async {
     final base = await getServerUrl();
-    final candidates = getCandidateUrls(base);
+    final candidates = await getCandidateUrls(base);
     final body = jsonEncode({
       'key_name': 'gemini_api_key',
       'key_value': apiKey.trim(),
@@ -167,7 +182,7 @@ class PhpMyAdminService {
   // Reset Data di phpMyAdmin (MySQL)
   static Future<bool> resetRemoteData() async {
     final base = await getServerUrl();
-    final candidates = getCandidateUrls(base);
+    final candidates = await getCandidateUrls(base);
     for (final cand in candidates) {
       try {
         final url = Uri.parse('$cand/reset.php');
@@ -187,7 +202,7 @@ class PhpMyAdminService {
   static Future<Map<String, dynamic>> syncFull(DatabaseHelper db) async {
     try {
       final base = await getServerUrl();
-      final candidates = getCandidateUrls(base);
+      final candidates = await getCandidateUrls(base);
 
       // 1. Ambil data lokal SQLite & API Key
       final localTxs = await db.getTransactions(limit: 1000);
