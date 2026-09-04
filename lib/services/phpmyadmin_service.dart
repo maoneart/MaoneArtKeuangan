@@ -196,6 +196,56 @@ class PhpMyAdminService {
     return false;
   }
 
+  // Tambah / Simpan Kategori ke phpMyAdmin secara real-time
+  static Future<bool> pushCategoryRemote(CategoryModel cat) async {
+    final base = await getServerUrl();
+    final candidates = await getCandidateUrls(base);
+    final body = jsonEncode({
+      'name': cat.name,
+      'type': cat.type,
+      'icon': cat.iconName,
+      'color': cat.colorHex,
+    });
+
+    for (final cand in candidates) {
+      try {
+        final url = Uri.parse('$cand/kategori.php');
+        final res = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: body,
+        ).timeout(const Duration(seconds: 3));
+        if (res.statusCode == 200 || res.statusCode == 201) {
+          return true;
+        }
+      } catch (_) {}
+    }
+    return false;
+  }
+
+  // Hapus Kategori dari phpMyAdmin secara real-time
+  static Future<bool> deleteCategoryRemote(int id, {String? name, String? type}) async {
+    final base = await getServerUrl();
+    final candidates = await getCandidateUrls(base);
+    for (final cand in candidates) {
+      try {
+        var uriStr = '$cand/kategori.php?id=$id';
+        if (name != null && name.isNotEmpty) {
+          uriStr += '&name=${Uri.encodeComponent(name)}';
+        }
+        if (type != null && type.isNotEmpty) {
+          uriStr += '&type=${Uri.encodeComponent(type)}';
+        }
+        final url = Uri.parse(uriStr);
+        final res = await http.delete(url).timeout(const Duration(seconds: 3));
+        if (res.statusCode == 200) {
+          return true;
+        }
+      } catch (_) {}
+    }
+    return false;
+  }
+
   // Reset Data di phpMyAdmin (MySQL)
   static Future<bool> resetRemoteData() async {
     final base = await getServerUrl();

@@ -627,30 +627,53 @@ class DatabaseHelper {
   }) async {
     final db = await database;
     await db.transaction((txn) async {
-      // 1. Sinkronisasi Kategori
-      for (final item in serverCategories) {
-        if (item is Map<String, dynamic>) {
-          final id = int.tryParse(item['id']?.toString() ?? '0') ?? 0;
-          final name = (item['name']?.toString() ?? item['nama_kategori']?.toString() ?? '').trim();
-          final type = item['type']?.toString() ?? item['tipe']?.toString() ?? 'pengeluaran';
-          final icon = item['icon']?.toString() ?? item['ikon']?.toString() ?? 'bi-bookmark';
-          final color = item['color']?.toString() ?? item['warna']?.toString() ?? '#10B981';
+      // 1. Sinkronisasi Kategori Master dari MySQL ke SQLite
+      if (serverCategories.isNotEmpty) {
+        final serverCatIds = <int>{};
+        for (final item in serverCategories) {
+          if (item is Map<String, dynamic>) {
+            final id = int.tryParse(item['id']?.toString() ?? '0') ?? 0;
+            final name = (item['name']?.toString() ?? item['nama_kategori']?.toString() ?? '').trim();
+            final type = item['type']?.toString() ?? item['tipe']?.toString() ?? 'pengeluaran';
+            final icon = item['icon']?.toString() ?? item['ikon']?.toString() ?? 'bi-bookmark';
+            final color = item['color']?.toString() ?? item['warna']?.toString() ?? '#10B981';
 
-          if (name.isEmpty) continue;
-
-          final existing = await txn.rawQuery(
-            "SELECT id FROM kategori WHERE TRIM(LOWER(nama_kategori)) = ? AND tipe = ?",
-            [name.toLowerCase(), type],
-          );
-          if (existing.isEmpty) {
-            await txn.insert('kategori', {
-              if (id > 0) 'id': id,
-              'nama_kategori': name,
-              'tipe': type,
-              'ikon': icon,
-              'warna': color,
-            });
+            if (name.isEmpty) continue;
+            if (id > 0) {
+              serverCatIds.add(id);
+              await txn.rawInsert('''
+                INSERT OR REPLACE INTO kategori (id, nama_kategori, tipe, ikon, warna)
+                VALUES (?, ?, ?, ?, ?)
+              ''', [id, name, type, icon, color]);
+            } else {
+              final existing = await txn.rawQuery(
+                "SELECT id FROM kategori WHERE TRIM(LOWER(nama_kategori)) = ? AND tipe = ?",
+                [name.toLowerCase(), type],
+              );
+              if (existing.isNotEmpty) {
+                final exId = existing.first['id'] as int;
+                serverCatIds.add(exId);
+                await txn.rawUpdate(
+                  "UPDATE kategori SET nama_kategori = ?, tipe = ?, ikon = ?, warna = ? WHERE id = ?",
+                  [name, type, icon, color, exId],
+                );
+              } else {
+                final newId = await txn.insert('kategori', {
+                  'nama_kategori': name,
+                  'tipe': type,
+                  'ikon': icon,
+                  'warna': color,
+                });
+                serverCatIds.add(newId);
+              }
+            }
           }
+        }
+
+        // Hapus kategori di SQLite yang sudah dihapus di Web / MySQL
+        if (serverCatIds.isNotEmpty) {
+          final idListStr = serverCatIds.join(',');
+          await txn.rawDelete("DELETE FROM kategori WHERE id NOT IN ($idListStr)");
         }
       }
 

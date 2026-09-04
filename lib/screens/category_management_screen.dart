@@ -306,24 +306,85 @@ class CategoryManagementScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      if (cat.id != null && cat.id! > 12)
+                      if (cat.id != null)
                         IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.textMuted, size: 18),
+                          icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.textMuted, size: 20),
                           onPressed: () async {
-                            final confirm = await showDialog(
+                            final confirm = await showGeneralDialog<bool>(
                               context: context,
-                              builder: (c) => AlertDialog(
-                                backgroundColor: AppTheme.cardBg,
-                                title: const Text('Hapus Kategori?'),
-                                content: Text('Hapus kategori "${cat.name}"?'),
-                                actions: [
-                                  TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Batal')),
-                                  ElevatedButton(onPressed: () => Navigator.pop(c, true), style: ElevatedButton.styleFrom(backgroundColor: AppTheme.redMain), child: const Text('Hapus', style: TextStyle(color: Colors.white))),
-                                ],
-                              ),
+                              barrierDismissible: true,
+                              barrierLabel: 'Dismiss',
+                              barrierColor: Colors.black.withValues(alpha: 0.55),
+                              transitionDuration: const Duration(milliseconds: 200),
+                              pageBuilder: (ctx, anim1, anim2) => const SizedBox.shrink(),
+                              transitionBuilder: (ctx, anim1, anim2, child) {
+                                return ScaleTransition(
+                                  scale: Tween<double>(begin: 0.9, end: 1.0).animate(
+                                    CurvedAnimation(parent: anim1, curve: Curves.easeOutCubic),
+                                  ),
+                                  child: AlertDialog(
+                                    backgroundColor: Colors.white.withValues(alpha: 0.95),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                    title: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFFEE2E2),
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          child: const Icon(Icons.delete_forever_rounded, color: Color(0xFFEF4444), size: 20),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          'Hapus Kategori',
+                                          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 16),
+                                        ),
+                                      ],
+                                    ),
+                                    content: Text(
+                                      'Apakah Anda yakin ingin menghapus kategori "${cat.name}"?',
+                                      style: GoogleFonts.plusJakartaSans(fontSize: 13, color: const Color(0xFF475569)),
+                                    ),
+                                    actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                    actions: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: OutlinedButton(
+                                              onPressed: () => Navigator.pop(ctx, false),
+                                              style: OutlinedButton.styleFrom(
+                                                foregroundColor: const Color(0xFF64748B),
+                                                side: const BorderSide(color: Color(0xFFCBD5E1)),
+                                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                              ),
+                                              child: Text('Batal', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: ElevatedButton(
+                                              onPressed: () => Navigator.pop(ctx, true),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: const Color(0xFFEF4444),
+                                                foregroundColor: Colors.white,
+                                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                elevation: 0,
+                                              ),
+                                              child: Text('Hapus', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
                             );
                             if (confirm == true) {
-                              ref.read(financialControllerProvider.notifier).deleteCategory(cat.id!);
+                              ref.read(financialControllerProvider.notifier).deleteCategory(cat.id!, name: cat.name, type: cat.type);
                             }
                           },
                         ),

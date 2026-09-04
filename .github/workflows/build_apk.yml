@@ -52,17 +52,17 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.2.9
-          name: 'MaoneArt Keuangan v1.2.9 (Release)'
+          tag_name: v1.3.0
+          name: 'MaoneArt Keuangan v1.3.0 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.2.9)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.3.0)
             
-            - **Desain Kalender & Date Picker Super Rapi**:
-              - Layout harmonis dan presisi sesuai standar Glassmorphism MaoneArt.
-              - Stepper navigasi Bulan & Tahun tersusun lapang dan elegan dengan tombol popover.
-              - Baris Hari (MIN-SAB) proporsional dan tidak berhimpitan.
-              - Tombol 'X' close di pojok kanan atas dan touch barrier dismiss.
-              - Quick buttons simetris: Hari Ini & Kemarin.
+            - **Perbaikan Total Sinkronisasi Kategori (Fix Primary Key Constraint Crash)**:
+              - Mengatasi error `UNIQUE constraint failed: kategori.id` dengan atomic `INSERT OR REPLACE` SQLite master reconciliation.
+              - Penyelarasan 2 arah kategori Web (MySQL phpMyAdmin) dan APK (SQLite) 100% konsisten.
+              - Kategori yang dihapus di Web otomatis terhapus di APK tanpa duplikasi / resurrecting.
+              - Real-time endpoint `/api/kategori.php` terintegrasi untuk penambahan & penghapusan kategori.
+              - Modal konfirmasi hapus kategori Glassmorphism standar MaoneArt.
             - **Sinkronisasi 2 Arah Master Web & APK Real-time**:
               - Rekonsiliasi atomic data MySQL sebagai master source of truth.
               - Hapus data transaksi langsung sinkron tanpa delay / duplikasi.

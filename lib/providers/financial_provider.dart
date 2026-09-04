@@ -356,15 +356,17 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
     try {
       final db = ref.read(databaseProvider);
       await db.insertCategory(category);
+      PhpMyAdminService.pushCategoryRemote(category).ignore();
       ref.invalidate(categoriesProvider);
       _autoSyncToPhpMyAdmin();
     } catch (_) {}
   }
 
-  Future<void> deleteCategory(int id) async {
+  Future<void> deleteCategory(int id, {String? name, String? type}) async {
     try {
       final db = ref.read(databaseProvider);
       await db.deleteCategory(id);
+      PhpMyAdminService.deleteCategoryRemote(id, name: name, type: type).ignore();
       ref.invalidate(categoriesProvider);
       _autoSyncToPhpMyAdmin();
     } catch (_) {}
@@ -375,6 +377,7 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
     ref.invalidate(financialSummaryProvider);
     ref.invalidate(debtsProvider);
     ref.invalidate(savingsProvider);
+    ref.invalidate(categoriesProvider);
   }
 
   Future<void> resetAllData() async {
