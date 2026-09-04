@@ -38,10 +38,7 @@ class HomeScreen extends ConsumerWidget {
       backgroundColor: AppTheme.bgApp,
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(financialSummaryProvider);
-          ref.invalidate(transactionsProvider);
-          ref.invalidate(debtsProvider);
-          ref.invalidate(savingsProvider);
+          await ref.read(financialControllerProvider.notifier).syncWithPhpMyAdmin();
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),

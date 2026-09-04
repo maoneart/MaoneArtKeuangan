@@ -73,8 +73,8 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
     try {
       final db = ref.read(databaseProvider);
       await db.insertTransaction(tx);
-      PhpMyAdminService.pushTransaction(tx).ignore();
       _refreshAll();
+      _autoSyncToPhpMyAdmin();
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -88,11 +88,21 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
     return result;
   }
 
+  void _autoSyncToPhpMyAdmin() {
+    try {
+      final db = ref.read(databaseProvider);
+      PhpMyAdminService.syncFull(db).then((_) {
+        _refreshAll();
+      }).catchError((_) {});
+    } catch (_) {}
+  }
+
   Future<void> deleteTransaction(int id) async {
     try {
       final db = ref.read(databaseProvider);
       await db.deleteTransaction(id);
       _refreshAll();
+      _autoSyncToPhpMyAdmin();
     } catch (_) {}
   }
 
@@ -102,6 +112,7 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
       await db.insertDebt(debt);
       ref.invalidate(debtsProvider);
       ref.invalidate(financialSummaryProvider);
+      _autoSyncToPhpMyAdmin();
     } catch (_) {}
   }
 
@@ -111,6 +122,7 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
       await db.addDebtPayment(debtId, amount, paymentDate, note: note);
       ref.invalidate(debtsProvider);
       ref.invalidate(financialSummaryProvider);
+      _autoSyncToPhpMyAdmin();
     } catch (_) {}
   }
 
@@ -120,6 +132,7 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
       await db.deleteDebt(id);
       ref.invalidate(debtsProvider);
       ref.invalidate(financialSummaryProvider);
+      _autoSyncToPhpMyAdmin();
     } catch (_) {}
   }
 
@@ -129,6 +142,7 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
       await db.insertSaving(saving);
       ref.invalidate(savingsProvider);
       ref.invalidate(financialSummaryProvider);
+      _autoSyncToPhpMyAdmin();
     } catch (_) {}
   }
 
@@ -138,6 +152,7 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
       await db.addSavingDeposit(savingId, amount, depositDate, note: note);
       ref.invalidate(savingsProvider);
       ref.invalidate(financialSummaryProvider);
+      _autoSyncToPhpMyAdmin();
     } catch (_) {}
   }
 
@@ -151,6 +166,7 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
       await db.deleteSaving(id);
       ref.invalidate(savingsProvider);
       ref.invalidate(financialSummaryProvider);
+      _autoSyncToPhpMyAdmin();
     } catch (_) {}
   }
 
@@ -159,6 +175,7 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
       final db = ref.read(databaseProvider);
       await db.insertCategory(category);
       ref.invalidate(categoriesProvider);
+      _autoSyncToPhpMyAdmin();
     } catch (_) {}
   }
 
@@ -167,6 +184,7 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
       final db = ref.read(databaseProvider);
       await db.deleteCategory(id);
       ref.invalidate(categoriesProvider);
+      _autoSyncToPhpMyAdmin();
     } catch (_) {}
   }
 
