@@ -77,6 +77,39 @@ class DebtModel {
   bool get isSettled => status.toLowerCase() == 'lunas' || remainingAmount <= 0;
   bool get isInstallment => tenorMonths > 0 || dueDay > 0 || monthlyInstallment > 0;
 
+  /// Apakah sudah ada pembayaran di bulan & tahun berjalan?
+  bool get hasPaidThisMonth {
+    final now = DateTime.now();
+    return payments.any((p) => p.paymentDate.year == now.year && p.paymentDate.month == now.month);
+  }
+
+  /// Total nominal yang sudah dibayar di bulan berjalan
+  double get paidThisMonthAmount {
+    final now = DateTime.now();
+    return payments
+        .where((p) => p.paymentDate.year == now.year && p.paymentDate.month == now.month)
+        .fold(0.0, (sum, p) => sum + p.amount);
+  }
+
+  /// Status penagihan / jatuh tempo bulan berjalan
+  /// 'lunas' | 'paid_this_month' | 'overdue' | 'due_soon' | 'normal'
+  String get currentMonthBillingStatus {
+    if (isSettled) return 'lunas';
+    if (hasPaidThisMonth) return 'paid_this_month';
+    if (dueDay <= 0 && dueDate == null) return 'normal';
+
+    final now = DateTime.now();
+    final targetDay = dueDay > 0 ? dueDay : (dueDate?.day ?? 15);
+    final daysDiff = targetDay - now.day;
+
+    if (now.day > targetDay) {
+      return 'overdue';
+    } else if (daysDiff <= 3 && daysDiff >= 0) {
+      return 'due_soon';
+    }
+    return 'normal';
+  }
+
   double get paidAmount => totalAmount - remainingAmount;
   double get progressPercentage => totalAmount > 0 ? (paidAmount / totalAmount).clamp(0.0, 1.0) : 0.0;
   double get calculatedMonthlyInstallment => monthlyInstallment > 0 ? monthlyInstallment : (tenorMonths > 0 ? (totalAmount / tenorMonths) : 0.0);

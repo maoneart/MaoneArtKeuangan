@@ -462,7 +462,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppTheme.blueLight,
                   borderRadius: BorderRadius.circular(8),
@@ -478,21 +478,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isLunas ? AppTheme.greenSoft : AppTheme.redSoft,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  isLunas ? 'LUNAS' : 'Belum Lunas',
-                  style: GoogleFonts.plusJakartaSans(
-                    color: isLunas ? const Color(0xFF047857) : const Color(0xFFB91C1C),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 11,
-                  ),
-                ),
-              ),
+              _buildBillingStatusBadge(item),
             ],
           ),
           const SizedBox(height: 10),
@@ -581,6 +567,53 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
                       'Lunas: ${AppDateFormatter.formatMonthYear(item.dueDate!)}',
                       style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 10.5, fontWeight: FontWeight.w600),
                     ),
+                ],
+              ),
+            ),
+          ],
+
+          // Monthly Overdue Warning Banner
+          if (item.currentMonthBillingStatus == 'overdue') ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF2F2),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFFECACA)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.warning_amber_rounded, color: AppTheme.redMain, size: 15),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      '⚠️ Peringatan: Jatuh tempo tanggal ${item.dueDay > 0 ? item.dueDay : item.dueDate?.day} bulan ini sudah lewat dan belum ada pembayaran yang dicatat!',
+                      style: GoogleFonts.plusJakartaSans(color: const Color(0xFF991B1B), fontSize: 10.5, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else if (item.hasPaidThisMonth && !item.isSettled) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF0FDF4),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFBBF7D0)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle_rounded, color: Color(0xFF059669), size: 14),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Tagihan bulan ini aman! Pembayaran sebesar ${CurrencyFormatter.formatRupiah(item.paidThisMonthAmount)} telah dicatat.',
+                      style: GoogleFonts.plusJakartaSans(color: const Color(0xFF065F46), fontSize: 10.5, fontWeight: FontWeight.w600),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -755,6 +788,70 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBillingStatusBadge(DebtModel item) {
+    final billingStatus = item.currentMonthBillingStatus;
+
+    if (item.isSettled) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(color: AppTheme.greenSoft, borderRadius: BorderRadius.circular(8)),
+        child: Text('LUNAS', style: GoogleFonts.plusJakartaSans(color: const Color(0xFF047857), fontWeight: FontWeight.bold, fontSize: 11)),
+      );
+    }
+
+    if (item.hasPaidThisMonth) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(color: const Color(0xFFD1FAE5), borderRadius: BorderRadius.circular(8)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.check_circle_rounded, size: 12, color: Color(0xFF059669)),
+            const SizedBox(width: 4),
+            Text('Bulan Ini Aman ✅', style: GoogleFonts.plusJakartaSans(color: const Color(0xFF047857), fontWeight: FontWeight.bold, fontSize: 10.5)),
+          ],
+        ),
+      );
+    }
+
+    if (billingStatus == 'overdue') {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(color: const Color(0xFFFEE2E2), borderRadius: BorderRadius.circular(8)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.warning_amber_rounded, size: 12, color: AppTheme.redMain),
+            const SizedBox(width: 4),
+            Text('Lewat Jatuh Tempo ⚠️', style: GoogleFonts.plusJakartaSans(color: const Color(0xFFB91C1C), fontWeight: FontWeight.bold, fontSize: 10.5)),
+          ],
+        ),
+      );
+    }
+
+    if (billingStatus == 'due_soon') {
+      final daysLeft = (item.dueDay > 0 ? item.dueDay : (item.dueDate?.day ?? 15)) - DateTime.now().day;
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(color: const Color(0xFFFEF3C7), borderRadius: BorderRadius.circular(8)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.access_time_rounded, size: 12, color: Color(0xFFD97706)),
+            const SizedBox(width: 4),
+            Text(daysLeft == 0 ? 'Jatuh Tempo Hari Ini!' : 'Jatuh Tempo H-$daysLeft', style: GoogleFonts.plusJakartaSans(color: const Color(0xFF92400E), fontWeight: FontWeight.bold, fontSize: 10.5)),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(8)),
+      child: Text('Belum Lunas', style: GoogleFonts.plusJakartaSans(color: const Color(0xFF475569), fontWeight: FontWeight.bold, fontSize: 11)),
     );
   }
 }

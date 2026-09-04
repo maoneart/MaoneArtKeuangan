@@ -1,7 +1,7 @@
 name: maoneart_keuangan
 description: "MaoneArt Keuangan - Aplikasi Pencatatan Keuangan, Arus Kas, Hutang Piutang & Tabungan Impian Cerdas berbasis Flutter & SQLite Offline"
 publish_to: 'none'
-version: 1.2.0+21
+version: 1.2.1+22
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
