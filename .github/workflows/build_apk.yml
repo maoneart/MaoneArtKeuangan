@@ -52,12 +52,21 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.2.8
-          name: 'MaoneArt Keuangan v1.2.8 (Release)'
+          tag_name: v1.2.9
+          name: 'MaoneArt Keuangan v1.2.9 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.2.8)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.2.9)
             
-            - **Anti-Duplikasi Transaksi Cerdas**:
+            - **Desain Kalender & Date Picker Super Rapi**:
+              - Layout harmonis dan presisi sesuai standar Glassmorphism MaoneArt.
+              - Stepper navigasi Bulan & Tahun tersusun lapang dan elegan dengan tombol popover.
+              - Baris Hari (MIN-SAB) proporsional dan tidak berhimpitan.
+              - Tombol 'X' close di pojok kanan atas dan touch barrier dismiss.
+              - Quick buttons simetris: Hari Ini & Kemarin.
+            - **Sinkronisasi 2 Arah Master Web & APK Real-time**:
+              - Rekonsiliasi atomic data MySQL sebagai master source of truth.
+              - Hapus data transaksi langsung sinkron tanpa delay / duplikasi.
+              - Filter 'Semua' menampilkan seluruh riwayat secara akurat.
               * Mutex sync lock mencegah race condition saat sinkronisasi background.
               * Batch atomic save untuk AI Chat Assistant 1-klik simpan.
               * Deduplikasi otomatis di SQLite lokal dan MySQL phpMyAdmin.

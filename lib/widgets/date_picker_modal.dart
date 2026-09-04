@@ -163,7 +163,7 @@ class _DatePickerModalState extends State<DatePickerModal> {
     );
   }
 
-  // 1. Header with Mode Switchers & Navigation
+  // 1. Header (Clean & Identical to MonthPickerModal)
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
@@ -185,141 +185,55 @@ class _DatePickerModalState extends State<DatePickerModal> {
                 child: const Icon(Icons.calendar_today_rounded, color: AppTheme.bluePrimary, size: 18),
               ),
               const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _mode == _PickerMode.year
-                        ? 'Pilih Tahun'
-                        : (_mode == _PickerMode.month ? 'Pilih Bulan' : 'Pilih Tanggal'),
-                    style: GoogleFonts.plusJakartaSans(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 15,
-                      color: AppTheme.textDark,
-                    ),
-                  ),
-                  Text(
-                    AppDateFormatter.formatShort(_selectedDate),
-                    style: GoogleFonts.plusJakartaSans(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 11,
-                      color: AppTheme.bluePrimary,
-                    ),
-                  ),
-                ],
+              Text(
+                _mode == _PickerMode.year
+                    ? 'Pilih Tahun'
+                    : (_mode == _PickerMode.month ? 'Pilih Bulan' : 'Pilih Tanggal'),
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                  color: AppTheme.textDark,
+                ),
               ),
             ],
           ),
 
-          // Right: Navigation / Switchers
-          if (_mode == _PickerMode.day)
-            Row(
-              children: [
-                // Month Selector Chip
-                InkWell(
-                  onTap: () => setState(() => _mode = _PickerMode.month),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+          // Right: Close Button 'X' (or Back to Calendar Button)
+          Row(
+            children: [
+              if (_mode != _PickerMode.day)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: TextButton.icon(
+                    onPressed: () => setState(() => _mode = _PickerMode.day),
+                    icon: const Icon(Icons.calendar_month_rounded, size: 15),
+                    label: Text(
+                      'Kalender',
+                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 12),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _months[_viewMonth - 1]['short'],
-                          style: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12.5,
-                            color: AppTheme.bluePrimary,
-                          ),
-                        ),
-                        const SizedBox(width: 2),
-                        const Icon(Icons.arrow_drop_down_rounded, size: 16, color: AppTheme.bluePrimary),
-                      ],
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppTheme.bluePrimary,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      backgroundColor: AppTheme.blueLight,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
                   ),
                 ),
-                const SizedBox(width: 4),
-                // Year Selector Chip
-                InkWell(
-                  onTap: () => setState(() => _mode = _PickerMode.year),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '$_viewYear',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12.5,
-                            color: AppTheme.bluePrimary,
-                          ),
-                        ),
-                        const SizedBox(width: 2),
-                        const Icon(Icons.arrow_drop_down_rounded, size: 16, color: AppTheme.bluePrimary),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                // Month Navigation Chevrons
-                IconButton(
-                  icon: const Icon(Icons.chevron_left_rounded, size: 20),
-                  onPressed: _previousMonth,
-                  padding: const EdgeInsets.all(4),
-                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                  splashRadius: 16,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.chevron_right_rounded, size: 20),
-                  onPressed: _nextMonth,
-                  padding: const EdgeInsets.all(4),
-                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                  splashRadius: 16,
-                ),
-              ],
-            )
-          else
-            // Back to Day Picker Button
-            TextButton.icon(
-              onPressed: () => setState(() => _mode = _PickerMode.day),
-              icon: const Icon(Icons.calendar_month_rounded, size: 15),
-              label: Text(
-                'Kalender',
-                style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700, fontSize: 12),
-              ),
-              style: TextButton.styleFrom(
-                foregroundColor: AppTheme.bluePrimary,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                backgroundColor: AppTheme.blueLight,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-            ),
-          const SizedBox(width: 4),
-          // Close 'X' Button
-          InkWell(
-            onTap: () => Navigator.of(context).pop(),
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
+              // Close 'X' Button
+              InkWell(
+                onTap: () => Navigator.of(context).pop(),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: const Icon(Icons.close_rounded, size: 18, color: AppTheme.textMuted),
+                ),
               ),
-              child: const Icon(Icons.close_rounded, size: 18, color: AppTheme.textMuted),
-            ),
+            ],
           ),
         ],
       ),
@@ -335,37 +249,104 @@ class _DatePickerModalState extends State<DatePickerModal> {
     final leadingSpaces = firstDayOfMonth.weekday % 7;
     final totalGridItems = leadingSpaces + daysInMonth;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      child: Column(
-        children: [
-          // Month Year Title Bar
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${_getMonthName(_viewMonth)} $_viewYear',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14,
-                    color: AppTheme.textDark,
-                  ),
-                ),
-                Text(
-                  'Pilih tanggal',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11,
-                    color: AppTheme.textMuted,
-                  ),
-                ),
-              ],
-            ),
+    return Column(
+      children: [
+        // Stepper Selector Bar for Month & Year (Spacious & Clean)
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
           ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left_rounded, size: 22),
+                onPressed: _previousMonth,
+                padding: const EdgeInsets.all(4),
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                splashRadius: 16,
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Month Picker Pill
+                  InkWell(
+                    onTap: () => setState(() => _mode = _PickerMode.month),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFCBD5E1)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _getMonthName(_viewMonth),
+                            style: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 13,
+                              color: AppTheme.bluePrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppTheme.bluePrimary),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  // Year Picker Pill
+                  InkWell(
+                    onTap: () => setState(() => _mode = _PickerMode.year),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFCBD5E1)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '$_viewYear',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 13,
+                              color: AppTheme.bluePrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppTheme.bluePrimary),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              IconButton(
+                icon: const Icon(Icons.chevron_right_rounded, size: 22),
+                onPressed: _nextMonth,
+                padding: const EdgeInsets.all(4),
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                splashRadius: 16,
+              ),
+            ],
+          ),
+        ),
 
-          // Weekday Labels
-          Row(
+        // Weekday Labels (MIN to SAB)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: _weekdays.map((day) {
               final isWeekend = day == 'MIN' || day == 'SAB';
@@ -376,25 +357,27 @@ class _DatePickerModalState extends State<DatePickerModal> {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
-                      color: isWeekend ? const Color(0xFFEF4444) : AppTheme.textMuted,
+                      color: isWeekend ? const Color(0xFFEF4444) : const Color(0xFF94A3B8),
                     ),
                   ),
                 ),
               );
             }).toList(),
           ),
-          const SizedBox(height: 8),
+        ),
 
-          // Day Grid
-          GridView.builder(
+        // Day Grid
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 2, 16, 12),
+          child: GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: totalGridItems,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 7,
-              crossAxisSpacing: 6,
-              mainAxisSpacing: 6,
-              childAspectRatio: 1.0,
+              crossAxisSpacing: 4,
+              mainAxisSpacing: 4,
+              childAspectRatio: 1.1,
             ),
             itemBuilder: (ctx, index) {
               if (index < leadingSpaces) {
@@ -432,20 +415,20 @@ class _DatePickerModalState extends State<DatePickerModal> {
                           : null,
                       color: isSelected
                           ? null
-                          : (isToday ? const Color(0xFFEFF6FF) : const Color(0xFFF8FAFC)),
+                          : (isToday ? const Color(0xFFEFF6FF) : Colors.transparent),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
                         color: isSelected
                             ? Colors.transparent
-                            : (isToday ? const Color(0xFF93C5FD) : const Color(0xFFE2E8F0)),
+                            : (isToday ? const Color(0xFF93C5FD) : Colors.transparent),
                         width: isToday ? 1.5 : 1,
                       ),
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
                                 color: const Color(0xFF0047CC).withValues(alpha: 0.35),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
                               ),
                             ]
                           : null,
@@ -457,7 +440,7 @@ class _DatePickerModalState extends State<DatePickerModal> {
                             ? const Color(0xFFCBD5E1)
                             : (isSelected
                                 ? Colors.white
-                                : (isToday ? const Color(0xFF1D4ED8) : const Color(0xFF334155))),
+                                : (isToday ? const Color(0xFF1D4ED8) : const Color(0xFF1E293B))),
                         fontWeight: isSelected || isToday ? FontWeight.w800 : FontWeight.w600,
                         fontSize: 13,
                       ),
@@ -467,21 +450,23 @@ class _DatePickerModalState extends State<DatePickerModal> {
               );
             },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  // 3. Month Selection View (Identical to MonthPickerModal)
+  // 3. Month Selection View (Identical to MonthPickerModal Screenshot 1)
   Widget _buildMonthPicker() {
+    final now = DateTime.now();
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
       child: Column(
         children: [
           // Year Switcher inside Month Picker
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            margin: const EdgeInsets.only(bottom: 14),
             decoration: BoxDecoration(
               color: const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(12),
@@ -493,8 +478,9 @@ class _DatePickerModalState extends State<DatePickerModal> {
                 IconButton(
                   icon: const Icon(Icons.chevron_left_rounded, size: 20),
                   onPressed: () => setState(() => _viewYear--),
-                  padding: EdgeInsets.zero,
+                  padding: const EdgeInsets.all(4),
                   constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  splashRadius: 16,
                 ),
                 Text(
                   'Tahun $_viewYear',
@@ -507,8 +493,9 @@ class _DatePickerModalState extends State<DatePickerModal> {
                 IconButton(
                   icon: const Icon(Icons.chevron_right_rounded, size: 20),
                   onPressed: () => setState(() => _viewYear++),
-                  padding: EdgeInsets.zero,
+                  padding: const EdgeInsets.all(4),
                   constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  splashRadius: 16,
                 ),
               ],
             ),
@@ -529,7 +516,6 @@ class _DatePickerModalState extends State<DatePickerModal> {
               final m = _months[i];
               final monthCode = m['code'] as int;
               final isSelected = _viewMonth == monthCode;
-              final now = DateTime.now();
               final isThisMonth = _viewYear == now.year && monthCode == now.month;
 
               return Material(
@@ -598,15 +584,16 @@ class _DatePickerModalState extends State<DatePickerModal> {
     final startYear = widget.firstDate.year;
     final endYear = widget.lastDate.year;
     final yearList = List.generate(endYear - startYear + 1, (i) => startYear + i);
+    final now = DateTime.now();
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.only(bottom: 10),
             child: Text(
-              'Pilih Tahun Transaksi ($startYear - $endYear)',
+              'Pilih Tahun ($startYear - $endYear)',
               style: GoogleFonts.plusJakartaSans(
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
@@ -628,7 +615,7 @@ class _DatePickerModalState extends State<DatePickerModal> {
               itemBuilder: (ctx, i) {
                 final year = yearList[i];
                 final isSelected = _viewYear == year;
-                final isThisYear = year == DateTime.now().year;
+                final isThisYear = year == now.year;
 
                 return Material(
                   color: Colors.transparent,
@@ -698,7 +685,7 @@ class _DatePickerModalState extends State<DatePickerModal> {
     final yesterday = now.subtract(const Duration(days: 1));
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
       child: Row(
         children: [
           // Button 1: Hari Ini
