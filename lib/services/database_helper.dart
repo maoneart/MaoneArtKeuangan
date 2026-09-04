@@ -722,14 +722,17 @@ class DatabaseHelper {
             final amt = double.tryParse(item['totalAmount']?.toString() ?? '0') ?? 0.0;
             if (amt <= 0) continue;
 
-            await txn.insert('hutang', {
+            final sisa = double.tryParse(item['remainingAmount']?.toString() ?? '0') ?? amt;
+            final status = item['status']?.toString() ?? (sisa <= 0 ? 'lunas' : 'belum_lunas');
+
+            final newDebtId = await txn.insert('hutang', {
               if (id != null && id > 0) 'id': id,
               'nama_penghutang': name,
               'tipe': item['type']?.toString() ?? 'hutang',
               'kategori_hutang': item['categoryDebt']?.toString() ?? 'Perorangan / Teman',
               'total_hutang': amt,
-              'sisa_hutang': double.tryParse(item['remainingAmount']?.toString() ?? '0') ?? amt,
-              'status': item['status']?.toString() ?? 'belum_lunas',
+              'sisa_hutang': sisa,
+              'status': status,
               'tanggal_pinjam': item['borrowDate']?.toString().substring(0, 10) ?? DateTime.now().toIso8601String().substring(0, 10),
               'tenggat_waktu': item['dueDate'] != null ? item['dueDate'].toString().substring(0, 10) : null,
               'tenor_bulan': int.tryParse(item['tenorMonths']?.toString() ?? '0') ?? 0,
@@ -737,6 +740,26 @@ class DatabaseHelper {
               'cicilan_per_bulan': double.tryParse(item['monthlyInstallment']?.toString() ?? '0') ?? 0.0,
               'keterangan': item['note']?.toString() ?? '',
             });
+
+            final actualId = (id != null && id > 0) ? id : newDebtId;
+
+            // Pulihkan riwayat pembayaran cicilan hutang
+            final payments = item['payments'] as List? ?? [];
+            for (final p in payments) {
+              if (p is Map<String, dynamic>) {
+                final pDate = p['paymentDate']?.toString() ?? p['tanggal_bayar']?.toString() ?? '';
+                final pAmt = double.tryParse(p['amount']?.toString() ?? p['jumlah_bayar']?.toString() ?? '0') ?? 0.0;
+                final pNote = p['note']?.toString() ?? p['keterangan']?.toString();
+                if (pAmt > 0 && pDate.isNotEmpty) {
+                  await txn.insert('pembayaran_hutang', {
+                    'id_hutang': actualId,
+                    'tanggal_bayar': pDate.substring(0, 10),
+                    'jumlah_bayar': pAmt,
+                    'keterangan': pNote,
+                  });
+                }
+              }
+            }
           }
         }
       }
@@ -756,7 +779,7 @@ class DatabaseHelper {
             final target = double.tryParse(item['targetAmount']?.toString() ?? '0') ?? 0.0;
             if (name.isEmpty || target <= 0) continue;
 
-            await txn.insert('tabungan', {
+            final newSavId = await txn.insert('tabungan', {
               if (id != null && id > 0) 'id': id,
               'nama_tabungan': name,
               'target_jumlah': target,
@@ -764,6 +787,24 @@ class DatabaseHelper {
               'status': item['status']?.toString() ?? 'berlangsung',
               'keterangan': item['note']?.toString() ?? '',
             });
+
+            final actualSavId = (id != null && id > 0) ? id : newSavId;
+            final deposits = item['deposits'] as List? ?? [];
+            for (final dep in deposits) {
+              if (dep is Map<String, dynamic>) {
+                final dDate = dep['depositDate']?.toString() ?? dep['tanggal_setor']?.toString() ?? '';
+                final dAmt = double.tryParse(dep['amount']?.toString() ?? dep['jumlah_setor']?.toString() ?? '0') ?? 0.0;
+                final dNote = dep['note']?.toString() ?? dep['keterangan']?.toString();
+                if (dAmt > 0 && dDate.isNotEmpty) {
+                  await txn.insert('setoran_tabungan', {
+                    'id_tabungan': actualSavId,
+                    'tanggal_setor': dDate.substring(0, 10),
+                    'jumlah_setor': dAmt,
+                    'keterangan': dNote,
+                  });
+                }
+              }
+            }
           }
         }
       }

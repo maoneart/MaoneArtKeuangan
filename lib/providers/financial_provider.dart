@@ -302,7 +302,9 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
     try {
       final db = ref.read(databaseProvider);
       await db.addDebtPayment(debtId, amount, paymentDate, note: note);
+      PhpMyAdminService.payDebtRemote(debtId, amount, paymentDate, note: note).ignore();
       ref.invalidate(debtsProvider);
+      ref.invalidate(transactionsProvider);
       ref.invalidate(financialSummaryProvider);
       _autoSyncToPhpMyAdmin();
     } catch (_) {}

@@ -246,6 +246,34 @@ class PhpMyAdminService {
     return false;
   }
 
+  // Bayar Cicilan / Pelunasan Hutang ke phpMyAdmin secara real-time
+  static Future<bool> payDebtRemote(int debtId, double amount, DateTime date, {String? note}) async {
+    final base = await getServerUrl();
+    final candidates = await getCandidateUrls(base);
+    final body = jsonEncode({
+      'action': 'pay',
+      'debtId': debtId,
+      'amount': amount,
+      'paymentDate': date.toIso8601String(),
+      'note': note ?? '',
+    });
+
+    for (final cand in candidates) {
+      try {
+        final url = Uri.parse('$cand/hutang.php');
+        final res = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: body,
+        ).timeout(const Duration(seconds: 3));
+        if (res.statusCode == 200 || res.statusCode == 201) {
+          return true;
+        }
+      } catch (_) {}
+    }
+    return false;
+  }
+
   // Reset Data di phpMyAdmin (MySQL)
   static Future<bool> resetRemoteData() async {
     final base = await getServerUrl();
@@ -278,6 +306,18 @@ class PhpMyAdminService {
       final localCategories = await db.getCategories();
       final localApiKey = await GeminiService.getApiKey() ?? '';
 
+      final List<Map<String, dynamic>> localDebtPayments = [];
+      for (final d in localDebts) {
+        for (final p in d.payments) {
+          localDebtPayments.add({
+            'debtId': d.id,
+            'amount': p.amount,
+            'paymentDate': p.paymentDate.toIso8601String(),
+            'note': p.note ?? '',
+          });
+        }
+      }
+
       // 2. Buat Payload Lengkap
       final payload = {
         'gemini_api_key': localApiKey,
@@ -309,6 +349,7 @@ class PhpMyAdminService {
           'monthlyInstallment': d.monthlyInstallment,
           'note': d.note ?? '',
         }).toList(),
+        'debt_payments': localDebtPayments,
         'savings': localSavings.map((s) => {
           'name': s.name,
           'targetAmount': s.targetAmount,

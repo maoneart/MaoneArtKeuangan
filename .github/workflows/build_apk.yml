@@ -52,17 +52,17 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.3.0
-          name: 'MaoneArt Keuangan v1.3.0 (Release)'
+          tag_name: v1.3.1
+          name: 'MaoneArt Keuangan v1.3.1 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.3.0)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.3.1)
             
-            - **Perbaikan Total Sinkronisasi Kategori (Fix Primary Key Constraint Crash)**:
-              - Mengatasi error `UNIQUE constraint failed: kategori.id` dengan atomic `INSERT OR REPLACE` SQLite master reconciliation.
-              - Penyelarasan 2 arah kategori Web (MySQL phpMyAdmin) dan APK (SQLite) 100% konsisten.
-              - Kategori yang dihapus di Web otomatis terhapus di APK tanpa duplikasi / resurrecting.
-              - Real-time endpoint `/api/kategori.php` terintegrasi untuk penambahan & penghapusan kategori.
-              - Modal konfirmasi hapus kategori Glassmorphism standar MaoneArt.
+            - **Perhitungan & Sinkronisasi Sisa Hutang Real-Time**:
+              - Mengatasi masalah sisa hutang tidak berkurang dengan rekonsiliasi riwayat pembayaran cicilan (`pembayaran_hutang`).
+              - Endpoint `/api/hutang.php` untuk pembayaran cicilan instan real-time.
+              - Penyelarasan atomic `sisa_hutang` = `total_hutang` - total cicilan di MySQL phpMyAdmin dan SQLite APK.
+              - Riwayat pembayaran cicilan tersinkronisasi penuh dua arah.
+            - **Sinkronisasi Kategori & Master Anti Crash (v1.3.0)**.
             - **Sinkronisasi 2 Arah Master Web & APK Real-time**:
               - Rekonsiliasi atomic data MySQL sebagai master source of truth.
               - Hapus data transaksi langsung sinkron tanpa delay / duplikasi.
