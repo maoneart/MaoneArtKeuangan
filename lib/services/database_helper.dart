@@ -190,6 +190,22 @@ class DatabaseHelper {
     return maps.map((e) => CategoryModel.fromMap(e)).toList();
   }
 
+  Future<bool> categoryExists({required String name, required String type}) async {
+    final db = await database;
+    final cleanName = name.trim().toLowerCase();
+    final maps = await db.rawQuery(
+      "SELECT id, nama_kategori FROM kategori WHERE tipe = ?",
+      [type],
+    );
+    for (final m in maps) {
+      final rowName = (m['nama_kategori']?.toString() ?? '').trim().toLowerCase();
+      if (rowName == cleanName) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   Future<int> insertCategory(CategoryModel category) async {
     final db = await database;
     return await db.insert('kategori', category.toMap());

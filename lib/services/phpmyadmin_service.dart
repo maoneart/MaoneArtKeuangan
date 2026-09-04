@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/transaction_model.dart';
 import '../models/debt_model.dart';
 import '../models/saving_model.dart';
+import '../models/category_model.dart';
 import 'database_helper.dart';
 import 'gemini_service.dart';
 
@@ -208,11 +209,19 @@ class PhpMyAdminService {
       final localTxs = await db.getTransactions(limit: 1000);
       final localDebts = await db.getDebts();
       final localSavings = await db.getSavings();
+      final localCategories = await db.getCategories();
       final localApiKey = await GeminiService.getApiKey() ?? '';
 
       // 2. Buat Payload Lengkap
       final payload = {
         'gemini_api_key': localApiKey,
+        'categories': localCategories.map((c) => {
+          'id': c.id,
+          'name': c.name,
+          'type': c.type,
+          'icon': c.icon,
+          'color': c.color,
+        }).toList(),
         'transactions': localTxs.map((t) => {
           'date': t.date.toIso8601String(),
           'type': t.type,
@@ -359,6 +368,29 @@ class PhpMyAdminService {
                 note: item['note']?.toString(),
               ));
               restoredSavings++;
+            }
+          }
+        }
+
+        // Kategori
+        final serverCats = serverData['categories'] as List? ?? [];
+        for (final item in serverCats) {
+          if (item is Map<String, dynamic>) {
+            final name = (item['name']?.toString() ?? item['nama_kategori']?.toString() ?? '').trim();
+            final type = item['type']?.toString() ?? item['tipe']?.toString() ?? 'pengeluaran';
+            final icon = item['icon']?.toString() ?? item['ikon']?.toString() ?? 'bi-bookmark';
+            final color = item['color']?.toString() ?? item['warna']?.toString() ?? '#10B981';
+
+            if (name.isEmpty) continue;
+
+            final exists = await db.categoryExists(name: name, type: type);
+            if (!exists) {
+              await db.insertCategory(CategoryModel(
+                name: name,
+                type: type,
+                icon: icon,
+                color: color,
+              ));
             }
           }
         }
