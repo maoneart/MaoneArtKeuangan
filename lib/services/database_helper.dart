@@ -248,7 +248,7 @@ class DatabaseHelper {
       args.add(categoryId);
     }
 
-    if (month != null && month.isNotEmpty) {
+    if (month != null && month.isNotEmpty && month != 'all') {
       query += " AND strftime('%Y-%m', t.tanggal) = ?";
       args.add(month);
     }
@@ -366,7 +366,7 @@ class DatabaseHelper {
       FROM transaksi
     ''';
     List<dynamic> args = [];
-    if (month != null && month.isNotEmpty) {
+    if (month != null && month.isNotEmpty && month != 'all') {
       query += " WHERE strftime('%Y-%m', tanggal) = ?";
       args.add(month);
     }
@@ -386,7 +386,7 @@ class DatabaseHelper {
       FROM transaksi
     ''';
     List<dynamic> cumulativeArgs = [];
-    if (month != null && month.isNotEmpty) {
+    if (month != null && month.isNotEmpty && month != 'all') {
       cumulativeQuery += " WHERE strftime('%Y-%m', tanggal) <= ?";
       cumulativeArgs.add(month);
     }
