@@ -121,6 +121,41 @@ class DebtModel {
   String get formattedBorrowDate => AppDateFormatter.formatFull(borrowDate);
   String get formattedDueDate => dueDate != null ? AppDateFormatter.formatFull(dueDate!) : 'Tidak ada tenggat';
   
+  /// Tanggal jatuh tempo tagihan berikutnya (Otomatis pindah ke bulan berikutnya jika bulan ini sudah bayar)
+  DateTime? get nextBillingDueDate {
+    if (isSettled) return null;
+    if (dueDay <= 0 && dueDate == null) return null;
+
+    final now = DateTime.now();
+    final targetDay = dueDay > 0 ? dueDay : (dueDate?.day ?? 15);
+
+    if (hasPaidThisMonth) {
+      // Jika bulan ini sudah bayar, jadwal tagihan otomatis maju ke bulan depan
+      var y = now.year;
+      var m = now.month + 1;
+      if (m > 12) {
+        y += 1;
+        m = 1;
+      }
+      final maxDay = DateTime(y, m + 1, 0).day;
+      return DateTime(y, m, targetDay.clamp(1, maxDay));
+    } else {
+      // Jika bulan ini belum bayar, jadwal tagihan adalah di bulan berjalan
+      final maxDay = DateTime(now.year, now.month + 1, 0).day;
+      return DateTime(now.year, now.month, targetDay.clamp(1, maxDay));
+    }
+  }
+
+  String get formattedNextBillingInfo {
+    if (isSettled) return 'Lunas';
+    final nextDate = nextBillingDueDate;
+    if (nextDate == null) return 'Tanpa batas waktu';
+    if (hasPaidThisMonth) {
+      return 'Jatuh tempo berikutnya: ${AppDateFormatter.formatShort(nextDate)}';
+    }
+    return 'Jatuh tempo bulan ini: ${AppDateFormatter.formatShort(nextDate)}';
+  }
+
   String get formattedDueDayInfo {
     if (dueDay > 0) {
       if (dueDate != null && tenorMonths > 0) {

@@ -523,7 +523,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final confirmed = await MaoneArtModal.showConfirmModal(
       context: context,
       title: 'Kosongkan Seluruh Data?',
-      message: 'Seluruh data catatan transaksi, hutang piutang, dan tabungan akan di-reset dari nol (0).\n\nKategori dan pengaturan API Key akan tetap tersimpan.',
+      message: 'Seluruh data catatan transaksi, hutang piutang, dan tabungan di HP & database phpMyAdmin akan di-reset dari nol (0).\n\nKategori dan pengaturan API Key akan tetap tersimpan.',
       confirmText: 'Ya, Kosongkan',
       cancelText: 'Batal',
       accentColor: AppTheme.redMain,
@@ -536,7 +536,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Buku kas dan data transaksi telah direset ke 0! 🧹'),
+            content: Text('Buku kas dan database phpMyAdmin telah direset ke 0! 🧹'),
             backgroundColor: AppTheme.redMain,
           ),
         );

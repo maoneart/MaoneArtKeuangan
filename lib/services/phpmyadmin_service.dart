@@ -135,6 +135,21 @@ class PhpMyAdminService {
     }
   }
 
+  // Reset Data di phpMyAdmin (MySQL)
+  static Future<bool> resetRemoteData() async {
+    try {
+      final baseUrl = await getServerUrl();
+      final url = Uri.parse('$baseUrl/reset.php');
+      final res = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(const Duration(seconds: 5));
+      return res.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // Sinkronisasi Penuh 2 Arah (Full Bidirectional Sync)
   // Menyimpan semua data lokal ke MySQL dan memulihkan data MySQL ke SQLite jika baru install ulang APK
   static Future<Map<String, dynamic>> syncFull(DatabaseHelper db) async {

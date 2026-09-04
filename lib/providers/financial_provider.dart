@@ -181,6 +181,9 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
     try {
       final db = ref.read(databaseProvider);
       await db.resetAllTransactionsData();
+      try {
+        await PhpMyAdminService.resetRemoteData();
+      } catch (_) {}
       _refreshAll();
     } catch (_) {}
   }
