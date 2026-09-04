@@ -38,124 +38,156 @@ class PhpMyAdminService {
     await prefs.setString(_prefServerUrl, normalized);
   }
 
+  static List<String> getCandidateUrls(String currentBase) {
+    final list = <String>[currentBase];
+    if (currentBase.contains('127.0.0.1')) {
+      list.add(currentBase.replaceAll('127.0.0.1', 'localhost'));
+    } else if (currentBase.contains('localhost')) {
+      list.add(currentBase.replaceAll('localhost', '127.0.0.1'));
+    }
+    final currentCopy = List<String>.from(list);
+    for (final u in currentCopy) {
+      if (u.contains(':8085')) {
+        list.add(u.replaceAll(':8085', ':8081'));
+      } else if (u.contains(':8081')) {
+        list.add(u.replaceAll(':8081', ':8085'));
+      }
+    }
+    list.add('http://127.0.0.1:8085/Keuangan/api');
+    list.add('http://localhost:8085/Keuangan/api');
+    list.add('http://127.0.0.1:8081/Keuangan/api');
+    list.add('http://localhost:8081/Keuangan/api');
+    return list.toSet().toList();
+  }
+
   // Cek Status Server phpMyAdmin & Database db_keuangan
   static Future<Map<String, dynamic>> checkStatus([String? customUrl]) async {
-    try {
-      var baseUrl = customUrl != null && customUrl.trim().isNotEmpty
-          ? normalizeUrl(customUrl)
-          : await getServerUrl();
+    final base = customUrl != null && customUrl.trim().isNotEmpty
+        ? normalizeUrl(customUrl)
+        : await getServerUrl();
 
-      final url = Uri.parse('$baseUrl/status.php');
-      final res = await http.get(url).timeout(const Duration(seconds: 4));
-      if (res.statusCode == 200) {
-        return jsonDecode(res.body);
-      }
-      return {'status': 'error', 'message': 'HTTP ${res.statusCode}'};
-    } catch (e) {
-      // Coba fallback ganti 127.0.0.1 <-> localhost jika gagal
+    final candidates = getCandidateUrls(base);
+    String lastErr = 'Tidak dapat terhubung';
+
+    for (final cand in candidates) {
       try {
-        var baseUrl = customUrl != null && customUrl.trim().isNotEmpty
-            ? normalizeUrl(customUrl)
-            : await getServerUrl();
-        if (baseUrl.contains('127.0.0.1')) {
-          baseUrl = baseUrl.replaceAll('127.0.0.1', 'localhost');
-        } else if (baseUrl.contains('localhost')) {
-          baseUrl = baseUrl.replaceAll('localhost', '127.0.0.1');
-        }
-        final url = Uri.parse('$baseUrl/status.php');
+        final url = Uri.parse('$cand/status.php');
         final res = await http.get(url).timeout(const Duration(seconds: 3));
         if (res.statusCode == 200) {
-          return jsonDecode(res.body);
+          final data = jsonDecode(res.body);
+          if (cand != base) {
+            await saveServerUrl(cand);
+          }
+          return data;
+        } else {
+          lastErr = 'HTTP ${res.statusCode}';
         }
-      } catch (_) {}
-
-      return {'status': 'error', 'message': 'Tidak dapat terhubung ke server ($e)'};
+      } catch (e) {
+        lastErr = '$e';
+      }
     }
+
+    return {'status': 'error', 'message': 'Tidak dapat terhubung ke server ($lastErr)'};
   }
 
   // Kirim transaksi baru ke phpMyAdmin secara real-time
   static Future<bool> pushTransaction(TransactionModel tx) async {
-    try {
-      final baseUrl = await getServerUrl();
-      final url = Uri.parse('$baseUrl/transaksi.php');
-      final body = jsonEncode({
-        'date': tx.date.toIso8601String(),
-        'type': tx.type,
-        'categoryId': tx.categoryId,
-        'amount': tx.amount,
-        'note': tx.note ?? '',
-      });
-      final res = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: body,
-      ).timeout(const Duration(seconds: 4));
-      return res.statusCode == 200 || res.statusCode == 201;
-    } catch (_) {
-      return false;
+    final base = await getServerUrl();
+    final candidates = getCandidateUrls(base);
+    final body = jsonEncode({
+      'date': tx.date.toIso8601String(),
+      'type': tx.type,
+      'categoryId': tx.categoryId,
+      'amount': tx.amount,
+      'note': tx.note ?? '',
+    });
+
+    for (final cand in candidates) {
+      try {
+        final url = Uri.parse('$cand/transaksi.php');
+        final res = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: body,
+        ).timeout(const Duration(seconds: 3));
+        if (res.statusCode == 200 || res.statusCode == 201) {
+          return true;
+        }
+      } catch (_) {}
     }
+    return false;
   }
 
   // Ambil Gemini API Key dari phpMyAdmin (app_settings)
   static Future<String?> fetchGeminiApiKey() async {
-    try {
-      final baseUrl = await getServerUrl();
-      final url = Uri.parse('$baseUrl/settings.php?key=gemini_api_key');
-      final res = await http.get(url).timeout(const Duration(seconds: 4));
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        final key = data['key_value']?.toString().trim();
-        if (key != null && key.isNotEmpty) {
-          await GeminiService.saveApiKey(key);
-          return key;
+    final base = await getServerUrl();
+    final candidates = getCandidateUrls(base);
+    for (final cand in candidates) {
+      try {
+        final url = Uri.parse('$cand/settings.php?key=gemini_api_key');
+        final res = await http.get(url).timeout(const Duration(seconds: 3));
+        if (res.statusCode == 200) {
+          final data = jsonDecode(res.body);
+          final key = data['key_value']?.toString().trim();
+          if (key != null && key.isNotEmpty) {
+            await GeminiService.saveApiKey(key);
+            return key;
+          }
         }
-      }
-      return null;
-    } catch (_) {
-      return null;
+      } catch (_) {}
     }
+    return null;
   }
 
   // Simpan Gemini API Key ke phpMyAdmin (app_settings)
   static Future<bool> saveGeminiApiKey(String apiKey) async {
-    try {
-      final baseUrl = await getServerUrl();
-      final url = Uri.parse('$baseUrl/settings.php');
-      final res = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'key_name': 'gemini_api_key',
-          'key_value': apiKey.trim(),
-        }),
-      ).timeout(const Duration(seconds: 4));
-      return res.statusCode == 200;
-    } catch (_) {
-      return false;
+    final base = await getServerUrl();
+    final candidates = getCandidateUrls(base);
+    final body = jsonEncode({
+      'key_name': 'gemini_api_key',
+      'key_value': apiKey.trim(),
+    });
+
+    for (final cand in candidates) {
+      try {
+        final url = Uri.parse('$cand/settings.php');
+        final res = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: body,
+        ).timeout(const Duration(seconds: 3));
+        if (res.statusCode == 200) {
+          return true;
+        }
+      } catch (_) {}
     }
+    return false;
   }
 
   // Reset Data di phpMyAdmin (MySQL)
   static Future<bool> resetRemoteData() async {
-    try {
-      final baseUrl = await getServerUrl();
-      final url = Uri.parse('$baseUrl/reset.php');
-      final res = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(const Duration(seconds: 5));
-      return res.statusCode == 200;
-    } catch (_) {
-      return false;
+    final base = await getServerUrl();
+    final candidates = getCandidateUrls(base);
+    for (final cand in candidates) {
+      try {
+        final url = Uri.parse('$cand/reset.php');
+        final res = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+        ).timeout(const Duration(seconds: 4));
+        if (res.statusCode == 200) {
+          return true;
+        }
+      } catch (_) {}
     }
+    return false;
   }
 
   // Sinkronisasi Penuh 2 Arah (Full Bidirectional Sync)
-  // Menyimpan semua data lokal ke MySQL dan memulihkan data MySQL ke SQLite jika baru install ulang APK
   static Future<Map<String, dynamic>> syncFull(DatabaseHelper db) async {
     try {
-      final baseUrl = await getServerUrl();
-      final url = Uri.parse('$baseUrl/sync.php');
+      final base = await getServerUrl();
+      final candidates = getCandidateUrls(base);
 
       // 1. Ambil data lokal SQLite & API Key
       final localTxs = await db.getTransactions(limit: 1000);
@@ -163,7 +195,7 @@ class PhpMyAdminService {
       final localSavings = await db.getSavings();
       final localApiKey = await GeminiService.getApiKey() ?? '';
 
-      // 2. Buat Payload
+      // 2. Buat Payload Lengkap
       final payload = {
         'gemini_api_key': localApiKey,
         'transactions': localTxs.map((t) => {
@@ -176,10 +208,15 @@ class PhpMyAdminService {
         'debts': localDebts.map((d) => {
           'debtorName': d.debtorName,
           'type': d.type,
+          'categoryDebt': d.categoryDebt,
           'totalAmount': d.totalAmount,
           'remainingAmount': d.remainingAmount,
           'status': d.status,
           'borrowDate': d.borrowDate.toIso8601String(),
+          'dueDate': d.dueDate?.toIso8601String(),
+          'tenorMonths': d.tenorMonths,
+          'dueDay': d.dueDay,
+          'monthlyInstallment': d.monthlyInstallment,
           'note': d.note ?? '',
         }).toList(),
         'savings': localSavings.map((s) => {
@@ -191,25 +228,43 @@ class PhpMyAdminService {
         }).toList(),
       };
 
-      // 3. Kirim ke Server PHP
-      final res = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(payload),
-      ).timeout(const Duration(seconds: 8));
+      http.Response? response;
+      String? workingBase;
 
-      if (res.statusCode != 200) {
-        return {'status': 'error', 'message': 'Gagal sinkronisasi (HTTP ${res.statusCode})'};
+      // Coba kirim ke candidate URLs
+      for (final cand in candidates) {
+        try {
+          final url = Uri.parse('$cand/sync.php');
+          final res = await http.post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(payload),
+          ).timeout(const Duration(seconds: 5));
+
+          if (res.statusCode == 200) {
+            response = res;
+            workingBase = cand;
+            break;
+          }
+        } catch (_) {}
       }
 
-      final resData = jsonDecode(res.body);
+      if (response == null || response.statusCode != 200) {
+        return {'status': 'error', 'message': 'Tidak dapat terhubung ke server Apache / PHP Termux di port 8085 / 8081'};
+      }
+
+      if (workingBase != null && workingBase != base) {
+        await saveServerUrl(workingBase);
+      }
+
+      final resData = jsonDecode(response.body);
       final serverData = resData['data'] as Map<String, dynamic>?;
 
       int restoredTxs = 0;
       int restoredDebts = 0;
       int restoredSavings = 0;
 
-      // 4. Pulihkan data dari phpMyAdmin ke SQLite lokal (jika lokal masih kosong / ada data baru di phpMyAdmin)
+      // 4. Pulihkan data dari phpMyAdmin ke SQLite lokal jika belum ada di lokal
       if (serverData != null) {
         // Transaksi
         final serverTxs = serverData['transactions'] as List? ?? [];
@@ -253,10 +308,15 @@ class PhpMyAdminService {
               await db.insertDebt(DebtModel(
                 debtorName: name,
                 type: item['type']?.toString() ?? 'hutang',
+                categoryDebt: item['categoryDebt']?.toString() ?? 'Perorangan / Teman',
                 totalAmount: amt,
                 remainingAmount: double.tryParse(item['remainingAmount']?.toString() ?? '0') ?? amt,
                 status: item['status']?.toString() ?? 'belum_lunas',
                 borrowDate: tgl,
+                dueDate: DateTime.tryParse(item['dueDate']?.toString() ?? ''),
+                tenorMonths: int.tryParse(item['tenorMonths']?.toString() ?? '0') ?? 0,
+                dueDay: int.tryParse(item['dueDay']?.toString() ?? '0') ?? 0,
+                monthlyInstallment: double.tryParse(item['monthlyInstallment']?.toString() ?? '0') ?? 0.0,
                 note: item['note']?.toString(),
               ));
               restoredDebts++;
@@ -284,6 +344,7 @@ class PhpMyAdminService {
             }
           }
         }
+
         // Pulihkan Gemini API Key jika ada di server
         final serverApiKey = serverData['gemini_api_key']?.toString().trim();
         if (serverApiKey != null && serverApiKey.isNotEmpty && localApiKey.isEmpty) {
