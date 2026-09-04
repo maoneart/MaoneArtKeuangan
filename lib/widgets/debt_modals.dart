@@ -5,6 +5,7 @@ import '../models/debt_model.dart';
 import '../providers/financial_provider.dart';
 import '../utils/app_theme.dart';
 import '../utils/currency_formatter.dart';
+import 'date_picker_modal.dart';
 
 class AddDebtModal extends ConsumerStatefulWidget {
   final String initialType;
@@ -416,8 +417,8 @@ class _AddDebtModalState extends ConsumerState<AddDebtModal> {
                   // Tanggal Mulai Pinjam
                   InkWell(
                     onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
+                      final picked = await DatePickerModal.show(
+                        context,
                         initialDate: _borrowDate,
                         firstDate: DateTime(2020),
                         lastDate: DateTime(2035),
@@ -624,7 +625,7 @@ class _AddDebtModalState extends ConsumerState<AddDebtModal> {
                       Expanded(
                         child: InkWell(
                           onTap: () async {
-                            final picked = await showDatePicker(context: context, initialDate: _borrowDate, firstDate: DateTime(2020), lastDate: DateTime(2035));
+                            final picked = await DatePickerModal.show(context, initialDate: _borrowDate, firstDate: DateTime(2020), lastDate: DateTime(2035));
                             if (picked != null) setState(() => _borrowDate = picked);
                           },
                           child: Container(
@@ -649,7 +650,7 @@ class _AddDebtModalState extends ConsumerState<AddDebtModal> {
                       Expanded(
                         child: InkWell(
                           onTap: () async {
-                            final picked = await showDatePicker(context: context, initialDate: _dueDate ?? DateTime.now().add(const Duration(days: 30)), firstDate: DateTime.now(), lastDate: DateTime(2035));
+                            final picked = await DatePickerModal.show(context, initialDate: _dueDate ?? DateTime.now().add(const Duration(days: 30)), firstDate: DateTime.now(), lastDate: DateTime(2035));
                             if (picked != null) setState(() => _dueDate = picked);
                           },
                           child: Container(
@@ -954,8 +955,8 @@ class _PayDebtModalState extends ConsumerState<PayDebtModal> {
                 const SizedBox(height: 6),
                 InkWell(
                   onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
+                    final picked = await DatePickerModal.show(
+                      context,
                       initialDate: _paymentDate,
                       firstDate: DateTime(2020),
                       lastDate: DateTime(2035),

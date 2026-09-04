@@ -6,6 +6,7 @@ import '../models/transaction_model.dart';
 import '../providers/financial_provider.dart';
 import '../utils/app_theme.dart';
 import '../utils/currency_formatter.dart';
+import 'date_picker_modal.dart';
 
 class QuickAddModal extends ConsumerStatefulWidget {
   final String initialType;
@@ -351,8 +352,8 @@ class _QuickAddModalState extends ConsumerState<QuickAddModal> {
                 // Tanggal Transaksi
                 InkWell(
                   onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
+                    final picked = await DatePickerModal.show(
+                      context,
                       initialDate: _selectedDate,
                       firstDate: DateTime(2020),
                       lastDate: DateTime(2035),

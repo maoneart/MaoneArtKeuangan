@@ -5,6 +5,7 @@ import '../models/saving_model.dart';
 import '../providers/financial_provider.dart';
 import '../utils/app_theme.dart';
 import '../utils/currency_formatter.dart';
+import 'date_picker_modal.dart';
 
 class AddSavingModal extends ConsumerStatefulWidget {
   const AddSavingModal({super.key});
@@ -299,8 +300,8 @@ class _AddSavingModalState extends ConsumerState<AddSavingModal> {
                           const SizedBox(height: 6),
                           InkWell(
                             onTap: () async {
-                              final picked = await showDatePicker(
-                                context: context,
+                              final picked = await DatePickerModal.show(
+                                context,
                                 initialDate: _dueDate ?? DateTime.now().add(const Duration(days: 90)),
                                 firstDate: DateTime.now(),
                                 lastDate: DateTime(2035),
@@ -586,8 +587,8 @@ class _DepositSavingModalState extends ConsumerState<DepositSavingModal> {
                 const SizedBox(height: 6),
                 InkWell(
                   onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
+                    final picked = await DatePickerModal.show(
+                      context,
                       initialDate: _depositDate,
                       firstDate: DateTime(2020),
                       lastDate: DateTime(2035),

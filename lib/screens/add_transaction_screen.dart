@@ -8,6 +8,7 @@ import '../utils/app_theme.dart';
 import '../utils/currency_formatter.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/maoneart_modal.dart';
+import '../widgets/date_picker_modal.dart';
 import 'category_management_screen.dart';
 
 class AddTransactionScreen extends ConsumerStatefulWidget {
@@ -441,8 +442,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     // Date Selector
                     InkWell(
                       onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
+                        final picked = await DatePickerModal.show(
+                          context,
                           initialDate: _selectedDate,
                           firstDate: DateTime(2020),
                           lastDate: DateTime(2035),
