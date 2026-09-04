@@ -52,18 +52,19 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.2.1
-          name: 'MaoneArt Keuangan v1.2.1 (Release)'
+          tag_name: v1.2.6
+          name: 'MaoneArt Keuangan v1.2.6 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.2.1)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.2.6)
             
+            - **Anti-Duplikasi Transaksi Cerdas**:
+              * Mutex sync lock mencegah race condition saat sinkronisasi background.
+              * Batch atomic save untuk AI Chat Assistant 1-klik simpan.
+              * Deduplikasi otomatis di SQLite lokal dan MySQL phpMyAdmin.
             - **Sistem Peringatan Jatuh Tempo & Indikator Aman Bulanan**:
-              * Indikator **"Bulan Ini Aman ✅"** otomatis aktif jika cicilan bulan berjalan sudah dibayar sebelum/pada tanggal jatuh tempo.
-              * Indikator **"Lewat Jatuh Tempo ⚠️"** dan banner peringatan merah otomatis muncul jika tanggal jatuh tempo bulan berjalan sudah lewat dan belum dicicil.
-              * Indikator **"Jatuh Tempo H-X ⏳"** saat mendekati tanggal jatuh tempo.
-            - **Kalkulator Cicilan & Tenor Otomatis (Smart Installment)**:
-              * Pilihan tenor fleksibel (misal: 33 bulan) dengan kalkulasi otomatis cicilan per bulan dan estimasi bulan lunas.
-              * Pengaturan jadwal jatuh tempo tagihan bulanan berulang (misal: Tiap tanggal 15 setiap bulan sampai lunas).
+              * Indikator **"Bulan Ini Aman ✅"** otomatis aktif jika cicilan bulan berjalan sudah dibayar.
+              * Indikator **"Lewat Jatuh Tempo ⚠️"** dan banner peringatan merah jika lewat tanggal jatuh tempo.
+            - **Kalkulator Cicilan & Tenor Otomatis (Smart Installment)**.
           files: build/app/outputs/flutter-apk/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
