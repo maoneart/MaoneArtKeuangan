@@ -7,6 +7,7 @@ import '../models/financial_summary.dart';
 import '../services/database_helper.dart';
 import '../services/gemini_service.dart';
 import '../services/phpmyadmin_service.dart';
+import '../utils/category_resolver.dart';
 
 // Database Instance Provider
 final databaseProvider = Provider<DatabaseHelper>((ref) => DatabaseHelper.instance);
@@ -127,18 +128,14 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
         if (tx.isSaved) continue;
 
         if (tx.type == 'pemasukan' || tx.type == 'pengeluaran') {
-          int catId = tx.categoryId ?? 1;
-          if (tx.categoryId == null) {
-            final matched = categories.firstWhere(
-              (c) => c.name.toLowerCase().contains(tx.categoryName.toLowerCase()) ||
-                  tx.categoryName.toLowerCase().contains(c.name.toLowerCase()),
-              orElse: () => categories.firstWhere(
-                (c) => c.type == tx.type,
-                orElse: () => categories.first,
-              ),
-            );
-            catId = matched.id ?? 1;
-          }
+          final resolvedCat = CategoryResolver.resolveCategory(
+            note: tx.note,
+            categoryHint: tx.categoryName,
+            categoryId: tx.categoryId,
+            type: tx.type,
+            categories: categories,
+          );
+          final catId = resolvedCat.id ?? 1;
 
           final exists = await db.transactionExists(
             date: tx.date,
@@ -180,9 +177,11 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
             );
             savedCount++;
           } else {
-            final matchedCat = categories.firstWhere(
-              (c) => c.name.toLowerCase().contains('hutang') || c.name.toLowerCase().contains('tagihan'),
-              orElse: () => categories.firstWhere((c) => c.type == 'pengeluaran', orElse: () => categories.first),
+            final resolvedCat = CategoryResolver.resolveCategory(
+              note: tx.note,
+              categoryHint: 'Tagihan & Listrik',
+              type: 'pengeluaran',
+              categories: categories,
             );
             final exists = await db.transactionExists(
               date: tx.date,
@@ -193,7 +192,7 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
               await db.insertTransaction(TransactionModel(
                 date: tx.date,
                 type: 'pengeluaran',
-                categoryId: matchedCat.id ?? 1,
+                categoryId: resolvedCat.id ?? 1,
                 amount: tx.amount,
                 note: tx.note,
               ));

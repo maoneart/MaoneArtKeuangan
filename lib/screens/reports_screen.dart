@@ -10,6 +10,7 @@ import '../services/csv_export_service.dart';
 import '../utils/app_theme.dart';
 import '../utils/currency_formatter.dart';
 import '../widgets/glass_card.dart';
+import '../widgets/month_picker_modal.dart';
 
 class ReportsScreen extends ConsumerStatefulWidget {
   const ReportsScreen({super.key});
@@ -27,9 +28,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     final transactionsAsync = ref.watch(transactionsProvider);
     final currentMonth = ref.watch(selectedMonthProvider);
 
-    final parts = currentMonth.split('-');
-    final monthDate = DateTime(int.parse(parts[0]), int.parse(parts[1]));
-    final periodLabel = AppDateFormatter.formatMonthYear(monthDate);
+    String periodLabel = 'Semua Periode';
+    if (currentMonth != 'all' && currentMonth.contains('-')) {
+      final parts = currentMonth.split('-');
+      final monthDate = DateTime(int.parse(parts[0]), int.parse(parts[1]));
+      periodLabel = AppDateFormatter.formatMonthYear(monthDate);
+    }
 
     final bottomPadding = MediaQuery.of(context).padding.bottom + 160;
 
@@ -42,24 +46,44 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         ),
         actions: [
           // Filter Periode Bulan
-          TextButton.icon(
-            onPressed: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: monthDate,
-                firstDate: DateTime(2020),
-                lastDate: DateTime(2035),
-                initialDatePickerMode: DatePickerMode.year,
-              );
-              if (picked != null) {
-                final newMonth = '${picked.year}-${picked.month.toString().padLeft(2, '0')}';
-                ref.read(selectedMonthProvider.notifier).state = newMonth;
-              }
-            },
-            icon: const Icon(Icons.calendar_month_rounded, color: AppTheme.bluePrimary, size: 16),
-            label: Text(
-              periodLabel,
-              style: GoogleFonts.plusJakartaSans(color: AppTheme.bluePrimary, fontSize: 12, fontWeight: FontWeight.bold),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: InkWell(
+              onTap: () {
+                MonthPickerModal.show(
+                  context,
+                  currentMonth: currentMonth,
+                  onMonthSelected: (newMonth) {
+                    ref.read(selectedMonthProvider.notifier).state = newMonth;
+                  },
+                );
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppTheme.blueLight,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.borderLight),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.calendar_month_rounded, color: AppTheme.bluePrimary, size: 15),
+                    const SizedBox(width: 5),
+                    Text(
+                      periodLabel,
+                      style: GoogleFonts.plusJakartaSans(
+                        color: AppTheme.bluePrimary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(width: 3),
+                    const Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.bluePrimary, size: 14),
+                  ],
+                ),
+              ),
             ),
           ),
         ],

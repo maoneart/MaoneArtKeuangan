@@ -9,6 +9,7 @@ import '../utils/app_theme.dart';
 import '../utils/currency_formatter.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/quick_add_modal.dart';
+import '../widgets/month_picker_modal.dart';
 import 'add_transaction_screen.dart';
 import 'category_management_screen.dart';
 import 'debts_screen.dart';
@@ -27,9 +28,12 @@ class HomeScreen extends ConsumerWidget {
     final categoriesAsync = ref.watch(categoriesProvider);
     final currentMonth = ref.watch(selectedMonthProvider);
 
-    final parts = currentMonth.split('-');
-    final monthDate = DateTime(int.parse(parts[0]), int.parse(parts[1]));
-    final periodLabel = AppDateFormatter.formatMonthYear(monthDate);
+    String periodLabel = 'Semua Periode';
+    if (currentMonth != 'all' && currentMonth.contains('-')) {
+      final parts = currentMonth.split('-');
+      final monthDate = DateTime(int.parse(parts[0]), int.parse(parts[1]));
+      periodLabel = AppDateFormatter.formatMonthYear(monthDate);
+    }
 
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
     final bottomPadding = MediaQuery.of(context).padding.bottom + (isLandscape ? 50 : 160);
@@ -118,35 +122,34 @@ class HomeScreen extends ConsumerWidget {
                           ],
                         ),
                         InkWell(
-                          onTap: () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: monthDate,
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime(2035),
-                              initialDatePickerMode: DatePickerMode.year,
+                          onTap: () {
+                            MonthPickerModal.show(
+                              context,
+                              currentMonth: currentMonth,
+                              onMonthSelected: (newMonth) {
+                                ref.read(selectedMonthProvider.notifier).state = newMonth;
+                              },
                             );
-                            if (picked != null) {
-                              final newMonth = '${picked.year}-${picked.month.toString().padLeft(2, '0')}';
-                              ref.read(selectedMonthProvider.notifier).state = newMonth;
-                            }
                           },
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: Colors.white24, width: 0.8),
+                              color: Colors.white.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white30, width: 0.8),
                             ),
                             child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(Icons.calendar_month_rounded, color: Colors.white, size: 14),
-                                const SizedBox(width: 4),
+                                const SizedBox(width: 5),
                                 Text(
                                   periodLabel,
-                                  style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                  style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w800),
                                 ),
+                                const SizedBox(width: 3),
+                                const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white70, size: 13),
                               ],
                             ),
                           ),

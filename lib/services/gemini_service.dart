@@ -5,6 +5,7 @@ import '../models/debt_model.dart';
 import '../models/category_model.dart';
 import '../models/saving_model.dart';
 import '../models/financial_summary.dart';
+import '../utils/category_resolver.dart';
 
 class ParsedTransaction {
   final String type; // 'pemasukan', 'pengeluaran', 'hutang', 'piutang', 'target_tabungan', 'setoran_tabungan'
@@ -353,21 +354,18 @@ class GeminiService {
       note = note.replaceAll(RegExp(r'\s+'), ' ');
       if (note.isEmpty) note = seg;
 
-      // Cari kategori yang cocok
-      String catName = tType == 'bayar_hutang' ? 'Pembayaran Hutang & Cicilan' : 'Lain-lain';
-      int? catId;
-      for (final c in categories) {
-        if (seg.toLowerCase().contains(c.name.toLowerCase()) || note.toLowerCase().contains(c.name.toLowerCase())) {
-          catName = c.name;
-          catId = c.id;
-          break;
-        }
-      }
+      // Cari kategori yang cocok secara cerdas
+      final resolved = CategoryResolver.resolveCategory(
+        note: note,
+        categoryHint: seg,
+        type: (tType == 'pemasukan') ? 'pemasukan' : 'pengeluaran',
+        categories: categories,
+      );
 
       results.add(ParsedTransaction(
         type: tType,
-        categoryId: catId,
-        categoryName: catName,
+        categoryId: resolved.id,
+        categoryName: tType == 'bayar_hutang' ? 'Pembayaran Hutang & Cicilan' : resolved.name,
         amount: nominal,
         note: note.isNotEmpty ? note : seg,
         date: segDate,
@@ -454,6 +452,21 @@ $savingsDesc
   * "target_tabungan": Buat target tabungan baru.
   * "setoran_tabungan": Setor dana ke target tabungan.
 - Ubah nominal singkatan ke angka bulat murni di field "jumlah" (contoh: 6.3 jt -> 6300000, 1jt -> 1000000, 200rb -> 200000, 30Orb/300rb -> 300000). JANGAN gunakan huruf di field "jumlah".
+
+5. ATURAN PENCOCOKAN KATEGORI (SANGAT PENTING):
+PILIH DAN CANTUMKAN "id_kategori" serta "nama_kategori" YANG PALING RELEVAN DARI DAFTAR KATEGORI APLIKASI:
+- Gaji / Upah / Bonus / Sampingan -> Kategori Pemasukan yang tepat (misal: "Gaji & Upah")
+- Listrik / PLN / Token / PDAM / Air / BPJS / Tagihan / Paylater -> "Tagihan & Listrik"
+- IndiHome / WiFi / Pulsa / Internet / Kuota -> "Pulsa & Internet" atau "Tagihan & Listrik"
+- Bensin / Pertalite / Pertamax / Ojol / Grab / Gojek / Parkir / Tol -> "Transportasi & Bensin" atau "Transportasi"
+- Makan / Minum / Resto / Cafe / Warteg / Kopi / Kuliner -> "Makanan & Minuman"
+- Belanja / Galon / Gas / Pasar / Supermarket / Bulanan / Dapur -> "Belanja Harian"
+- Obat / Dokter / Klinik / Apotek / Rumah Sakit -> "Kesehatan & Medis"
+- SPP / Sekolah / Kuliah / Buku / Kursus -> "Pendidikan"
+- Sedekah / Infaq / Zakat / Masjid -> "Sedekah & Infaq"
+- Hiburan / Liburan / Bioskop / Game / Wisata -> "Hiburan & Liburan"
+JANGAN PERNAH sembarangan mencatat pengeluaran listrik/indihome sebagai "Belanja Harian"!
+
 - Format JSON harus SELALU valid, ditutup rapi, dan ditempatkan di paling akhir respons:
 ```json
 {
