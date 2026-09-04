@@ -68,6 +68,9 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
 
   FinancialController(this.ref) : super(const AsyncValue.data(null));
 
+  bool _isSyncing = false;
+  bool _syncPending = false;
+
   Future<void> addTransaction(TransactionModel tx) async {
     state = const AsyncValue.loading();
     try {
@@ -88,13 +91,192 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
     return result;
   }
 
-  void _autoSyncToPhpMyAdmin() {
+  void _autoSyncToPhpMyAdmin() async {
+    if (_isSyncing) {
+      _syncPending = true;
+      return;
+    }
+    _isSyncing = true;
+    _syncPending = false;
     try {
       final db = ref.read(databaseProvider);
-      PhpMyAdminService.syncFull(db).then((_) {
-        _refreshAll();
-      }).catchError((_) {});
-    } catch (_) {}
+      await PhpMyAdminService.syncFull(db);
+      _refreshAll();
+    } catch (_) {
+    } finally {
+      _isSyncing = false;
+      if (_syncPending) {
+        _syncPending = false;
+        _autoSyncToPhpMyAdmin();
+      }
+    }
+  }
+
+  Future<int> saveBatchParsedTransactions({
+    required List<ParsedTransaction> transactions,
+    required List<CategoryModel> categories,
+    required List<SavingModel> savings,
+    required List<DebtModel> debts,
+  }) async {
+    state = const AsyncValue.loading();
+    final db = ref.read(databaseProvider);
+    int savedCount = 0;
+
+    try {
+      for (final tx in transactions) {
+        if (tx.isSaved) continue;
+
+        if (tx.type == 'pemasukan' || tx.type == 'pengeluaran') {
+          int catId = tx.categoryId ?? 1;
+          if (tx.categoryId == null) {
+            final matched = categories.firstWhere(
+              (c) => c.name.toLowerCase().contains(tx.categoryName.toLowerCase()) ||
+                  tx.categoryName.toLowerCase().contains(c.name.toLowerCase()),
+              orElse: () => categories.firstWhere(
+                (c) => c.type == tx.type,
+                orElse: () => categories.first,
+              ),
+            );
+            catId = matched.id ?? 1;
+          }
+
+          final exists = await db.transactionExists(
+            date: tx.date,
+            amount: tx.amount,
+            note: tx.note,
+          );
+
+          if (!exists) {
+            await db.insertTransaction(TransactionModel(
+              date: tx.date,
+              type: tx.type,
+              categoryId: catId,
+              amount: tx.amount,
+              note: tx.note,
+            ));
+            savedCount++;
+          }
+          tx.isSaved = true;
+        } else if (tx.type == 'bayar_hutang') {
+          DebtModel? targetDebt;
+          if (debts.isNotEmpty) {
+            if (tx.personName != null && tx.personName!.isNotEmpty) {
+              targetDebt = debts.firstWhere(
+                (d) => d.isDebt && (d.debtorName.toLowerCase().contains(tx.personName!.toLowerCase()) ||
+                    tx.personName!.toLowerCase().contains(d.debtorName.toLowerCase())),
+                orElse: () => debts.firstWhere((d) => d.isDebt && !d.isSettled, orElse: () => debts.first),
+              );
+            } else {
+              targetDebt = debts.firstWhere((d) => d.isDebt && !d.isSettled, orElse: () => debts.first);
+            }
+          }
+
+          if (targetDebt != null && targetDebt.id != null) {
+            await db.addDebtPayment(
+              targetDebt.id!,
+              tx.amount,
+              tx.date,
+              note: tx.note,
+            );
+            savedCount++;
+          } else {
+            final matchedCat = categories.firstWhere(
+              (c) => c.name.toLowerCase().contains('hutang') || c.name.toLowerCase().contains('tagihan'),
+              orElse: () => categories.firstWhere((c) => c.type == 'pengeluaran', orElse: () => categories.first),
+            );
+            final exists = await db.transactionExists(
+              date: tx.date,
+              amount: tx.amount,
+              note: tx.note,
+            );
+            if (!exists) {
+              await db.insertTransaction(TransactionModel(
+                date: tx.date,
+                type: 'pengeluaran',
+                categoryId: matchedCat.id ?? 1,
+                amount: tx.amount,
+                note: tx.note,
+              ));
+              savedCount++;
+            }
+          }
+          tx.isSaved = true;
+        } else if (tx.type == 'hutang' || tx.type == 'piutang') {
+          final personName = tx.personName != null && tx.personName!.isNotEmpty ? tx.personName! : 'Rekan / Pihak Lain';
+          final exists = await db.debtExists(debtorName: personName, totalAmount: tx.amount);
+          if (!exists) {
+            await db.insertDebt(DebtModel(
+              debtorName: personName,
+              type: tx.type,
+              totalAmount: tx.amount,
+              remainingAmount: tx.amount,
+              borrowDate: tx.date,
+              dueDate: tx.dueDate,
+              tenorMonths: tx.tenorMonths,
+              dueDay: tx.dueDay,
+              monthlyInstallment: tx.monthlyInstallment,
+              note: tx.note,
+            ));
+            savedCount++;
+          }
+          tx.isSaved = true;
+        } else if (tx.type == 'target_tabungan') {
+          final targetName = tx.targetName != null && tx.targetName!.isNotEmpty ? tx.targetName! : 'Tabungan Impian';
+          final exists = await db.savingExists(name: targetName);
+          if (!exists) {
+            await db.insertSaving(SavingModel(
+              name: targetName,
+              targetAmount: (tx.targetAmount != null && tx.targetAmount! > 0) ? tx.targetAmount! : tx.amount,
+              collectedAmount: 0.0,
+              note: tx.note,
+            ));
+            savedCount++;
+          }
+          tx.isSaved = true;
+        } else if (tx.type == 'setoran_tabungan') {
+          SavingModel? targetSaving;
+          if (savings.isNotEmpty) {
+            targetSaving = savings.firstWhere(
+              (s) => tx.targetName != null && (s.name.toLowerCase().contains(tx.targetName!.toLowerCase()) ||
+                  tx.targetName!.toLowerCase().contains(s.name.toLowerCase())),
+              orElse: () => savings.first,
+            );
+          }
+
+          if (targetSaving != null && targetSaving.id != null) {
+            await db.addSavingDeposit(
+              targetSaving.id!,
+              tx.amount,
+              tx.date,
+              note: tx.note,
+            );
+            savedCount++;
+          } else {
+            final targetName = tx.targetName != null && tx.targetName!.isNotEmpty ? tx.targetName! : 'Tabungan Impian';
+            final exists = await db.savingExists(name: targetName);
+            if (!exists) {
+              await db.insertSaving(SavingModel(
+                name: targetName,
+                targetAmount: tx.amount * 5,
+                collectedAmount: tx.amount,
+                note: tx.note,
+              ));
+              savedCount++;
+            }
+          }
+          tx.isSaved = true;
+        }
+      }
+
+      await db.removeDuplicateTransactions();
+      _refreshAll();
+      _autoSyncToPhpMyAdmin();
+      state = const AsyncValue.data(null);
+      return savedCount;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      return savedCount;
+    }
   }
 
   Future<void> deleteTransaction(int id) async {

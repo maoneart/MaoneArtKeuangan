@@ -43,6 +43,16 @@ class DatabaseHelper {
       if (!cols.contains('cicilan_per_bulan')) {
         await db.execute("ALTER TABLE hutang ADD COLUMN cicilan_per_bulan REAL DEFAULT 0.0");
       }
+
+      // Bersihkan transaksi duplikat otomatis saat aplikasi dibuka
+      await db.rawDelete('''
+        DELETE FROM transaksi 
+        WHERE id NOT IN (
+          SELECT MIN(id) 
+          FROM transaksi 
+          GROUP BY strftime('%Y-%m-%d', tanggal), jumlah, TRIM(LOWER(keterangan))
+        )
+      ''');
     } catch (_) {}
   }
 
@@ -238,6 +248,79 @@ class DatabaseHelper {
 
     final maps = await db.rawQuery(query, args);
     return maps.map((e) => TransactionModel.fromMap(e)).toList();
+  }
+
+  Future<bool> transactionExists({
+    required DateTime date,
+    required double amount,
+    required String note,
+  }) async {
+    final db = await database;
+    final dateStr = date.toIso8601String().substring(0, 10);
+    final cleanNote = note.trim().toLowerCase();
+
+    final maps = await db.rawQuery(
+      "SELECT id, keterangan FROM transaksi WHERE strftime('%Y-%m-%d', tanggal) = ? AND ABS(jumlah - ?) < 0.01",
+      [dateStr, amount],
+    );
+
+    for (final m in maps) {
+      final rowNote = (m['keterangan']?.toString() ?? '').trim().toLowerCase();
+      if (rowNote == cleanNote) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  Future<int> removeDuplicateTransactions() async {
+    final db = await database;
+    try {
+      return await db.rawDelete('''
+        DELETE FROM transaksi 
+        WHERE id NOT IN (
+          SELECT MIN(id) 
+          FROM transaksi 
+          GROUP BY strftime('%Y-%m-%d', tanggal), jumlah, TRIM(LOWER(keterangan))
+        )
+      ''');
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  Future<bool> debtExists({
+    required String debtorName,
+    required double totalAmount,
+  }) async {
+    final db = await database;
+    final cleanName = debtorName.trim().toLowerCase();
+    final maps = await db.rawQuery(
+      "SELECT id, nama_penghutang FROM hutang WHERE ABS(total_hutang - ?) < 0.01",
+      [totalAmount],
+    );
+    for (final m in maps) {
+      final rowName = (m['nama_penghutang']?.toString() ?? '').trim().toLowerCase();
+      if (rowName == cleanName) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  Future<bool> savingExists({
+    required String name,
+  }) async {
+    final db = await database;
+    final cleanName = name.trim().toLowerCase();
+    final maps = await db.rawQuery("SELECT id, nama_tabungan FROM tabungan");
+    for (final m in maps) {
+      final rowName = (m['nama_tabungan']?.toString() ?? '').trim().toLowerCase();
+      if (rowName == cleanName) {
+        return true;
+      }
+    }
+    return false;
   }
 
   Future<int> insertTransaction(TransactionModel transaction) async {

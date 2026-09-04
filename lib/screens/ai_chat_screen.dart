@@ -41,6 +41,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final List<ChatBubbleMessage> _messages = [];
   bool _isLoading = false;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -131,145 +132,43 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   }
 
   void _saveTransactions(List<ParsedTransaction> txs, List<CategoryModel> categories, List<SavingModel> savings, List<DebtModel> debts) async {
-    int savedCount = 0;
-    for (final tx in txs) {
-      if (!tx.isSaved) {
-        if (tx.type == 'pemasukan' || tx.type == 'pengeluaran') {
-          // 1. Simpan Transaksi Arus Kas
-          int catId = tx.categoryId ?? 1;
-          if (tx.categoryId == null) {
-            final matched = categories.firstWhere(
-              (c) => c.name.toLowerCase().contains(tx.categoryName.toLowerCase()) ||
-                  tx.categoryName.toLowerCase().contains(c.name.toLowerCase()),
-              orElse: () => categories.firstWhere(
-                (c) => c.type == tx.type,
-                orElse: () => categories.first,
-              ),
-            );
-            catId = matched.id ?? 1;
-          }
+    if (_isSaving) return;
+    setState(() {
+      _isSaving = true;
+    });
 
-          final newTx = TransactionModel(
-            date: tx.date,
-            type: tx.type,
-            categoryId: catId,
-            amount: tx.amount,
-            note: tx.note,
-          );
-
-          await ref.read(financialControllerProvider.notifier).addTransaction(newTx);
-          tx.isSaved = true;
-          savedCount++;
-        } else if (tx.type == 'bayar_hutang') {
-          // 2. Bayar Cicilan / Pelunasan Hutang
-          DebtModel? targetDebt;
-          if (debts.isNotEmpty) {
-            if (tx.personName != null && tx.personName!.isNotEmpty) {
-              targetDebt = debts.firstWhere(
-                (d) => d.isDebt && (d.debtorName.toLowerCase().contains(tx.personName!.toLowerCase()) ||
-                    tx.personName!.toLowerCase().contains(d.debtorName.toLowerCase())),
-                orElse: () => debts.firstWhere((d) => d.isDebt && !d.isSettled, orElse: () => debts.first),
-              );
-            } else {
-              targetDebt = debts.firstWhere((d) => d.isDebt && !d.isSettled, orElse: () => debts.first);
-            }
-          }
-
-          if (targetDebt != null && targetDebt.id != null) {
-            await ref.read(financialControllerProvider.notifier).payDebt(
-              targetDebt.id!,
-              tx.amount,
-              tx.date,
-              note: tx.note,
-            );
-          } else {
-            final matchedCat = categories.firstWhere(
-              (c) => c.name.toLowerCase().contains('hutang') || c.name.toLowerCase().contains('tagihan'),
-              orElse: () => categories.firstWhere((c) => c.type == 'pengeluaran', orElse: () => categories.first),
-            );
-            final newTx = TransactionModel(
-              date: tx.date,
-              type: 'pengeluaran',
-              categoryId: matchedCat.id ?? 1,
-              amount: tx.amount,
-              note: tx.note,
-            );
-            await ref.read(financialControllerProvider.notifier).addTransaction(newTx);
-          }
-          tx.isSaved = true;
-          savedCount++;
-        } else if (tx.type == 'hutang' || tx.type == 'piutang') {
-          // 3. Simpan Hutang atau Piutang Baru
-          final newDebt = DebtModel(
-            debtorName: tx.personName != null && tx.personName!.isNotEmpty ? tx.personName! : 'Rekan / Pihak Lain',
-            type: tx.type,
-            totalAmount: tx.amount,
-            remainingAmount: tx.amount,
-            borrowDate: tx.date,
-            dueDate: tx.dueDate,
-            tenorMonths: tx.tenorMonths,
-            dueDay: tx.dueDay,
-            monthlyInstallment: tx.monthlyInstallment,
-            note: tx.note,
-          );
-
-          await ref.read(financialControllerProvider.notifier).addDebt(newDebt);
-          tx.isSaved = true;
-          savedCount++;
-        } else if (tx.type == 'target_tabungan') {
-          // 4. Buat Target Impian Tabungan Baru
-          final newSaving = SavingModel(
-            name: tx.targetName != null && tx.targetName!.isNotEmpty ? tx.targetName! : 'Tabungan Impian',
-            targetAmount: (tx.targetAmount != null && tx.targetAmount! > 0) ? tx.targetAmount! : tx.amount,
-            collectedAmount: 0.0,
-            note: tx.note,
-          );
-
-          await ref.read(financialControllerProvider.notifier).addSaving(newSaving);
-          tx.isSaved = true;
-          savedCount++;
-        } else if (tx.type == 'setoran_tabungan') {
-          // 5. Setor ke Tabungan yang Ada
-          SavingModel? targetSaving;
-          if (savings.isNotEmpty) {
-            targetSaving = savings.firstWhere(
-              (s) => tx.targetName != null && (s.name.toLowerCase().contains(tx.targetName!.toLowerCase()) ||
-                  tx.targetName!.toLowerCase().contains(s.name.toLowerCase())),
-              orElse: () => savings.first,
-            );
-          }
-
-          if (targetSaving != null && targetSaving.id != null) {
-            await ref.read(financialControllerProvider.notifier).depositSaving(
-              targetSaving.id!,
-              tx.amount,
-              tx.date,
-              note: tx.note,
-            );
-          } else {
-            // Jika belum ada target, buat target baru lalu setorkan
-            final newSaving = SavingModel(
-              name: tx.targetName != null && tx.targetName!.isNotEmpty ? tx.targetName! : 'Tabungan Impian',
-              targetAmount: tx.amount * 5,
-              collectedAmount: tx.amount,
-              note: tx.note,
-            );
-            await ref.read(financialControllerProvider.notifier).addSaving(newSaving);
-          }
-          tx.isSaved = true;
-          savedCount++;
-        }
-      }
-    }
-
-    if (mounted) {
-      setState(() {});
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$savedCount catatan berhasil disimpan ke database keuangan! 🎉'),
-          backgroundColor: AppTheme.greenMain,
-        ),
+    try {
+      final savedCount = await ref.read(financialControllerProvider.notifier).saveBatchParsedTransactions(
+        transactions: txs,
+        categories: categories,
+        savings: savings,
+        debts: debts,
       );
+
+      if (mounted) {
+        setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$savedCount catatan berhasil disimpan ke database keuangan! 🎉'),
+            backgroundColor: AppTheme.greenMain,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal menyimpan catatan: $e'),
+            backgroundColor: AppTheme.redMain,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
     }
   }
 
@@ -585,7 +484,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: msg.detectedTransactions.every((t) => t.isSaved)
+                          onPressed: (_isSaving || msg.detectedTransactions.every((t) => t.isSaved))
                               ? null
                               : () => _saveTransactions(msg.detectedTransactions, categories, savings, debts),
                           style: ElevatedButton.styleFrom(
@@ -597,16 +496,24 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             elevation: 0,
                           ),
-                          icon: Icon(
-                            msg.detectedTransactions.every((t) => t.isSaved)
-                                ? Icons.check_circle_rounded
-                                : Icons.save_rounded,
-                            size: 16,
-                          ),
+                          icon: _isSaving
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                )
+                              : Icon(
+                                  msg.detectedTransactions.every((t) => t.isSaved)
+                                      ? Icons.check_circle_rounded
+                                      : Icons.save_rounded,
+                                  size: 16,
+                                ),
                           label: Text(
-                            msg.detectedTransactions.every((t) => t.isSaved)
-                                ? 'Semua Catatan Telah Disimpan ✅'
-                                : 'Simpan ke Catatan Keuangan',
+                            _isSaving
+                                ? 'Menyimpan ke Database...'
+                                : (msg.detectedTransactions.every((t) => t.isSaved)
+                                    ? 'Semua Catatan Telah Disimpan ✅'
+                                    : 'Simpan ke Catatan Keuangan'),
                             style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12),
                           ),
                         ),

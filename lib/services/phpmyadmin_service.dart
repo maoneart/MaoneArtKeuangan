@@ -288,20 +288,19 @@ class PhpMyAdminService {
             final tglStr = item['date']?.toString() ?? '';
             final tgl = DateTime.tryParse(tglStr) ?? DateTime.now();
             final amt = double.tryParse(item['amount']?.toString() ?? '0') ?? 0.0;
-            final note = item['note']?.toString() ?? '';
+            final note = (item['note']?.toString() ?? '').trim();
+            final type = item['type']?.toString() ?? 'pengeluaran';
+            final catId = int.tryParse(item['categoryId']?.toString() ?? '1') ?? 1;
 
-            final exists = localTxs.any((lt) =>
-                lt.amount == amt &&
-                lt.note == note &&
-                lt.date.year == tgl.year &&
-                lt.date.month == tgl.month &&
-                lt.date.day == tgl.day);
+            if (amt <= 0) continue;
+
+            final exists = await db.transactionExists(date: tgl, amount: amt, note: note);
 
             if (!exists) {
               await db.insertTransaction(TransactionModel(
                 date: tgl,
-                type: item['type']?.toString() ?? 'pengeluaran',
-                categoryId: int.tryParse(item['categoryId']?.toString() ?? '1') ?? 1,
+                type: type,
+                categoryId: catId,
                 amount: amt,
                 note: note,
               ));
@@ -314,10 +313,12 @@ class PhpMyAdminService {
         final serverDebts = serverData['debts'] as List? ?? [];
         for (final item in serverDebts) {
           if (item is Map<String, dynamic>) {
-            final name = item['debtorName']?.toString() ?? 'Rekan';
+            final name = (item['debtorName']?.toString() ?? 'Rekan').trim();
             final amt = double.tryParse(item['totalAmount']?.toString() ?? '0') ?? 0.0;
 
-            final exists = localDebts.any((ld) => ld.debtorName == name && ld.totalAmount == amt);
+            if (amt <= 0) continue;
+
+            final exists = await db.debtExists(debtorName: name, totalAmount: amt);
             if (!exists) {
               final tgl = DateTime.tryParse(item['borrowDate']?.toString() ?? '') ?? DateTime.now();
               await db.insertDebt(DebtModel(
@@ -343,10 +344,12 @@ class PhpMyAdminService {
         final serverSavings = serverData['savings'] as List? ?? [];
         for (final item in serverSavings) {
           if (item is Map<String, dynamic>) {
-            final name = item['name']?.toString() ?? 'Tabungan';
+            final name = (item['name']?.toString() ?? 'Tabungan').trim();
             final target = double.tryParse(item['targetAmount']?.toString() ?? '0') ?? 0.0;
 
-            final exists = localSavings.any((ls) => ls.name == name);
+            if (name.isEmpty || target <= 0) continue;
+
+            final exists = await db.savingExists(name: name);
             if (!exists) {
               await db.insertSaving(SavingModel(
                 name: name,
@@ -359,6 +362,9 @@ class PhpMyAdminService {
             }
           }
         }
+
+        // Bersihkan duplikat lokal jika sempat terjadi
+        await db.removeDuplicateTransactions();
 
         // Pulihkan Gemini API Key jika ada di server
         final serverApiKey = serverData['gemini_api_key']?.toString().trim();

@@ -311,19 +311,24 @@ class GeminiService {
       segClean = segClean.replaceAll(RegExp(r'\btgl\s+\d+(\s+[a-zA-Z]+)?(\s+\d+)?', caseSensitive: false), '');
       segClean = segClean.replaceAll(RegExp(r'\btahun\s+\d+', caseSensitive: false), '');
 
-      // Cari pola nominal uang (misal: 6.3 jt, 1jt, 200rb, 300rb, 1000000)
+      // Cari pola nominal uang (misal: 6.3 jt, 1jt, 200rb, 300rb, 279.000, 27.000, 1000000)
       final match = RegExp(r'(\d+(?:[\.,]\d+)?)\s*(jt|juta|rb|ribu|k)\b', caseSensitive: false).firstMatch(segClean);
-      if (match == null) continue;
-
-      final numPart = double.tryParse(match.group(1)!.replaceAll(',', '.')) ?? 0.0;
-      final unitPart = (match.group(2) ?? '').toLowerCase();
       double nominal = 0.0;
-      if (unitPart == 'jt' || unitPart == 'juta') {
-        nominal = numPart * 1000000;
-      } else if (unitPart == 'rb' || unitPart == 'ribu' || unitPart == 'k') {
-        nominal = numPart * 1000;
+      if (match != null) {
+        final numPart = double.tryParse(match.group(1)!.replaceAll(',', '.')) ?? 0.0;
+        final unitPart = (match.group(2) ?? '').toLowerCase();
+        if (unitPart == 'jt' || unitPart == 'juta') {
+          nominal = numPart * 1000000;
+        } else if (unitPart == 'rb' || unitPart == 'ribu' || unitPart == 'k') {
+          nominal = numPart * 1000;
+        } else {
+          nominal = numPart;
+        }
       } else {
-        nominal = numPart;
+        final plainMatch = RegExp(r'\b(\d{1,3}(?:[\.,]\d{3})+|\d{4,})\b').firstMatch(segClean);
+        if (plainMatch != null) {
+          nominal = ParsedTransaction.parseAmount(plainMatch.group(1)!);
+        }
       }
 
       if (nominal <= 0) continue;
@@ -343,6 +348,7 @@ class GeminiService {
 
       // Bersihkan keterangan
       var note = seg.replaceAll(RegExp(r'(\d+(?:[\.,]\d+)?)\s*(jt|juta|rb|ribu|k)\b', caseSensitive: false), '');
+      note = note.replaceAll(RegExp(r'\b(\d{1,3}(?:[\.,]\d{3})+|\d{4,})\b'), '');
       note = note.replaceAll(RegExp(r'\b(sejumlah|sebesar|nominal|buat|bayar|beli|tagihan|apakah.*|bagaimana.*)\b', caseSensitive: false), '').trim();
       note = note.replaceAll(RegExp(r'\s+'), ' ');
       if (note.isEmpty) note = seg;
@@ -436,11 +442,12 @@ $savingsDesc
 - Jika tahun disebutkan 2 digit (misal: "26"), anggap tahun 2026.
 - Jika pengguna tidak menyebutkan tanggal apa pun, gunakan tanggal hari ini ("$nowIso").
 
-4. ATURAN EKSTRAKSI TRANSAKSI (SANGAT KETAT):
+4. ATURAN EKSTRAKSI TRANSAKSI (SANGAT KETAT & ANTI-DUPLIKASI):
 - Ekstrak SEMUA rincian pengeluaran, pemasukan, hutang, piutang, bayar hutang/cicilan, atau tabungan yang ada dalam pesan pengguna tanpa terkecuali!
+- ATURAN ANTI-DUPLIKASI: Setiap item yang disebutkan pengguna HANYA BOLEH dimasukkan TEPAT 1 KALI ke dalam array "transactions". Jangan pernah menduplikasi pengeluaran/tagihan/paylater menjadi 2 catatan berbeda (misal paylater yang disebutkan sebagai pengeluaran rutin cukup dicatat 1 kali).
 - TIPE TRANSAKSI YANG DIDUKUNG:
   * "pemasukan": Gaji, bonus, transfer masuk, dll.
-  * "pengeluaran": Belanja, bensin, tagihan, makanan, dll.
+  * "pengeluaran": Belanja, bensin, tagihan, makanan, paylater, dll.
   * "hutang": Tambah catatan hutang / cicilan baru (misal: "ambil cicilan motor 49jt selama 33 bulan jatuh tempo per tanggal 15"). Field pendukung jika ada: "tenor_bulan": 33, "jatuh_tempo_hari": 15, "cicilan_per_bulan": 1484848, "nama_orang": "Leasing Motor".
   * "piutang": Catatan orang pinjam uang ke kita (misal: "si Andi pinjam 300rb").
   * "bayar_hutang": Bayar/cicil/lunas hutang (misal: "bayar hutang ke Budi 200rb pakai gaji maret 2025", "cicil hutang 500rb"). Cantumkan nama orang di "nama_orang".
@@ -587,14 +594,26 @@ $savingsDesc
 
       // STAGE 3: Natural Language Processing (NLP) Fallback Langsung dari Teks Pengguna
       // Jika AI melewatkan transaksi atau gagal, langsung ekstrak dari teks asli!
-      final nlpTxs = extractTransactionsFromRawText(userMessage, categories);
-      if (transactions.length < nlpTxs.length) {
-        // Gabungkan atau gunakan hasil NLP yang lebih lengkap
-        for (final nlpItem in nlpTxs) {
-          final alreadyExists = transactions.any((t) => (t.amount - nlpItem.amount).abs() < 100);
-          if (!alreadyExists) {
-            transactions.add(nlpItem);
-          }
+      if (transactions.isEmpty) {
+        final nlpTxs = extractTransactionsFromRawText(userMessage, categories);
+        transactions.addAll(nlpTxs);
+      }
+
+      // Deduplikasi list transaksi (pastikan tidak ada catatan ganda)
+      final uniqueTxs = <ParsedTransaction>[];
+      for (final tx in transactions) {
+        final isDup = uniqueTxs.any((u) =>
+            u.type == tx.type &&
+            (u.amount - tx.amount).abs() < 1 &&
+            (u.note.toLowerCase().trim() == tx.note.toLowerCase().trim() ||
+             (u.note.toLowerCase().contains(tx.note.toLowerCase()) && tx.note.length > 3) ||
+             (tx.note.toLowerCase().contains(u.note.toLowerCase()) && u.note.length > 3)) &&
+            u.date.year == tx.date.year &&
+            u.date.month == tx.date.month &&
+            u.date.day == tx.date.day);
+
+        if (!isDup) {
+          uniqueTxs.add(tx);
         }
       }
 
@@ -602,7 +621,7 @@ $savingsDesc
       if (cleanReply.trim() == 'Berikut rincian transaksi yang telah saya siapkan:' || cleanReply.trim().isEmpty) {
         double totalIn = 0;
         double totalOut = 0;
-        for (final t in transactions) {
+        for (final t in uniqueTxs) {
           if (t.type == 'pemasukan') totalIn += t.amount;
           if (t.type == 'pengeluaran') totalOut += t.amount;
         }
@@ -616,7 +635,7 @@ $savingsDesc
 
       return AiChatResponse(
         replyText: cleanReply,
-        detectedTransactions: transactions,
+        detectedTransactions: uniqueTxs,
         isError: false,
       );
     } catch (e) {
