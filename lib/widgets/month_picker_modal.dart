@@ -138,50 +138,69 @@ class _MonthPickerModalState extends State<MonthPickerModal> {
                             ),
                           ],
                         ),
-                        // Year Switcher
-                        Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
-                          ),
-                          child: Row(
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.chevron_left_rounded, size: 20),
-                                onPressed: () {
-                                  setState(() {
-                                    _selectedYear--;
-                                  });
-                                },
-                                padding: const EdgeInsets.all(4),
-                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                splashRadius: 16,
+                        Row(
+                          children: [
+                            // Year Switcher
+                            Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
                               ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 4),
-                                child: Text(
-                                  '$_selectedYear',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 14,
-                                    color: AppTheme.bluePrimary,
+                              child: Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.chevron_left_rounded, size: 20),
+                                    onPressed: () {
+                                      setState(() {
+                                        _selectedYear--;
+                                      });
+                                    },
+                                    padding: const EdgeInsets.all(4),
+                                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                    splashRadius: 16,
                                   ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                                    child: Text(
+                                      '$_selectedYear',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 14,
+                                        color: AppTheme.bluePrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.chevron_right_rounded, size: 20),
+                                    onPressed: () {
+                                      setState(() {
+                                        _selectedYear++;
+                                      });
+                                    },
+                                    padding: const EdgeInsets.all(4),
+                                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                    splashRadius: 16,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            // Close Button 'X'
+                            InkWell(
+                              onTap: () => Navigator.of(context).pop(),
+                              borderRadius: BorderRadius.circular(10),
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF1F5F9),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: const Color(0xFFE2E8F0)),
                                 ),
+                                child: const Icon(Icons.close_rounded, size: 18, color: AppTheme.textMuted),
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.chevron_right_rounded, size: 20),
-                                onPressed: () {
-                                  setState(() {
-                                    _selectedYear++;
-                                  });
-                                },
-                                padding: const EdgeInsets.all(4),
-                                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                splashRadius: 16,
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

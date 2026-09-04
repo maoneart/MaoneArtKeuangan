@@ -306,6 +306,21 @@ class _DatePickerModalState extends State<DatePickerModal> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
             ),
+          const SizedBox(width: 4),
+          // Close 'X' Button
+          InkWell(
+            onTap: () => Navigator.of(context).pop(),
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: const Icon(Icons.close_rounded, size: 18, color: AppTheme.textMuted),
+            ),
+          ),
         ],
       ),
     );
