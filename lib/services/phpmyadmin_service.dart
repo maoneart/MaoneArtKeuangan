@@ -219,8 +219,8 @@ class PhpMyAdminService {
           'id': c.id,
           'name': c.name,
           'type': c.type,
-          'icon': c.icon,
-          'color': c.color,
+          'icon': c.iconName,
+          'color': c.colorHex,
         }).toList(),
         'transactions': localTxs.map((t) => {
           'date': t.date.toIso8601String(),
@@ -388,8 +388,8 @@ class PhpMyAdminService {
               await db.insertCategory(CategoryModel(
                 name: name,
                 type: type,
-                icon: icon,
-                color: color,
+                iconName: icon,
+                colorHex: color,
               ));
             }
           }
