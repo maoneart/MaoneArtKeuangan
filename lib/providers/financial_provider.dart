@@ -282,6 +282,7 @@ class FinancialController extends StateNotifier<AsyncValue<void>> {
     try {
       final db = ref.read(databaseProvider);
       await db.deleteTransaction(id);
+      PhpMyAdminService.deleteTransactionRemote(id).ignore();
       _refreshAll();
       _autoSyncToPhpMyAdmin();
     } catch (_) {}

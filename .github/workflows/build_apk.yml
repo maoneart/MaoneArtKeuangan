@@ -52,10 +52,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.2.6
-          name: 'MaoneArt Keuangan v1.2.6 (Release)'
+          tag_name: v1.2.8
+          name: 'MaoneArt Keuangan v1.2.8 (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.2.6)
+            ## 💰 MaoneArt Keuangan - Android Release APK (v1.2.8)
             
             - **Anti-Duplikasi Transaksi Cerdas**:
               * Mutex sync lock mencegah race condition saat sinkronisasi background.

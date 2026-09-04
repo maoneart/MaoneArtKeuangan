@@ -617,4 +617,133 @@ class DatabaseHelper {
       await db.rawDelete("DELETE FROM sqlite_sequence WHERE name IN ('transaksi', 'hutang', 'tabungan', 'pembayaran_hutang', 'setoran_tabungan')");
     } catch (_) {}
   }
+
+  // Penyelarasan Master Penuh dengan Database phpMyAdmin (MySQL)
+  Future<void> syncMasterFromServer({
+    required List<dynamic> serverTransactions,
+    required List<dynamic> serverDebts,
+    required List<dynamic> serverSavings,
+    required List<dynamic> serverCategories,
+  }) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      // 1. Sinkronisasi Kategori
+      for (final item in serverCategories) {
+        if (item is Map<String, dynamic>) {
+          final id = int.tryParse(item['id']?.toString() ?? '0') ?? 0;
+          final name = (item['name']?.toString() ?? item['nama_kategori']?.toString() ?? '').trim();
+          final type = item['type']?.toString() ?? item['tipe']?.toString() ?? 'pengeluaran';
+          final icon = item['icon']?.toString() ?? item['ikon']?.toString() ?? 'bi-bookmark';
+          final color = item['color']?.toString() ?? item['warna']?.toString() ?? '#10B981';
+
+          if (name.isEmpty) continue;
+
+          final existing = await txn.rawQuery(
+            "SELECT id FROM kategori WHERE TRIM(LOWER(nama_kategori)) = ? AND tipe = ?",
+            [name.toLowerCase(), type],
+          );
+          if (existing.isEmpty) {
+            await txn.insert('kategori', {
+              if (id > 0) 'id': id,
+              'nama_kategori': name,
+              'tipe': type,
+              'ikon': icon,
+              'warna': color,
+            });
+          }
+        }
+      }
+
+      // 2. Jika server memiliki transaksi, sinkronkan master lokal persis dengan server
+      if (serverTransactions.isNotEmpty) {
+        await txn.delete('transaksi');
+        try {
+          await txn.rawDelete("DELETE FROM sqlite_sequence WHERE name = 'transaksi'");
+        } catch (_) {}
+
+        for (final item in serverTransactions) {
+          if (item is Map<String, dynamic>) {
+            final id = int.tryParse(item['id']?.toString() ?? '0');
+            final tglStr = item['date']?.toString() ?? '';
+            final amt = double.tryParse(item['amount']?.toString() ?? '0') ?? 0.0;
+            final note = (item['note']?.toString() ?? '').trim();
+            final type = item['type']?.toString() ?? 'pengeluaran';
+            final catId = int.tryParse(item['categoryId']?.toString() ?? '1') ?? 1;
+
+            if (amt <= 0) continue;
+
+            await txn.insert('transaksi', {
+              if (id != null && id > 0) 'id': id,
+              'tanggal': tglStr.isNotEmpty ? tglStr.substring(0, 10) : DateTime.now().toIso8601String().substring(0, 10),
+              'tipe': type,
+              'id_kategori': catId,
+              'jumlah': amt,
+              'keterangan': note,
+            });
+          }
+        }
+      }
+
+      // 3. Sinkronisasi Hutang
+      if (serverDebts.isNotEmpty) {
+        await txn.delete('pembayaran_hutang');
+        await txn.delete('hutang');
+        try {
+          await txn.rawDelete("DELETE FROM sqlite_sequence WHERE name IN ('hutang', 'pembayaran_hutang')");
+        } catch (_) {}
+
+        for (final item in serverDebts) {
+          if (item is Map<String, dynamic>) {
+            final id = int.tryParse(item['id']?.toString() ?? '0');
+            final name = (item['debtorName']?.toString() ?? 'Rekan').trim();
+            final amt = double.tryParse(item['totalAmount']?.toString() ?? '0') ?? 0.0;
+            if (amt <= 0) continue;
+
+            await txn.insert('hutang', {
+              if (id != null && id > 0) 'id': id,
+              'nama_penghutang': name,
+              'tipe': item['type']?.toString() ?? 'hutang',
+              'kategori_hutang': item['categoryDebt']?.toString() ?? 'Perorangan / Teman',
+              'total_hutang': amt,
+              'sisa_hutang': double.tryParse(item['remainingAmount']?.toString() ?? '0') ?? amt,
+              'status': item['status']?.toString() ?? 'belum_lunas',
+              'tanggal_pinjam': item['borrowDate']?.toString().substring(0, 10) ?? DateTime.now().toIso8601String().substring(0, 10),
+              'tenggat_waktu': item['dueDate'] != null ? item['dueDate'].toString().substring(0, 10) : null,
+              'tenor_bulan': int.tryParse(item['tenorMonths']?.toString() ?? '0') ?? 0,
+              'jatuh_tempo_hari': int.tryParse(item['dueDay']?.toString() ?? '0') ?? 0,
+              'cicilan_per_bulan': double.tryParse(item['monthlyInstallment']?.toString() ?? '0') ?? 0.0,
+              'keterangan': item['note']?.toString() ?? '',
+            });
+          }
+        }
+      }
+
+      // 4. Sinkronisasi Tabungan
+      if (serverSavings.isNotEmpty) {
+        await txn.delete('setoran_tabungan');
+        await txn.delete('tabungan');
+        try {
+          await txn.rawDelete("DELETE FROM sqlite_sequence WHERE name IN ('tabungan', 'setoran_tabungan')");
+        } catch (_) {}
+
+        for (final item in serverSavings) {
+          if (item is Map<String, dynamic>) {
+            final id = int.tryParse(item['id']?.toString() ?? '0');
+            final name = (item['name']?.toString() ?? 'Tabungan').trim();
+            final target = double.tryParse(item['targetAmount']?.toString() ?? '0') ?? 0.0;
+            if (name.isEmpty || target <= 0) continue;
+
+            await txn.insert('tabungan', {
+              if (id != null && id > 0) 'id': id,
+              'nama_tabungan': name,
+              'target_jumlah': target,
+              'saldo_terkumpul': double.tryParse(item['collectedAmount']?.toString() ?? '0') ?? 0.0,
+              'status': item['status']?.toString() ?? 'berlangsung',
+              'keterangan': item['note']?.toString() ?? '',
+            });
+          }
+        }
+      }
+    });
+  }
 }

@@ -180,6 +180,22 @@ class PhpMyAdminService {
     return false;
   }
 
+  // Hapus transaksi dari phpMyAdmin secara real-time
+  static Future<bool> deleteTransactionRemote(int id) async {
+    final base = await getServerUrl();
+    final candidates = await getCandidateUrls(base);
+    for (final cand in candidates) {
+      try {
+        final url = Uri.parse('$cand/transaksi.php?id=$id');
+        final res = await http.delete(url).timeout(const Duration(seconds: 3));
+        if (res.statusCode == 200) {
+          return true;
+        }
+      } catch (_) {}
+    }
+    return false;
+  }
+
   // Reset Data di phpMyAdmin (MySQL)
   static Future<bool> resetRemoteData() async {
     final base = await getServerUrl();
@@ -288,115 +304,23 @@ class PhpMyAdminService {
       int restoredDebts = 0;
       int restoredSavings = 0;
 
-      // 4. Pulihkan data dari phpMyAdmin ke SQLite lokal jika belum ada di lokal
+      // 4. Sinkronkan Master Penuh dari phpMyAdmin ke SQLite lokal
       if (serverData != null) {
-        // Transaksi
         final serverTxs = serverData['transactions'] as List? ?? [];
-        for (final item in serverTxs) {
-          if (item is Map<String, dynamic>) {
-            final tglStr = item['date']?.toString() ?? '';
-            final tgl = DateTime.tryParse(tglStr) ?? DateTime.now();
-            final amt = double.tryParse(item['amount']?.toString() ?? '0') ?? 0.0;
-            final note = (item['note']?.toString() ?? '').trim();
-            final type = item['type']?.toString() ?? 'pengeluaran';
-            final catId = int.tryParse(item['categoryId']?.toString() ?? '1') ?? 1;
-
-            if (amt <= 0) continue;
-
-            final exists = await db.transactionExists(date: tgl, amount: amt, note: note);
-
-            if (!exists) {
-              await db.insertTransaction(TransactionModel(
-                date: tgl,
-                type: type,
-                categoryId: catId,
-                amount: amt,
-                note: note,
-              ));
-              restoredTxs++;
-            }
-          }
-        }
-
-        // Hutang
         final serverDebts = serverData['debts'] as List? ?? [];
-        for (final item in serverDebts) {
-          if (item is Map<String, dynamic>) {
-            final name = (item['debtorName']?.toString() ?? 'Rekan').trim();
-            final amt = double.tryParse(item['totalAmount']?.toString() ?? '0') ?? 0.0;
-
-            if (amt <= 0) continue;
-
-            final exists = await db.debtExists(debtorName: name, totalAmount: amt);
-            if (!exists) {
-              final tgl = DateTime.tryParse(item['borrowDate']?.toString() ?? '') ?? DateTime.now();
-              await db.insertDebt(DebtModel(
-                debtorName: name,
-                type: item['type']?.toString() ?? 'hutang',
-                categoryDebt: item['categoryDebt']?.toString() ?? 'Perorangan / Teman',
-                totalAmount: amt,
-                remainingAmount: double.tryParse(item['remainingAmount']?.toString() ?? '0') ?? amt,
-                status: item['status']?.toString() ?? 'belum_lunas',
-                borrowDate: tgl,
-                dueDate: DateTime.tryParse(item['dueDate']?.toString() ?? ''),
-                tenorMonths: int.tryParse(item['tenorMonths']?.toString() ?? '0') ?? 0,
-                dueDay: int.tryParse(item['dueDay']?.toString() ?? '0') ?? 0,
-                monthlyInstallment: double.tryParse(item['monthlyInstallment']?.toString() ?? '0') ?? 0.0,
-                note: item['note']?.toString(),
-              ));
-              restoredDebts++;
-            }
-          }
-        }
-
-        // Tabungan
         final serverSavings = serverData['savings'] as List? ?? [];
-        for (final item in serverSavings) {
-          if (item is Map<String, dynamic>) {
-            final name = (item['name']?.toString() ?? 'Tabungan').trim();
-            final target = double.tryParse(item['targetAmount']?.toString() ?? '0') ?? 0.0;
-
-            if (name.isEmpty || target <= 0) continue;
-
-            final exists = await db.savingExists(name: name);
-            if (!exists) {
-              await db.insertSaving(SavingModel(
-                name: name,
-                targetAmount: target,
-                collectedAmount: double.tryParse(item['collectedAmount']?.toString() ?? '0') ?? 0.0,
-                status: item['status']?.toString() ?? 'berlangsung',
-                note: item['note']?.toString(),
-              ));
-              restoredSavings++;
-            }
-          }
-        }
-
-        // Kategori
         final serverCats = serverData['categories'] as List? ?? [];
-        for (final item in serverCats) {
-          if (item is Map<String, dynamic>) {
-            final name = (item['name']?.toString() ?? item['nama_kategori']?.toString() ?? '').trim();
-            final type = item['type']?.toString() ?? item['tipe']?.toString() ?? 'pengeluaran';
-            final icon = item['icon']?.toString() ?? item['ikon']?.toString() ?? 'bi-bookmark';
-            final color = item['color']?.toString() ?? item['warna']?.toString() ?? '#10B981';
 
-            if (name.isEmpty) continue;
+        await db.syncMasterFromServer(
+          serverTransactions: serverTxs,
+          serverDebts: serverDebts,
+          serverSavings: serverSavings,
+          serverCategories: serverCats,
+        );
 
-            final exists = await db.categoryExists(name: name, type: type);
-            if (!exists) {
-              await db.insertCategory(CategoryModel(
-                name: name,
-                type: type,
-                iconName: icon,
-                colorHex: color,
-              ));
-            }
-          }
-        }
-
-        // Bersihkan duplikat lokal jika sempat terjadi
-        await db.removeDuplicateTransactions();
+        restoredTxs = serverTxs.length;
+        restoredDebts = serverDebts.length;
+        restoredSavings = serverSavings.length;
 
         // Pulihkan Gemini API Key jika ada di server
         final serverApiKey = serverData['gemini_api_key']?.toString().trim();
@@ -407,7 +331,7 @@ class PhpMyAdminService {
 
       return {
         'status': 'success',
-        'message': 'Sinkronisasi berhasil! Data aman di database phpMyAdmin.',
+        'message': 'Sinkronisasi berhasil! Data aman dan identik dengan database phpMyAdmin.',
         'pushed_new': resData['pushed_new'] ?? {},
         'restored_to_local': {
           'transactions': restoredTxs,
