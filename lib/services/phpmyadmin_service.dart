@@ -8,6 +8,7 @@ import '../models/saving_model.dart';
 import '../models/category_model.dart';
 import 'database_helper.dart';
 import 'gemini_service.dart';
+import 'auth_service.dart';
 
 class PhpMyAdminService {
   static const String _prefServerUrl = 'phpmyadmin_server_url';
@@ -322,8 +323,12 @@ class PhpMyAdminService {
         }
       }
 
+      final currentUser = await AuthService.getCurrentUser();
+      final currentUserId = currentUser?['id'] as int? ?? 3;
+
       // 2. Buat Payload Lengkap
       final payload = {
+        'userId': currentUserId,
         'gemini_api_key': localApiKey,
         'categories': localCategories.map((c) => {
           'id': c.id,

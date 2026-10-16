@@ -9,7 +9,9 @@ import 'onboarding_screen.dart';
 import 'about_screen.dart';
 import '../services/phpmyadmin_service.dart';
 import '../services/gemini_service.dart';
+import '../services/auth_service.dart';
 import '../widgets/maoneart_modal.dart';
+import 'login_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -549,6 +551,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  // ==================== MODAL 4: LOGOUT AKUN ====================
+  void _handleLogout(BuildContext context) async {
+    final confirmed = await MaoneArtModal.showConfirmModal(
+      context: context,
+      title: 'Keluar dari Akun?',
+      message: 'Anda akan keluar dari sesi login aplikasi MaoneArt Keuangan.\n\nData lokal di HP tetap tersimpan dan aman di cloud server.',
+      confirmText: 'Ya, Keluar',
+      cancelText: 'Batal',
+      accentColor: AppTheme.redMain,
+      icon: Icons.logout_rounded,
+      isDanger: true,
+    );
+
+    if (confirmed == true) {
+      await AuthService.logout();
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    }
+  }
+
   // ==================== MAIN SCREEN BUILD ====================
   @override
   Widget build(BuildContext context) {
@@ -774,6 +799,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const AboutScreen()),
                 ),
+              ),
+              const SizedBox(height: 18),
+
+              // ==================== SECTION 5: AKUN & KEAMANAN ====================
+              _buildSectionTitle('AKUN & KEAMANAN'),
+              _buildMenuCard(
+                icon: Icons.logout_rounded,
+                iconGradient: const LinearGradient(colors: [Color(0xFFEF4444), Color(0xFFDC2626)]),
+                title: 'Keluar Akun (Logout)',
+                subtitle: 'Keluar dari sesi akun MaoneArt Keuangan',
+                isDestructive: true,
+                onTap: () => _handleLogout(context),
               ),
               const SizedBox(height: 24),
 

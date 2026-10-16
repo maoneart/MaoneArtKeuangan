@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'screens/login_screen.dart';
 import 'screens/main_navigation_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'services/auth_service.dart';
 import 'utils/app_theme.dart';
 
 void main() async {
@@ -13,9 +15,10 @@ void main() async {
   // Inisialisasi format tanggal bahasa Indonesia
   await initializeDateFormatting('id_ID', null);
 
-  // Cek apakah sudah pernah melihat intro onboarding
+  // Cek onboarding & session login
   final prefs = await SharedPreferences.getInstance();
   final bool hasSeenOnboarding = prefs.getBool(OnboardingScreen.prefKey) ?? false;
+  final bool isLoggedIn = await AuthService.isLoggedIn();
 
   // Set status bar transparan modern
   SystemChrome.setSystemUIOverlayStyle(
@@ -29,14 +32,33 @@ void main() async {
 
   runApp(
     ProviderScope(
-      child: MaoneArtKeuanganApp(showOnboarding: !hasSeenOnboarding),
+      child: MaoneArtKeuanganApp(
+        showOnboarding: !hasSeenOnboarding,
+        isLoggedIn: isLoggedIn,
+      ),
     ),
   );
 }
 
 class MaoneArtKeuanganApp extends StatelessWidget {
   final bool showOnboarding;
-  const MaoneArtKeuanganApp({super.key, required this.showOnboarding});
+  final bool isLoggedIn;
+
+  const MaoneArtKeuanganApp({
+    super.key,
+    required this.showOnboarding,
+    required this.isLoggedIn,
+  });
+
+  Widget _getHome() {
+    if (showOnboarding) {
+      return const OnboardingScreen();
+    }
+    if (!isLoggedIn) {
+      return const LoginScreen();
+    }
+    return const MainNavigationScreen();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +66,7 @@ class MaoneArtKeuanganApp extends StatelessWidget {
       title: 'MaoneArt Keuangan',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: showOnboarding ? const OnboardingScreen() : const MainNavigationScreen(),
+      home: _getHome(),
     );
   }
 }

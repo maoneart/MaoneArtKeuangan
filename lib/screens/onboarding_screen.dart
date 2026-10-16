@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/auth_service.dart';
 import '../utils/app_theme.dart';
 import '../widgets/glass_card.dart';
+import 'login_screen.dart';
 import 'main_navigation_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -29,8 +31,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (widget.isFromSettings) {
       Navigator.of(context).pop();
     } else {
+      final isLoggedIn = await AuthService.isLoggedIn();
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+        MaterialPageRoute(
+          builder: (_) => isLoggedIn ? const MainNavigationScreen() : const LoginScreen(),
+        ),
       );
     }
   }
