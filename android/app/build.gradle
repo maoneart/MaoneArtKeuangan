@@ -45,9 +45,25 @@ android {
         multiDexEnabled true
     }
 
+    signingConfigs {
+        release {
+            def keyFile = file('upload-keystore.jks')
+            if (!keyFile.exists()) {
+                keyFile = rootProject.file('upload-keystore.jks')
+            }
+            if (!keyFile.exists()) {
+                keyFile = rootProject.file('app/upload-keystore.jks')
+            }
+            storeFile keyFile
+            storePassword 'maoneart2026'
+            keyAlias 'maoneart'
+            keyPassword 'maoneart2026'
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
             minifyEnabled false
             shrinkResources false
         }

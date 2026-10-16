@@ -434,27 +434,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           const SizedBox(height: 12),
                         ],
 
-                        Text(
-                          'Alamat Endpoint REST API phpMyAdmin lokal:',
-                          style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 11.5),
-                        ),
-                        const SizedBox(height: 6),
-
-                        TextField(
-                          controller: _serverUrlController,
-                          style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 12.5),
-                          decoration: InputDecoration(
-                            hintText: 'http://127.0.0.1:8085/Keuangan/api',
-                            filled: true,
-                            fillColor: const Color(0xFFF8FAFC),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.borderLight)),
-                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.borderLight)),
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.check_rounded, color: AppTheme.bluePrimary, size: 20),
-                              tooltip: 'Simpan URL',
-                              onPressed: () => _saveServerUrl(setModalState),
-                            ),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppTheme.borderLight),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.cloud_done_rounded, color: AppTheme.greenMain, size: 16),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Cloud API & Database Otomatis',
+                                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.textDark),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'https://api.maoneart.my.id/keuangan/api',
+                                style: GoogleFonts.plusJakartaSans(color: AppTheme.bluePrimary, fontSize: 11, fontWeight: FontWeight.w600),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -728,8 +733,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               _buildMenuCard(
                 icon: Icons.storage_rounded,
                 iconGradient: const LinearGradient(colors: [Color(0xFFF59E0B), Color(0xFFD97706)]),
-                title: 'Database phpMyAdmin (MySQL)',
-                subtitle: 'Alamat server Termux, uji koneksi & sinkronisasi',
+                title: 'Cloud Database & Sinkronisasi',
+                subtitle: 'api.maoneart.my.id, uji koneksi & sinkronisasi',
                 badgeText: _serverStatus == 'connected' ? 'Terhubung' : 'Offline',
                 badgeColor: _serverStatus == 'connected' ? AppTheme.greenSoft : const Color(0xFFFEE2E2),
                 badgeTextColor: _serverStatus == 'connected' ? const Color(0xFF047857) : const Color(0xFFDC2626),

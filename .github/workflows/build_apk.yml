@@ -39,7 +39,7 @@ jobs:
         run: flutter pub run flutter_launcher_icons
 
       - name: Build Universal Release APK
-        run: flutter build apk --release
+        run: flutter build apk --release --android-skip-build-dependency-validation
 
       - name: Upload APK to Artifacts
         uses: actions/upload-artifact@v4
@@ -48,32 +48,32 @@ jobs:
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 14
 
+      - name: Extract App Version
+        id: app_version
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d '+' -f 1)
+          echo "version=v$VERSION" >> $GITHUB_OUTPUT
+          echo "raw_version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.3.1
-          name: 'MaoneArt Keuangan v1.3.1 (Release)'
+          tag_name: ${{ steps.app_version.outputs.version }}
+          name: 'MaoneArt Keuangan ${{ steps.app_version.outputs.version }} (Release)'
           body: |
-            ## 💰 MaoneArt Keuangan - Android Release APK (v1.3.1)
+            ## 💰 MaoneArt Keuangan ${{ steps.app_version.outputs.version }} - Android Release APK
             
-            - **Perhitungan & Sinkronisasi Sisa Hutang Real-Time**:
-              - Mengatasi masalah sisa hutang tidak berkurang dengan rekonsiliasi riwayat pembayaran cicilan (`pembayaran_hutang`).
-              - Endpoint `/api/hutang.php` untuk pembayaran cicilan instan real-time.
-              - Penyelarasan atomic `sisa_hutang` = `total_hutang` - total cicilan di MySQL phpMyAdmin dan SQLite APK.
-              - Riwayat pembayaran cicilan tersinkronisasi penuh dua arah.
-            - **Sinkronisasi Kategori & Master Anti Crash (v1.3.0)**.
-            - **Sinkronisasi 2 Arah Master Web & APK Real-time**:
-              - Rekonsiliasi atomic data MySQL sebagai master source of truth.
-              - Hapus data transaksi langsung sinkron tanpa delay / duplikasi.
-              - Filter 'Semua' menampilkan seluruh riwayat secara akurat.
-              * Mutex sync lock mencegah race condition saat sinkronisasi background.
-              * Batch atomic save untuk AI Chat Assistant 1-klik simpan.
-              * Deduplikasi otomatis di SQLite lokal dan MySQL phpMyAdmin.
-            - **Sistem Peringatan Jatuh Tempo & Indikator Aman Bulanan**:
-              * Indikator **"Bulan Ini Aman ✅"** otomatis aktif jika cicilan bulan berjalan sudah dibayar.
-              * Indikator **"Lewat Jatuh Tempo ⚠️"** dan banner peringatan merah jika lewat tanggal jatuh tempo.
-            - **Kalkulator Cicilan & Tenor Otomatis (Smart Installment)**.
+            Versi terbaru aplikasi MaoneArt Keuangan dengan koneksi cloud hosting otomatis dan update in-place mulus 1 key!
+            
+            ### ✨ Fitur Baru di Versi ${{ steps.app_version.outputs.version }}:
+            - 🔑 **Permanent Release Keystore (1 Key Update Mulus)**: Tanda tangan digital permanen sama seperti MaoneArt Music (`upload-keystore.jks`), sehingga update berikutnya bisa langsung ditimpa (*in-place update*) tanpa perlu uninstall lagi!
+            - ☁️ **Koneksi Cloud Hosting Otomatis**: Endpoint otomatis tersambung ke `https://api.maoneart.my.id/keuangan/api` di shared hosting JagoanHosting (`maonear1_keuangan`). Bebas repot isi URL manual di Pengaturan.
+            - 🔄 **Sinkronisasi 2 Arah Penuh (Bidirectional)**: Data transaksi, hutang/cicilan, dan tabungan otomatis saling backup antara HP dan server.
+            - 🛡️ **Proteksi Anti Duplikasi**: Aman dari data tabrakan atau ganda meski lupa sinkronisasi.
+            - ⚡ **Offline-First SQLite**: Aplikasi tetap cepat dan bisa mencatat transaksi meski tanpa koneksi internet.
+            
+            📥 **Download berkas APK di bawah ini dan instal langsung di perangkat Android Anda!**
           files: build/app/outputs/flutter-apk/app-release.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

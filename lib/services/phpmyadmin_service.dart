@@ -11,13 +11,13 @@ import 'gemini_service.dart';
 
 class PhpMyAdminService {
   static const String _prefServerUrl = 'phpmyadmin_server_url';
-  static const String defaultServerUrl = 'http://127.0.0.1:8085/Keuangan/api';
+  static const String defaultServerUrl = 'https://api.maoneart.my.id/keuangan/api';
 
   static String normalizeUrl(String raw) {
     var url = raw.trim();
     if (url.isEmpty) return defaultServerUrl;
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      url = 'http://$url';
+      url = 'https://$url';
     }
     while (url.endsWith('/')) {
       url = url.substring(0, url.length - 1);
@@ -31,7 +31,7 @@ class PhpMyAdminService {
   static Future<String> getServerUrl() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_prefServerUrl);
-    return raw != null ? normalizeUrl(raw) : defaultServerUrl;
+    return raw != null && raw.isNotEmpty ? normalizeUrl(raw) : defaultServerUrl;
   }
 
   static Future<void> saveServerUrl(String url) async {
@@ -49,7 +49,11 @@ class PhpMyAdminService {
       list.add(saved);
     }
 
-    // 1. Tambahkan loopback & host emulator
+    // 1. Cloud Server Utama (Prioritas 1)
+    list.add('https://api.maoneart.my.id/keuangan/api');
+    list.add('https://api.maoneart.my.id/keuangan');
+
+    // 2. Loopback lokal jika ada
     list.add('http://127.0.0.1:8085/Keuangan/api');
     list.add('http://localhost:8085/Keuangan/api');
     list.add('http://10.0.2.2:8085/Keuangan/api');
