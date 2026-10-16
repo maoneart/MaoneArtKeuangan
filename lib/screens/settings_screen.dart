@@ -42,14 +42,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _serverUrlController.text = url;
     _checkServer();
 
-    // Auto-load Gemini API Key dari phpMyAdmin jika di HP masih kosong
+    // Load Gemini API Key hanya dari penyimpanan lokal HP (privat)
     final localKey = await GeminiService.getApiKey();
-    if (localKey == null || localKey.isEmpty) {
-      final remoteKey = await PhpMyAdminService.fetchGeminiApiKey();
-      if (remoteKey != null && remoteKey.isNotEmpty && mounted) {
-        ref.read(geminiApiKeyProvider.notifier).setKey(remoteKey);
-        _apiKeyController.text = remoteKey;
-      }
+    if (localKey != null && localKey.isNotEmpty && mounted) {
+      ref.read(geminiApiKeyProvider.notifier).setKey(localKey);
+      _apiKeyController.text = localKey;
     }
   }
 
@@ -139,7 +136,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final key = _apiKeyController.text.trim();
     if (key.isEmpty) {
       await ref.read(geminiApiKeyProvider.notifier).removeKey();
-      PhpMyAdminService.saveGeminiApiKey('').ignore();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Gemini API Key telah dihapus.')),
@@ -149,11 +145,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
 
     await ref.read(geminiApiKeyProvider.notifier).setKey(key);
-    PhpMyAdminService.saveGeminiApiKey(key).ignore();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Gemini API Key berhasil disimpan ke HP & phpMyAdmin! ✨'),
+          content: Text('Gemini API Key berhasil disimpan di HP! ✨'),
           backgroundColor: AppTheme.greenMain,
         ),
       );
