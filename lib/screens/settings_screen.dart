@@ -579,7 +579,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 badgeText: _isSyncing ? 'Menyinkronkan...' : 'Sinkronkan',
                 badgeColor: _isSyncing ? const Color(0xFFFEF3C7) : AppTheme.greenSoft,
                 badgeTextColor: _isSyncing ? const Color(0xFFD97706) : const Color(0xFF047857),
-                onTap: _isSyncing ? null : _syncData,
+                onTap: () {
+                  if (!_isSyncing) _syncData();
+                },
               ),
               const SizedBox(height: 18),
 
@@ -753,5 +755,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ),
       ),
+    );
   }
 }
