@@ -566,6 +566,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     if (confirmed == true) {
       await AuthService.logout();
+      await ref.read(databaseProvider).resetAllTransactionsData();
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const LoginScreen()),

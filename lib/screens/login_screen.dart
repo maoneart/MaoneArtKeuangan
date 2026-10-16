@@ -51,9 +51,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = false);
 
     if (res['status'] == 'success') {
-      // Sinkronkan data cloud secara otomatis di background
+      // Bersihkan data lokal lama agar tidak tercampur, lalu sinkronkan data user ini
+      await ref.read(databaseProvider).resetAllTransactionsData();
       ref.read(financialControllerProvider.notifier).syncWithPhpMyAdmin().ignore();
 
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
       );
