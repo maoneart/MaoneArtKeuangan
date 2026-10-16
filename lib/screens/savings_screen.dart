@@ -122,7 +122,7 @@ class _SavingsScreenState extends ConsumerState<SavingsScreen> {
   @override
   Widget build(BuildContext context) {
     final savingsAsync = ref.watch(savingsProvider);
-    final bottomPadding = MediaQuery.of(context).padding.bottom + 160;
+    final bottomPadding = MediaQuery.of(context).padding.bottom + 80;
 
     return Scaffold(
       backgroundColor: AppTheme.bgApp,

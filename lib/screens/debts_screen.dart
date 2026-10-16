@@ -142,7 +142,7 @@ class _DebtsScreenState extends ConsumerState<DebtsScreen> {
     final debtsAsync = ref.watch(debtsProvider);
     final summaryAsync = ref.watch(financialSummaryProvider);
 
-    final bottomPadding = MediaQuery.of(context).padding.bottom + 160;
+    final bottomPadding = MediaQuery.of(context).padding.bottom + 80;
 
     return Scaffold(
       backgroundColor: AppTheme.bgApp,

@@ -166,7 +166,7 @@ class _TransactionScreenState extends ConsumerState<TransactionScreen> {
                     );
                   }
 
-                  final bottomPadding = MediaQuery.of(context).padding.bottom + 160;
+                  final bottomPadding = MediaQuery.of(context).padding.bottom + 28;
                   return ListView.separated(
                     padding: EdgeInsets.fromLTRB(16, 8, 16, bottomPadding),
                     itemCount: txs.length,

@@ -36,7 +36,7 @@ class HomeScreen extends ConsumerWidget {
     }
 
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
-    final bottomPadding = MediaQuery.of(context).padding.bottom + (isLandscape ? 50 : 160);
+    final bottomPadding = MediaQuery.of(context).padding.bottom + (isLandscape ? 20 : 28);
 
     return Scaffold(
       backgroundColor: AppTheme.bgApp,
@@ -64,9 +64,9 @@ class HomeScreen extends ConsumerWidget {
                   ],
                 ),
                 padding: EdgeInsets.fromLTRB(
-                  20,
+                  16,
                   MediaQuery.of(context).padding.top + (isLandscape ? 10 : 16),
-                  20,
+                  16,
                   isLandscape ? 16 : 24,
                 ),
                 child: Column(
@@ -75,52 +75,63 @@ class HomeScreen extends ConsumerWidget {
                     // Row 1: Logo & App Title & Month Switcher
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 38,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: const [
-                                  BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 2)),
-                                ],
-                              ),
-                              padding: const EdgeInsets.all(4),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.asset(
-                                  'assets/images/logo.png',
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (_, __, ___) => const Icon(Icons.account_balance_wallet, color: AppTheme.bluePrimary),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: const [
+                                    BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 2)),
+                                  ],
                                 ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'MaoneArt Keuangan',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                                padding: const EdgeInsets.all(4),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.asset(
+                                    'assets/images/logo.png',
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (_, __, ___) => const Icon(Icons.account_balance_wallet, color: AppTheme.bluePrimary),
                                   ),
                                 ),
-                                Text(
-                                  'Catatan Keuangan Cerdas',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    color: Colors.white70,
-                                    fontSize: 11,
-                                  ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'MaoneArt Keuangan',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      'Catatan Keuangan Cerdas',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        color: Colors.white70,
+                                        fontSize: 11,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          ],
+                              ),
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         InkWell(
                           onTap: () {
                             MonthPickerModal.show(
@@ -144,9 +155,18 @@ class HomeScreen extends ConsumerWidget {
                               children: [
                                 const Icon(Icons.calendar_month_rounded, color: Colors.white, size: 14),
                                 const SizedBox(width: 5),
-                                Text(
-                                  periodLabel,
-                                  style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w800),
+                                ConstrainedBox(
+                                  constraints: const BoxConstraints(maxWidth: 120),
+                                  child: Text(
+                                    periodLabel,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      color: Colors.white,
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                                 const SizedBox(width: 3),
                                 const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white70, size: 13),

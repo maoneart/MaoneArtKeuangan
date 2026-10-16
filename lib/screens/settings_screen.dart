@@ -61,7 +61,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     setState(() {
       _serverStatus = 'checking';
-      _serverStatusMessage = 'Menghubungi server phpMyAdmin...';
+      _serverStatusMessage = 'Menghubungi cloud server...';
     });
     setModalState?.call(() {});
 
@@ -71,11 +71,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     setState(() {
       if (res['status'] == 'connected') {
         _serverStatus = 'connected';
-        _serverStatusMessage = 'Terhubung ke database ${res['database'] ?? 'db_keuangan'}';
+        _serverStatusMessage = 'Terhubung ke cloud server';
         _serverCounts = res['counts'] as Map<String, dynamic>?;
       } else {
         _serverStatus = 'error';
-        _serverStatusMessage = res['message'] ?? 'Server Termux offline';
+        _serverStatusMessage = res['message'] ?? 'Cloud server offline';
         _serverCounts = null;
       }
     });
@@ -107,10 +107,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       MaoneArtModal.showAlertModal(
         context: context,
         title: 'Sinkronisasi Berhasil! 🎉',
-        message: 'Data tersinkronisasi dengan database phpMyAdmin (db_keuangan):\n\n'
-            '• Data Baru ke Server: ${pushed['transactions'] ?? 0} transaksi, ${pushed['debts'] ?? 0} hutang, ${pushed['savings'] ?? 0} tabungan\n'
-            '• Data Dipulihkan ke HP: ${restored['transactions'] ?? 0} transaksi, ${restored['debts'] ?? 0} hutang, ${restored['savings'] ?? 0} tabungan\n\n'
-            'Data Anda 100% aman dan tidak akan hilang meski aplikasi di-update atau di-install ulang!',
+        message: 'Catatan kas berhasil disinkronkan dengan cloud server:\n\n'
+            '• Data Baru Terkirim: ${pushed['transactions'] ?? 0} transaksi, ${pushed['debts'] ?? 0} hutang, ${pushed['savings'] ?? 0} tabungan\n'
+            '• Data Diperbarui: ${restored['transactions'] ?? 0} transaksi, ${restored['debts'] ?? 0} hutang, ${restored['savings'] ?? 0} tabungan\n\n'
+            'Data kas Anda aman tersimpan dan selalu terhubung secara real-time!',
         accentColor: AppTheme.greenMain,
         icon: Icons.cloud_done_rounded,
         buttonText: 'Mantap',
@@ -120,7 +120,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       MaoneArtModal.showAlertModal(
         context: context,
         title: 'Gagal Sinkronisasi',
-        message: 'Keterangan: ${res['message']}\n\nPastikan web server Apache & MySQL Termux sedang aktif di port 8085.',
+        message: 'Keterangan: ${res['message']}\n\nPastikan koneksi internet Anda aktif.',
         accentColor: AppTheme.redMain,
         icon: Icons.error_outline_rounded,
         buttonText: 'Tutup',
@@ -340,197 +340,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  // ==================== MODAL 2: PENGATURAN PHPMYADMIN ====================
-  void _showPhpMyAdminSettingsModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      builder: (modalCtx) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            final bottomInsets = MediaQuery.of(context).viewInsets.bottom;
-            final bottomPadding = MediaQuery.of(context).padding.bottom;
-
-            return Padding(
-              padding: EdgeInsets.only(bottom: bottomInsets),
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + bottomPadding),
-                child: SafeArea(
-                  top: false,
-                  bottom: true,
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Center(
-                          child: Container(
-                            width: 40,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFE2E8F0),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(colors: [Color(0xFFF59E0B), Color(0xFFD97706)]),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(Icons.storage_rounded, color: Colors.white, size: 20),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Database phpMyAdmin (Termux)',
-                                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textDark),
-                                  ),
-                                  Text(
-                                    _serverStatus == 'connected' ? 'Status: Terhubung 🟢' : 'Status: Offline 🔴',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 11.5,
-                                      color: _serverStatus == 'connected' ? AppTheme.greenMain : AppTheme.redMain,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-
-                        if (_serverCounts != null) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF0FDF4),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFBBF7D0)),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                _buildCountPill('Transaksi', _serverCounts!['transaksi'] ?? 0),
-                                _buildCountPill('Kategori', _serverCounts!['kategori'] ?? 0),
-                                _buildCountPill('Hutang', _serverCounts!['hutang'] ?? 0),
-                                _buildCountPill('Tabungan', _serverCounts!['tabungan'] ?? 0),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppTheme.borderLight),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  const Icon(Icons.cloud_done_rounded, color: AppTheme.greenMain, size: 16),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Cloud API & Database Otomatis',
-                                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.textDark),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'https://api.maoneart.my.id/keuangan/api',
-                                style: GoogleFonts.plusJakartaSans(color: AppTheme.bluePrimary, fontSize: 11, fontWeight: FontWeight.w600),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Symmetrical 2-Column Action Buttons
-                        Row(
-                          children: [
-                            Expanded(
-                              child: SizedBox(
-                                height: 44,
-                                child: OutlinedButton.icon(
-                                  onPressed: () => _checkServer(setModalState),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: AppTheme.bluePrimary,
-                                    side: const BorderSide(color: AppTheme.bluePrimary),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  ),
-                                  icon: const Icon(Icons.refresh_rounded, size: 16),
-                                  label: Text('Uji Koneksi', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12)),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: SizedBox(
-                                height: 44,
-                                child: ElevatedButton.icon(
-                                  onPressed: _isSyncing
-                                      ? null
-                                      : () {
-                                          Navigator.pop(modalCtx);
-                                          _syncData();
-                                        },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppTheme.greenMain,
-                                    foregroundColor: Colors.white,
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  ),
-                                  icon: _isSyncing
-                                      ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                      : const Icon(Icons.sync_rounded, size: 16),
-                                  label: Text(
-                                    _isSyncing ? 'Proses...' : 'Sinkronkan Data',
-                                    style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 12),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  // ==================== MODAL 3: RESET / KOSONGKAN DATA ====================
+  // ==================== MODAL 2: RESET / KOSONGKAN DATA ====================
   void _showResetDataModal(BuildContext context) async {
     final confirmed = await MaoneArtModal.showConfirmModal(
       context: context,
       title: 'Kosongkan Seluruh Data?',
-      message: 'Seluruh data catatan transaksi, hutang piutang, dan tabungan di HP & database phpMyAdmin akan di-reset dari nol (0).\n\nKategori dan pengaturan API Key akan tetap tersimpan.',
+      message: 'Seluruh data catatan transaksi, hutang piutang, dan tabungan akan di-reset dari nol (0).\n\nKategori dan pengaturan AI akan tetap tersimpan.',
       confirmText: 'Ya, Kosongkan',
       cancelText: 'Batal',
       accentColor: AppTheme.redMain,
@@ -543,7 +358,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Buku kas dan database phpMyAdmin telah direset ke 0! 🧹'),
+            content: Text('Buku kas telah direset ke 0! 🧹'),
             backgroundColor: AppTheme.redMain,
           ),
         );
@@ -581,7 +396,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final savedKey = ref.watch(geminiApiKeyProvider);
     final hasSavedKey = savedKey.trim().isNotEmpty;
     final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
-    final bottomPadding = MediaQuery.of(context).padding.bottom + (isLandscape ? 50 : 160);
+    final bottomPadding = MediaQuery.of(context).padding.bottom + (isLandscape ? 20 : 28);
 
     if (!_isInitialized && savedKey.isNotEmpty) {
       _apiKeyController.text = savedKey;
@@ -754,17 +569,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               const SizedBox(height: 18),
 
-              // ==================== SECTION 2: DATABASE & SINKRONISASI ====================
-              _buildSectionTitle('DATABASE & SINKRONISASI'),
+              // ==================== SECTION 2: SINKRONISASI DATA ====================
+              _buildSectionTitle('SINKRONISASI DATA'),
               _buildMenuCard(
-                icon: Icons.storage_rounded,
-                iconGradient: const LinearGradient(colors: [Color(0xFFF59E0B), Color(0xFFD97706)]),
-                title: 'Cloud Database & Sinkronisasi',
-                subtitle: 'api.maoneart.my.id, uji koneksi & sinkronisasi',
-                badgeText: _serverStatus == 'connected' ? 'Terhubung' : 'Offline',
-                badgeColor: _serverStatus == 'connected' ? AppTheme.greenSoft : const Color(0xFFFEE2E2),
-                badgeTextColor: _serverStatus == 'connected' ? const Color(0xFF047857) : const Color(0xFFDC2626),
-                onTap: () => _showPhpMyAdminSettingsModal(context),
+                icon: Icons.sync_rounded,
+                iconGradient: const LinearGradient(colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)]),
+                title: 'Sinkronisasi Data Kas',
+                subtitle: 'Cadangkan & selaraskan seluruh catatan kas ke cloud',
+                badgeText: _isSyncing ? 'Menyinkronkan...' : 'Sinkronkan',
+                badgeColor: _isSyncing ? const Color(0xFFFEF3C7) : AppTheme.greenSoft,
+                badgeTextColor: _isSyncing ? const Color(0xFFD97706) : const Color(0xFF047857),
+                onTap: _isSyncing ? null : _syncData,
               ),
               const SizedBox(height: 18),
 
@@ -938,37 +753,5 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildCountPill(String label, dynamic count) {
-    return Column(
-      children: [
-        Text(
-          '$count',
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 13, color: const Color(0xFF15803D)),
-        ),
-        Text(
-          label,
-          style: GoogleFonts.plusJakartaSans(color: const Color(0xFF166534), fontSize: 9.5, fontWeight: FontWeight.w500),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.plusJakartaSans(color: AppTheme.textMuted, fontSize: 12, fontWeight: FontWeight.w600),
-        ),
-        Text(
-          value,
-          style: GoogleFonts.plusJakartaSans(color: AppTheme.textDark, fontSize: 12, fontWeight: FontWeight.bold),
-        ),
-      ],
-    );
   }
 }

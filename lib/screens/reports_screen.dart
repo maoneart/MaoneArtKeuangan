@@ -35,7 +35,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       periodLabel = AppDateFormatter.formatMonthYear(monthDate);
     }
 
-    final bottomPadding = MediaQuery.of(context).padding.bottom + 160;
+    final bottomPadding = MediaQuery.of(context).padding.bottom + 28;
 
     return Scaffold(
       backgroundColor: AppTheme.bgApp,
