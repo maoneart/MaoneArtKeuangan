@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'phpmyadmin_service.dart';
+import 'gemini_service.dart';
 
 class AuthService {
   static const String _prefIsLoggedIn = 'auth_is_logged_in';
@@ -52,9 +53,69 @@ class AuthService {
             await prefs.setInt(_prefUserId, (user['id'] as num).toInt());
             await prefs.setString(_prefUserName, user['name']?.toString() ?? 'Hermawan');
             await prefs.setString(_prefUserEmail, user['email']?.toString() ?? email);
+
+            final remoteApiKey = user['gemini_api_key']?.toString();
+            if (remoteApiKey != null && remoteApiKey.isNotEmpty) {
+              await GeminiService.saveApiKey(remoteApiKey);
+            }
+
             return {'status': 'success', 'user': user};
           } else {
             lastError = data['message'] ?? 'Email atau password salah.';
+          }
+        } catch (_) {}
+      }
+
+      return {'status': 'error', 'message': lastError};
+    } catch (e) {
+      return {'status': 'error', 'message': 'Terjadi kesalahan sistem: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> register({
+    required String name,
+    required String email,
+    required String password,
+    String? geminiApiKey,
+  }) async {
+    try {
+      final base = await PhpMyAdminService.getServerUrl();
+      final candidates = await PhpMyAdminService.getCandidateUrls(base);
+
+      String lastError = 'Tidak dapat terhubung ke server cloud.';
+
+      for (final cand in candidates) {
+        try {
+          final url = Uri.parse('$cand/register.php');
+          final response = await http.post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'name': name.trim(),
+              'email': email.trim(),
+              'password': password.trim(),
+              'gemini_api_key': (geminiApiKey ?? '').trim(),
+            }),
+          ).timeout(const Duration(seconds: 6));
+
+          final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+          if ((response.statusCode == 200 || response.statusCode == 201) && data['status'] == 'success') {
+            final user = data['user'] as Map<String, dynamic>;
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool(_prefIsLoggedIn, true);
+            await prefs.setInt(_prefUserId, (user['id'] as num).toInt());
+            await prefs.setString(_prefUserName, user['name']?.toString() ?? name);
+            await prefs.setString(_prefUserEmail, user['email']?.toString() ?? email);
+
+            final remoteApiKey = user['gemini_api_key']?.toString();
+            if (remoteApiKey != null && remoteApiKey.isNotEmpty) {
+              await GeminiService.saveApiKey(remoteApiKey);
+            }
+
+            return {'status': 'success', 'user': user};
+          } else {
+            lastError = data['message'] ?? 'Gagal mendaftar akun.';
           }
         } catch (_) {}
       }
@@ -71,5 +132,6 @@ class AuthService {
     await prefs.remove(_prefUserId);
     await prefs.remove(_prefUserName);
     await prefs.remove(_prefUserEmail);
+    await GeminiService.removeApiKey();
   }
 }

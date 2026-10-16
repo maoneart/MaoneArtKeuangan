@@ -7,6 +7,7 @@ import '../services/auth_service.dart';
 import '../utils/app_theme.dart';
 import '../widgets/maoneart_modal.dart';
 import 'main_navigation_screen.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -290,6 +291,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         ),
                                 ),
                               ),
+                              const SizedBox(height: 16),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Belum punya akun? ',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      color: AppTheme.textMuted,
+                                      fontSize: 12.5,
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                                      );
+                                    },
+                                    child: Text(
+                                      'Daftar Sekarang',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        color: AppTheme.bluePrimary,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12.5,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                         ),
@@ -298,7 +327,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     const SizedBox(height: 24),
                     Text(
-                      'Tersinkronisasi otomatis dengan server hosting JagoanHosting',
+                      'Tersinkronisasi otomatis & aman dengan Cloud Server',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 11,
                         color: AppTheme.textMuted,

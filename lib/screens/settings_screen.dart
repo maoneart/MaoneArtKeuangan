@@ -134,8 +134,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   void _saveApiKey() async {
     final key = _apiKeyController.text.trim();
+    final user = await AuthService.getCurrentUser();
+    final uid = user?['id'] as int? ?? 0;
+
     if (key.isEmpty) {
       await ref.read(geminiApiKeyProvider.notifier).removeKey();
+      if (uid > 0) {
+        PhpMyAdminService.saveGeminiApiKeyForUser(uid, '').ignore();
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Gemini API Key telah dihapus.')),
@@ -145,10 +151,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
 
     await ref.read(geminiApiKeyProvider.notifier).setKey(key);
+    if (uid > 0) {
+      PhpMyAdminService.saveGeminiApiKeyForUser(uid, key).ignore();
+    }
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Gemini API Key berhasil disimpan di HP! ✨'),
+          content: Text('Gemini API Key berhasil disimpan ke akun Anda! ✨'),
           backgroundColor: AppTheme.greenMain,
         ),
       );

@@ -160,11 +160,12 @@ class PhpMyAdminService {
     return null;
   }
 
-  // Simpan Gemini API Key ke phpMyAdmin (app_settings)
-  static Future<bool> saveGeminiApiKey(String apiKey) async {
+  // Simpan Gemini API Key ke cloud database sesuai user akun
+  static Future<bool> saveGeminiApiKeyForUser(int userId, String apiKey) async {
     final base = await getServerUrl();
     final candidates = await getCandidateUrls(base);
     final body = jsonEncode({
+      'userId': userId,
       'key_name': 'gemini_api_key',
       'key_value': apiKey.trim(),
     });
@@ -176,7 +177,7 @@ class PhpMyAdminService {
           url,
           headers: {'Content-Type': 'application/json'},
           body: body,
-        ).timeout(const Duration(seconds: 3));
+        ).timeout(const Duration(seconds: 4));
         if (res.statusCode == 200) {
           return true;
         }
